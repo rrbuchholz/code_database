@@ -3,7 +3,7 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - For use with MOPITT CO version 6, level 2 product
+;   - For use with MOPITT CO version 6 or 7, level 2 product
 ;   - Loading CO data from MOPITT .he5 file
 ;          - select daytime retrievals
 ;          - select for spatial region around station
@@ -30,51 +30,40 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V6J"
-  ; V6 T and N work all files
-  ;all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
-  ;if (version.eq."V5J") then
-  ;  ;all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.hdf")
-  ;  all_files = systemfunc ("ls /MOPITT/TEST/ArchiveV5J/L2/2012*/*/MOP02J-*.hdf")
-  ;end if
-  ;all_files = systemfunc ("ls MOP02J-*.hdfeos")
+  version = "V7J"
+  location_name = "Arrival Heights"
+  if (version.eq."V6J") then
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
-  dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
-  all_files = dummy(235:dimsizes(dummy)-1)
+    dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
+    all_files = dummy(235:dimsizes(dummy)-1)
+  else 
+    all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
+  end if
+   ;print(all_files(0:10))
 
-;print(all_files)
-;exit
+  ; -------------------------------
+  ; Start and truncation dates
+  ; (beta files when prelim calibration)
+  ; -------------------------------
+   start_date = 20000101
+   truncation_date = 20170101
+
   ;------------
   ; select location
+  ; not defined below
   ;------------
-  ARRIVALHGTS = False
-  BREMEN      = False
-  DARWIN      = False
-  EUREKA      = False
-  JUNGFRAU    = False
-  IZANA       = False
-  KIRUNA      = False
-  WOLLONGONG  = False
-  LAUDER      = True
-  LA_REUNION  = False
-  MAUNALOA    = False
-  NYALESUND   = False
-  STHKOREA    = False
-  THULE       = False
-  TORONTO     = False
-  ZUGSPITZE   = False
   USERDEF     = False
     if (USERDEF) then
       location_lat = -10
       location_lon = 120
-      location     = "location name"
+      location     = "location_name"
     end if
 
   ;------------
   ; distance around 
   ; station
   ;------------
-  delta_deg   = 0.5
+  delta_deg   = 1.0
 
   ;------------
   ; select daytime 
@@ -87,6 +76,7 @@ begin
   ; toggles
   ;------------
   netCDF         = True
+    outdir = "/IASI/home/buchholz/MOPITT_subset/V7/"
 
 ;--------------------------------------------
 ; end user input
@@ -100,100 +90,97 @@ begin
   ; -------------------------------
   ; names of data structures
   ; determined from an ncl_filedump
-  suff           = "_MOP02"
-  date           = "Time"+suff
-  longitude      = "Longitude"+suff
-  latitude       = "Latitude"+suff
-
-if (version.eq."V5J") then
-  tracer         = "Retrieved_CO_Total_Column"+suff
-  solarza        = "Solar_Zenith_Angle"+suff
-  swath_index    = "Swath_Index"+suff
-  surface_index  = "Surface_Index"+suff
-  deg_freedom    = "Degrees_of_Freedom_for_Signal"+suff
-  vmr_aprior     = "A_Priori_CO_Mixing_Ratio_Profile"+suff
-  vmr_surface    = "A_Priori_CO_Surface_Mixing_Ratio"+suff
-  vmr_aposterior = "Retrieved_CO_Mixing_Ratio_Profile"+suff
-  apost_surf     = "Retrieved_CO_Surface_Mixing_Ratio"+suff
-  vmr_avker      = "Retrieval_Averaging_Kernel_Matrix"+suff
-  pressure_surf  = "Surface_Pressure"+suff
-else
-  tracer         = "RetrievedCOTotalColumn"+suff
-  solarza        = "SolarZenithAngle"+suff
-  swath_index    = "SwathIndex"+suff
-  surface_index  = "SurfaceIndex"+suff
-  deg_freedom    = "DegreesofFreedomforSignal"+suff
-  tcol_apriori   = "APrioriCOTotalColumn"+suff
-  vmr_aprior     = "APrioriCOMixingRatioProfile"+suff
-  vmr_surface    = "APrioriCOSurfaceMixingRatio"+suff
-  vmr_aposterior = "RetrievedCOMixingRatioProfile"+suff
-  apost_surf     = "RetrievedCOSurfaceMixingRatio"+suff
-  vmr_avker      = "RetrievalAveragingKernelMatrix"+suff
-  pressure_surf  = "SurfacePressure"+suff
-end if
+    suff           = "_MOP02"
+    date           = "Time"+suff
+    longitude      = "Longitude"+suff
+    latitude       = "Latitude"+suff
+    tracer         = "RetrievedCOTotalColumn"+suff
+    solarza        = "SolarZenithAngle"+suff
+    swath_index    = "SwathIndex"+suff
+    surface_index  = "SurfaceIndex"+suff
+    deg_freedom    = "DegreesofFreedomforSignal"+suff
+    tcol_apriori   = "APrioriCOTotalColumn"+suff
+    vmr_aprior     = "APrioriCOMixingRatioProfile"+suff
+    vmr_surface    = "APrioriCOSurfaceMixingRatio"+suff
+    vmr_aposterior = "RetrievedCOMixingRatioProfile"+suff
+    apost_surf     = "RetrievedCOSurfaceMixingRatio"+suff
+    vmr_avker      = "RetrievalAveragingKernelMatrix"+suff
+    pressure_surf  = "SurfacePressure"+suff
 
 
-  if (ARRIVALHGTS) then
+  if (location_name.eq."Arrival Heights") then
     location_lat = -77.82
     location_lon = 166.65
     location = "ArrivalHeights"
-  else if (BREMEN) then
+  else if (location_name.eq."Boulder") then
+    location_lat = 48.04
+    location_lon = -105.2
+    location = "Boulder"
+  else if (location_name.eq."Bremen") then
     location_lat = 53.10
     location_lon = 8.85
     location = "Bremen"
-  else if (DARWIN) then
+  else if (location_name.eq."Darwin") then
     location_lat = -12.424
     location_lon = 130.892
     location = "Darwin"
-  else if (EUREKA) then
+  else if (location_name.eq."Eureka") then
     location_lat = 80.05
     location_lon = -82.42
     location = "Eureka"
-  else if (JUNGFRAU) then
-    location_lat = 46.55
-    location_lon = 7.98
-    location = "Jungfrau"
-  else if (IZANA) then
+  else if (location_name.eq."Izana") then
     location_lat = 28.30
     location_lon = -16.48
     location = "Izana"
-  else if (KIRUNA) then
+  else if (location_name.eq."Jungfraujoch") then
+    location_lat = 46.55
+    location_lon = 7.98
+    location = "Jungfrau"
+  else if (location_name.eq."Kiruna") then
     location_lat = 67.84
     location_lon = 20.41
     location = "Kiruna"
-  else if (LAUDER) then
+  else if (location_name.eq."Lauder") then
     location_lat = -45.038
     location_lon = 169.684
     location = "Lauder"
-  else if (LA_REUNION) then
+  else if (location_name.eq."La Reunion") then
     location_lat = -20.901
     location_lon = 55.485
     location = "Reunion"
-  else if (MAUNALOA) then
+  else if (location_name.eq."Mauna Loa") then
     location_lat = 19.54
     location_lon = -155.58
     location = "MaunaLoa"
-  else if (NYALESUND) then
+  else if (location_name.eq."Ny Alesund") then
     location_lat = 78.923
     location_lon = 11.923
     location = "NyAlesund"
-  else if (STHKOREA) then
-    location_lat = 36.5
-    location_lon = 128
-    location = "SthKorea"
-  else if (THULE) then
+  else if (location_name.eq."Paris") then
+    location_lat = 48.97
+    location_lon = 2.366
+    location = "Paris"
+  else if (location_name.eq."Rikubetsu") then
+    location_lat = 43.46
+    location_lon = 143.8
+    location = "Rikubetsu"
+  else if (location_name.eq."St Petersburg") then
+    location_lat = 59.88
+    location_lon = 29.83
+    location = "StPete"
+  else if (location_name.eq."Thule") then
     location_lat = 76.53
     location_lon = -68.74
     location = "Thule"
-  else if (TORONTO) then
+  else if (location_name.eq."Toronto") then
     location_lat = 43.66
     location_lon = -79.40
     location = "Toronto"
-  else if (WOLLONGONG) then
+  else if (location_name.eq."Wollongong") then
     location_lat = -34.406
     location_lon = 150.879
     location = "Wollongong"
-  else if (ZUGSPITZE) then
+  else if (location_name.eq."Zugspitze") then
     location_lat = 47.42
     location_lon = 10.98
     location = "Zugspitze"
@@ -213,9 +200,12 @@ end if
   end if
   end if
   end if
+  end if
+  end if
+  end if
 
   if (netCDF) then
-     outname      = location+"_"+delta_deg+"deg_"+version+"subset.nc"
+     outname      = outdir+location+"_"+delta_deg+"deg_"+version+"subset.nc"
   end if
 
    topboundary     = location_lat+delta_deg
@@ -226,9 +216,21 @@ end if
   ; number of files to be read
   ndates = dimsizes(all_files)
   
-  ; counter for setting up selected arrays
-  counter= 0
+  ; counter for number of measurements
   dcount = 0
+
+  ; -------------------------------
+  ; Truncation to ignore beta files
+  ; (prelim calibration applied)
+  ; -------------------------------
+   file_date = str_split_csv(all_files, "-" ,0)
+   select_dates_ind = ind(file_date(:,1).ge.start_date.and.\
+                          file_date(:,1).lt.truncation_date)
+   selected_files = all_files(select_dates_ind)
+   all_files := selected_files
+
+   ;print(all_files(0:10))
+   ;print(all_files(dimsizes(all_files)-10:dimsizes(all_files)-1))
 
 ;--------------------------------------------
 ; load file and extract
@@ -241,67 +243,47 @@ end if
   ; files
   ;------------
   do i=0,ndates-1
-    ; read data
-    if (version.eq."V5J") then
-       system("ln -sf "+all_files(i)+" /IASI/home/buchholz/tmp/mopittfile.hdfeos")
-       fin = addfile("/IASI/home/buchholz/tmp/mopittfile.hdfeos", "r")            ; read in
-    else
-       fin = addfile(all_files(i), "r")            ; read in
-    end if
+      fin = addfile(all_files(i), "r")            ; read in
 
-      tgas         = fin->$tracer$
-      tcol         = tgas(:,0)
-      tcol_err     = tgas(:,1)
-      lon          = fin->$longitude$
-      lat          = fin->$latitude$
-      sza          = fin->$solarza$
-      time         = fin->$date$
+      tgas         := fin->$tracer$
+      tcol         := tgas(:,0)
+      tcol_err     := tgas(:,1)
+      lon          := fin->$longitude$
+      lat          := fin->$latitude$
+      sza          := fin->$solarza$
+      time         := fin->$date$
         ;units value presumes use of TAI93 (International Atomic Time) format
         time@units = "seconds since 1993-1-1 00:00:00"
-      pixels       = fin->$swath_index$
-      surf_type    = fin->$surface_index$
-      dofs         = fin->$deg_freedom$
-      if (version.eq."V5J") then
-        apriori = tcol
-        apriori = -999.99
-        apriori@_FillValue = -999.99
-      else
-        apriori      = fin->$tcol_apriori$
-      end if
-      vmr_dummy    = fin->$vmr_aprior$
-      vmr_surf     = fin->$vmr_surface$
-      vmr_apriori  = new((/dimsizes(tcol),10/),float,-9999)
+      pixels       := fin->$swath_index$
+      surf_type    := fin->$surface_index$
+      dofs         := fin->$deg_freedom$
+      apriori      := fin->$tcol_apriori$
+      vmr_dummy    := fin->$vmr_aprior$
+      vmr_surf     := fin->$vmr_surface$
+      vmr_apriori  := new((/dimsizes(tcol),10/),float,-9999)
          vmr_apriori(:,0)    = (/vmr_surf(:,0)/)
          vmr_apriori(:,1:9)  = vmr_dummy(:,:,0)
-      ret_dummy    = fin->$vmr_aposterior$
-      ret_surf     = fin->$apost_surf$
-      ret_profile  = new((/dimsizes(tcol),10/),float,-9999)
+      ret_dummy    := fin->$vmr_aposterior$
+      ret_surf     := fin->$apost_surf$
+      ret_profile  := new((/dimsizes(tcol),10/),float,-9999)
          ret_profile(:,0)    = (/ret_surf(:,0)/)
          ret_profile(:,1:9)  = ret_dummy(:,:,0)
-      ak           = fin->$vmr_avker$
-      psurf        = fin->$pressure_surf$
+      ak           := fin->$vmr_avker$
+      psurf        := fin->$pressure_surf$
 
 
     ;--------------------------------------------
     ; select region to bin (daytime retrievals)
     ;--------------------------------------------
-    region = ind(sza.le.dayflag.and.\
+    region := ind(sza.le.dayflag.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\
                  lon.le.rightboundary)
+
     if (all(ismissing(region))) then
       print("No MOPITT data at " + location +\
             " for file " + i +", date: "+cd_calendar(time(i),4))
-      ;------------
-      ; release
-      ; variables
-      ;------------
-      delete([/tgas,tcol,tcol_err,lon,lat,sza,time,pixels,surf_type,\
-               dofs,apriori,vmr_dummy,vmr_surf,vmr_apriori,\
-               ret_dummy,ret_surf,ret_profile,\
-               ak,psurf,region/])
-
       continue  ; skip all the next bit and go to next file
     end if
     
@@ -310,19 +292,19 @@ end if
 
     print("***Collecting MOPITT data at " + location +\
           " for file "+i+", date: "+cd_calendar(time(i),4))
-    region_tcol    = tcol(region)
-    region_lat     = lat(region)
-    region_lon     = lon(region)
-    region_time    = time(region)     ; time in seconds since 1993-1-1 00:00:00 (TAI93)
-    region_err     = tcol_err(region)
-    region_pix     = pixels(region,0)
-    region_stype   = surf_type(region)
-    region_dofs    = dofs(region)
-    region_ap      = apriori(region)
-    region_psurf   = psurf(region)
-    region_v_ap    = vmr_apriori(region, :)
-    region_profile = ret_profile(region, :)
-    region_ak      = ak(region, :, :)  ;!!!!!!need to account for loss of 1st dim if 1 point
+    region_tcol    := tcol(region)
+    region_lat     := lat(region)
+    region_lon     := lon(region)
+    region_time    := time(region)     ; time in seconds since 1993-1-1 00:00:00 (TAI93)
+    region_err     := tcol_err(region)
+    region_pix     := pixels(region,0)
+    region_stype   := surf_type(region)
+    region_dofs    := dofs(region)
+    region_ap      := apriori(region)
+    region_psurf   := psurf(region)
+    region_v_ap    := vmr_apriori(region, :)
+    region_profile := ret_profile(region, :)
+    region_ak      := ak(region, :, :)  
 
       ;--------------------------------------------
       ; append to arrays
@@ -336,6 +318,7 @@ end if
         if (.not.ismissing(region_tcol(k))) then
 
           if (dimsizes(region_ap).eq.1) then
+            ;accounting for loss of 1st dim if only 1 pixel around station
             a=region_v_ap(:)
             b=region_profile(:)
             c=region_ak(:,:)
@@ -345,7 +328,7 @@ end if
             c=region_ak(k,:,:)
           end if
 
-          if (counter.eq.0) then
+          if (.not.(isdefined("time_selected"))) then
           ;--- time
             time_selected = region_time(k)
           ;--- total column
@@ -375,8 +358,7 @@ end if
           ;--- zveraging kernel
             m_ak_selected = new((/1,10,10/),float)
             m_ak_selected(0,:,:) = c
-            ;print(counter)
-          else if (counter.gt.0) then
+          else
             temp0 := time_selected
             temp1 := mopitt_selected
             temp2 := lat_selected
@@ -390,64 +372,43 @@ end if
             temp10 := m_apriori_selected
             temp11 := m_profile_selected
             temp12 := m_ak_selected
-            delete([/time_selected, mopitt_selected, lat_selected, lon_selected,\
-                     err_selected, psurf_selected, pixel_selected,\
-                     stype_selected, dofs_selected, ap_selected,\
-                     m_apriori_selected, m_profile_selected, m_ak_selected/])
+
           ;--- time 
-            time_selected = array_append_record(temp0,region_time(k),0)
+            time_selected := array_append_record(temp0,region_time(k),0)
           ;--- total column
-            mopitt_selected = array_append_record(temp1,region_tcol(k),0)
+            mopitt_selected := array_append_record(temp1,region_tcol(k),0)
           ;--- latitude
-            lat_selected = array_append_record(temp2,region_lat(k),0)
+            lat_selected := array_append_record(temp2,region_lat(k),0)
           ;--- longitude
-            lon_selected = array_append_record(temp3,region_lon(k),0)
+            lon_selected := array_append_record(temp3,region_lon(k),0)
           ;--- errors
-            err_selected = array_append_record(temp4,region_err(k),0)
+            err_selected := array_append_record(temp4,region_err(k),0)
           ;--- surface pressure
-            psurf_selected = array_append_record(temp5,region_psurf(k),0)
+            psurf_selected := array_append_record(temp5,region_psurf(k),0)
           ;--- pixel number
-            pixel_selected = array_append_record(temp6,region_pix(k),0)
+            pixel_selected := array_append_record(temp6,region_pix(k),0)
           ;--- surface type
-            stype_selected = array_append_record(temp7,region_stype(k),0)
+            stype_selected := array_append_record(temp7,region_stype(k),0)
           ;--- dofs
-            dofs_selected = array_append_record(temp8,region_dofs(k),0)
+            dofs_selected := array_append_record(temp8,region_dofs(k),0)
           ;--- a priori (column)
-            ap_selected = array_append_record(temp9,region_ap(k),0)
+            ap_selected := array_append_record(temp9,region_ap(k),0)
           ;--- a priori (vmr profile)
             dummy := new((/1,10/),float)
             dummy(0,:) = a
-            m_apriori_selected = array_append_record(temp10,dummy,0)
+            m_apriori_selected := array_append_record(temp10,dummy,0)
           ;--- a posteriori (vmr profile)
             dummy2 := new((/1,10/),float)
             dummy2(0,:) = b
-            m_profile_selected = array_append_record(temp11,dummy2,0)
+            m_profile_selected := array_append_record(temp11,dummy2,0)
           ;--- zveraging kernel
             dummy3 := new((/1,10,10/),float)
             dummy3(0,:,:) = c
-            m_ak_selected = array_append_record(temp12,dummy3,0)
-          end if
-          end if
-            temp = counter
-            delete(counter)
-            counter = temp + 1
-            delete(temp) 
-            ;print(counter)         
+            m_ak_selected := array_append_record(temp12,dummy3,0)
+          end if      
         end if
       end do
     end if ; collect if not missing in region_tcol
-
-    ;------------
-    ; release
-    ; variables
-    ;------------
-    delete([/tgas,tcol,tcol_err,lon,lat,sza,time,pixels,surf_type,\
-               dofs,apriori,vmr_dummy,vmr_apriori,vmr_surf,\
-               ret_profile,ret_dummy, ret_surf, ak,psurf/])
-    delete([/region, region_tcol,region_lon,region_lat,\
-             region_time,region_err, region_pix, region_stype,\
-             region_dofs, region_ap, region_v_ap, region_profile,\
-             region_ak, region_psurf/])
 
   end do
   ;printVarSummary(mopitt_selected)
@@ -469,6 +430,7 @@ end if
 ;--------------------------------------------
 if (netCDF) then
   ; saves MOPITT subset
+
   fout = addfile(outname, "c")
   ;------------
   ; File 
