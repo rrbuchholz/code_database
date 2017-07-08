@@ -1,22 +1,25 @@
 ;================================================;
-;  plot_mopitt_averages.ncl
+;  plot_MOPITT_averages.ncl
 ;================================================;
 ;
 ; Concepts illustrated:
 ;   - For use with MOPITT CO version 7, level 3 product month average files
 ;   - Load data from MOPITT .he5 file
 ;   - Plotting region on a map
+;   - Overlay region of interest boxes
+;   - Plot vectors
 ;
 ;   Files needed:
 ;         -MOPITT level 3, monthly netCDF
 ;
 ;   To run type:
-;         apply_tracer_ratios.ncl 
-;                                          rrb 20170510
+;         ncl plot_MOPITT_averages.ncl 
+;                                          rrb 20170612
 ; ================================================;
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl" 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+load "~/code_database/ncl_programs/buchholz_global_util/arrow.ncl"
 
 ; add in bash for own colormaps
 ;export NCARG_COLORMAPS=/IASI/home/buchholz/NCL_programs/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
@@ -25,10 +28,9 @@ begin
 ;***************************************************************
 ; User Input
 ;***************************************************************
-   date    = "2008-2015"                        ; date for file
     version = "V7T"
-    mopitt_file = "/IASI/home/buchholz/scripts/MOPITT_ASON_2001_2016.nc"
-    sd_file = "/IASI/home/buchholz/scripts/MOPITT_2001_2016_ASONsd.nc"
+    mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
+    sd_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_ASONsd.nc"
    ; -------------------------------
    ; SELECT OUTPUT
    ; -------------------------------
@@ -37,7 +39,7 @@ begin
    if (PLOT) then                            ; Map plot
        mapDir  = "./"                        ; directory for plot output
        mapName = "MOPITT_"+version+"_tcol" ; plot name output
-       mapType = "x11"                       ; workstation type
+       mapType = "png"                       ; workstation type
         mapType@wkWidth = 1200
         mapType@wkHeight = 1200 
    end if
@@ -241,7 +243,7 @@ begin
     do j=0,dimsizes(region_name)-1
      region_lon := (/lonmin(j), lonmin(j), lonmax(j), lonmax(j), lonmin(j)/)
      region_lat := (/latmin(j), latmax(j), latmax(j), latmin(j), latmin(j)/)
-     dum(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
+     dum(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxres)
      ;dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxres)
     end do
 
@@ -263,8 +265,22 @@ begin
     do j=0,dimsizes(index_name)-1
      region_lon := (/index_lonmin(j), index_lonmin(j), index_lonmax(j), index_lonmax(j), index_lonmin(j)/)
      region_lat := (/index_latmin(j), index_latmax(j), index_latmax(j), index_latmin(j), index_latmin(j)/)
-     dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxresII)
+     dum2(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxresII)
     end do
+
+    ;-------------------
+    ; draw AAO arrows
+    ;-------------------
+    aao_lines_up = new(9, graphic)
+    aao_lines_down = new(9, graphic)
+    arrow_res = True
+      arrow_res@gsLineColor      = "white"
+      arrow_res@gsLineThicknessF = 5.0
+    do j = 0,dimsizes(aao_lines_up)-1
+      aao_lines_up(j)=add_arrow(wks, map,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
+      aao_lines_down(j)=add_arrow(wks, map,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
+    end do
+
 
     ;-------------------
     ; add text for regions
@@ -282,13 +298,16 @@ begin
     ;gsn_text_ndc(wks,"test",0.1,0.1,txres)
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1
-      if (k.eq.5) then
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-35,txres)
+      if (k.eq.2) then
+        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
+      else if (k.eq.5) then
+        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-35,txres)
       else if (k.eq.6)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-2, latmax(k)-35,txres)
+        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmin(k)-2, latmax(k)-35,txres)
       else
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
+        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
+      end if
       end if
       end if
     end do
@@ -300,15 +319,19 @@ begin
       if (k.eq.2) then
         continue;
       else if (k.eq.0)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
       else if (k.eq.1)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-20,txres)
+        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+35, index_latmin(k)-20,txres)
       else 
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
        end if
        end if
        end if
     end do
+
+        txres@txFontColor    = "white"
+        txres@txJust         = "CenterCenter"
+        textIII = gsn_add_text(wks,map,"AAO",55, -55,txres)
 
     ; ===================
     ; panel the plots
