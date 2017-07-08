@@ -38,8 +38,8 @@ begin
 
    if (PLOT) then                            ; Map plot
        mapDir  = "./"                        ; directory for plot output
-       mapName = "MOPITT_"+version+"_tcol" ; plot name output
-       mapType = "png"                       ; workstation type
+       mapName = "~/MOPITT_"+version+"_tcol" ; plot name output
+       mapType = "x11"                       ; workstation type
         mapType@wkWidth = 1200
         mapType@wkHeight = 1200 
    end if
