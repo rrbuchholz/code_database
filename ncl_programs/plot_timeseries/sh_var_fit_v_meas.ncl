@@ -28,11 +28,11 @@ begin
   location_title = "Maritime SEA"
   
   PLOT = True
-    plottype = "x11"
-      plottype@wkWidth  = 1500
-      plottype@wkHeight = 800
-      ;plottype@wkPaperWidthF  = 7.0 ;for pdf
-      ;plottype@wkPaperHeightF = 20  ;for pdf
+    plottype = "pdf"
+      ;plottype@wkWidth  = 1500
+      ;plottype@wkHeight = 800
+      plottype@wkPaperWidthF  = 7.0 ;for pdf
+      plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/Statistic_results/"+location+"_meas_v_mod"
 
   PREDICT = True
@@ -231,7 +231,7 @@ if (PLOT) then
      res2@xyMarkers               :=  (/filled_tri,filled_tri/)    ; choose type of marker  
      res2@xyMarkerColors          := (/"mediumpurple2","darkorange2"/)  ; Marker color
      res2@xyMarkerOpacityF        = 0.75
-     res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
+     res2@xyMarkerSizeF           = 0.016          ; Marker size (default 0.01)
 
    plot2  = gsn_csm_xy (wks,yearfrac,data(2:1,:),res2) ; create plot
 
@@ -242,6 +242,7 @@ if (PLOT) then
     res2@xyMarkerColors           := (/"mediumpurple4","darkorange4"/)         ; Marker color
     res2@xyMarkerThicknessF       = 4
      res2@xyMarkerOpacityF        = 1
+     res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
    plot3  = gsn_csm_xy (wks,yearfrac,data(2:1,:),res2)  ; create plot
 
   else
