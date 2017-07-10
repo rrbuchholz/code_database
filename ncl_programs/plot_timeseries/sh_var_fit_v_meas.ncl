@@ -35,7 +35,7 @@ begin
       plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/Statistic_results/"+location+"_meas_v_mod"
 
-  PREDICT = True
+  PREDICT = False
 ; =========================================
 ; SET UP
 ; =========================================
@@ -226,9 +226,10 @@ if (PLOT) then
     ;-----------------------------------
      ; new tickmark
      filled_tri = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 0.0)
+     filled_tri2 = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 180.0)
 
      res2@xyMarkLineModes         := (/"Markers","Markers"/)
-     res2@xyMarkers               :=  (/filled_tri,filled_tri/)    ; choose type of marker  
+     res2@xyMarkers               :=  (/filled_tri2,filled_tri/)    ; choose type of marker  
      res2@xyMarkerColors          := (/"mediumpurple2","darkorange2"/)  ; Marker color
      res2@xyMarkerOpacityF        = 0.75
      res2@xyMarkerSizeF           = 0.016          ; Marker size (default 0.01)
@@ -238,7 +239,7 @@ if (PLOT) then
     ;-----------------------------------
     ; Outlines
     ;-----------------------------------
-    res2@xyMarkers                := (/7,7/)               ; choose type of marker  
+    res2@xyMarkers                := (/8,7/)               ; choose type of marker  
     res2@xyMarkerColors           := (/"mediumpurple4","darkorange4"/)         ; Marker color
     res2@xyMarkerThicknessF       = 4
      res2@xyMarkerOpacityF        = 1
