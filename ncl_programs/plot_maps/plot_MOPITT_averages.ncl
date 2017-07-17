@@ -92,7 +92,7 @@ begin
   sd_data!1 = "lat"
   sd_tracer = sd_data(lat|:, lon|:)             ; reorder - NCL needs lon as rightmost coordinate
 
-  rel_sd = sd_tracer/tracer
+  rel_sd = (sd_tracer/tracer)*100
   rel_sd!0 = "lat"
   rel_sd&lat = latitude
   rel_sd!1 = "lon"
@@ -197,16 +197,16 @@ begin
     ; SD plot
     ; ===================
     mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    ;mapres@lbTitleString             = "relative SD"             ; Label Bar title
-    ;labels := fspan(0.025, 0.4, 16)
-    ;labels_strings := (/"0.025","0.050","0.075","0.100","0.125",\
-    ;                   "0.150","0.175","0.200","0.225","0.250",\
-    ;                   "0.275","0.300","0.325","0.350","0.375","0.400"/)
-    mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    labels := fspan(0.5e17,7.5e17, 15)
-    labels_strings := (/"0.5","1.0","1.5","2.0","2.5",\
-                       "3.0","3.5","4.0","4.5","5.0",\
-                       "5.5","6.0","6.5","7.0","7.5"/)
+    mapres@lbTitleString             = "CV"             ; Label Bar title
+    labels := fspan(2.5, 40, 16)
+    labels_strings := (/"2.5","5.0","7.5","10","12.5",\
+                       "15","17.5","20","22.5","25",\
+                       "27.5","30","32.5","35","37.5","40"/)
+    ;mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
+    ;labels := fspan(0.5e17,7.5e17, 15)
+    ;labels_strings := (/"0.5","1.0","1.5","2.0","2.5",\
+    ;                   "3.0","3.5","4.0","4.5","5.0",\
+    ;                   "5.5","6.0","6.5","7.0","7.5"/)
     ;print(labels)
     mapres@cnLevels                  := labels
     mapres@lbLabelStrings            := labels_strings
@@ -220,8 +220,8 @@ begin
     ;  mapres@cnMaxLevelValF          = 30.         ; set the maximum contour level
     ;  mapres@cnLevelSpacingF         = 0.5          ; set the interval between contours
 
-  ;  map2 = gsn_csm_contour_map_ce(wks,rel_sd(::-1,:),mapres)
-    map2 = gsn_csm_contour_map_ce(wks,sd_tracer(::-1,:),mapres)
+    map2 = gsn_csm_contour_map_ce(wks,rel_sd(::-1,:),mapres)
+  ;  map2 = gsn_csm_contour_map_ce(wks,sd_tracer(::-1,:),mapres)
 
     ;-------------------
     ; draw region boxes
@@ -352,7 +352,7 @@ begin
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) SD"/)
+  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) Coefficient of variation"/)
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
   panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True
