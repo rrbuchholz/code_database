@@ -4,7 +4,8 @@
 ;
 ; Concepts illustrated:
 ;   - load CAM emission files
-;   - sum each year and print out
+;   - global sum each year and print out
+;   - write region sum timeseries to netCDF
 ;   
 ;   To run type:
 ;         ncl sum_CAMchem_emis.ncl
@@ -23,42 +24,33 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
+  ystart = 2014
+  yend = 2016
+  res = "0.94x1.2"
+
   tracer = "CO"
-  ystart = 2001
-  yend = 2014
+  ; BIGALD, BIGALK, BIGENE, C10H16, C2H4, C2H5OH, C2H6, C3H6, C3H8, CB1, CB2, CH2O, CH3CHO, CH3COCH3, CH3COCHO, CH3COOH, CH3OH, CO, CRESOL, GLYALD, HYAC, ISOP, MACR, MEK, MVK, NH3, NO, OC1, OC2, SO2, TOLUENE
+  ; not in MW file: XYLENE, HCOOH, HCN, CO2, CH3CN, C2H2, BENZ
 
-;qfed.emis_BENZ_1.9x2.5_mol_2000_2014.nc      
-;qfed.emis_BIGALD_1.9x2.5_mol_2000_2014.nc    
-;qfed.emis_BIGALK_1.9x2.5_mol_2000_2014.nc    qfed.emis_CRESOL_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_BIGENE_1.9x2.5_mol_2000_2014.nc    qfed.emis_GLYALD_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_C10H16_1.9x2.5_mol_2000_2014.nc    qfed.emis_HCN_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_C2H2_1.9x2.5_mol_2000_2014.nc      qfed.emis_HCOOH_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_C2H4_1.9x2.5_mol_2000_2014.nc      qfed.emis_HYAC_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_C2H5OH_1.9x2.5_mol_2000_2014.nc        
-;qfed.emis_C3H6_1.9x2.5_mol_2000_2014.nc      
-;qfed.emis_C3H8_1.9x2.5_mol_2000_2014.nc           
-;qfed.emis_CH3CHO_1.9x2.5_mol_2000_2014.nc   
-;qfed.emis_CH3CN_1.9x2.5_mol_2000_2014.nc     
-;qfed.emis_CH3COCH3_1.9x2.5_mol_2000_2014.nc  
-;qfed.emis_CH3COCHO_1.9x2.5_mol_2000_2014.nc  qfed.emis_TOLUENE_1.9x2.5_mol_2000_2014.nc
-;qfed.emis_CH3COOH_1.9x2.5_mol_2000_2014.nc   qfed.emis_XYLENE_1.9x2.5_mol_2000_2014.nc
-
+; location = "SAfrica"
 
   ; -------------------------------
   ; emission files
   ; -------------------------------
-;  e_file_in = "/glade/p/work/buchholz/emis/qfed_finn_2000_2014/qfed.emis_"+tracer+"_1.9x2.5_mol_2000_2014.nc"
-; location = "SAfrica"
-;  e_file_in = "/glade/p/work/buchholz/emis/tagged_qfed_finn/qfed.emis_"+\
-;                 tracer+"_"+location+"_1.9x2.5_mol_2000_2014.nc"
- ; e_file_in = "/glade/p/work/buchholz/emis/rcp85_2000_2014/tagged_emis/rcp85_2000-2014_"+\
- ;              tracer+"_"+location+"_noBiogBB_1.9x2.5_mol_c20150313.nc"
-  e_file_in = "/glade/p/work/emmons/emis/rcp85_2000_2014/rcp85_2000-2014_"+\
-                tracer+"_noBiogBB_1.9x2.5_mol_c20150313.nc"
+   indir = "/data14b/buchholz/qfed/cam_0.94x1.2/allyears/"
+   outir = "/data14b/buchholz/qfed/cam_0.94x1.2/region_sums/"
+   e_file_in = "qfed.emis_"+tracer+"_0.94x1.2_mol_"+ystart+"_"+yend+".nc"
+
+  ; -------------------------------
+  ; toggles
+  ; -------------------------------
+   NETCDF = False
+
   ; -------------------------------
   ; MOZART molecular weights
   ; -------------------------------
-  molwts = "/glade/u/home/buchholz/data/species_molwts.txt"
+  ;molwts = "/glade/u/home/buchholz/data/species_molwts.txt"
+  molwts = "~/data/species_molwts.txt"
 
 ;--------------------------------------------
 ; end user input
@@ -68,18 +60,18 @@ begin
 ; set up
   ; -------------------------------
   ; names of data structures
+  ; "anthro", "bb", "ocean"
   ; -------------------------------
-;  emiss           = "bb"
-; emiss = "anthro"
- emiss = "ocean"
+  emiss           = "bb"
 
   ; -------------------------------
   ; constants
   ; -------------------------------
    NAv = 6.022e23                    ; Avogadro's number, molecules mole^-1
-   re   = 6.37122e06                 ; Earth radius
+   re   = 6.37122e06                 ; Earth radius (in metres)
    rad  = 4.0 * atan(1.0) / 180.0    ; Convert degrees to radians (pi radians per 180 deg)
    con  = re * rad                   ; constant for determining arc length 
+
    montharray = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
 
    ; load molecular weights (g/mol) from a MOZART file,
@@ -94,7 +86,7 @@ begin
 
 ;********************************************
 ; load files and extract
-    fin = addfile(e_file_in, "r")
+    fin = addfile(indir+e_file_in, "r")
       emiss_in         = fin->$emiss$
       time = emiss_in&time
       yyyymmdd = cd_calendar(time,-2)
@@ -120,7 +112,7 @@ begin
      ; g cm-2 d-1
      tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
      ; g m-2 d-1
-     tracer_emiss = (tracer_emiss*100*100)
+     tracer_emiss = (tracer_emiss*100*100)     ; cm-2 -> m-2
 
      ; weight by gridbox area
        ; prevent negative weights 
@@ -129,15 +121,12 @@ begin
        lat(dimsizes(lat)-1)= -89.99999   
 
      clat = cos(lat * rad)           ; cosine of latitude
-   
      dlon = (lon(2) - lon(1))        ; assume dlon is constant
      dlat = (lat(2) - lat(1))        ; assume dlat is constant
-
      dx   = con * dlon * clat        ; dx (in metres) at each latitude
      dy   = con * dlat               ; dy (in metres) is constant
      dydx = dy * dx                  ; dydx(nlat)
 
-   
      wgt  = new((/nlat, mlon/), float)
      wgt  = conform(wgt, dydx, 0)
 
@@ -150,28 +139,42 @@ begin
      if (emiss.eq."anthro".or.\
          emiss.eq."ocean") then
        print("monthly emissions")
-       do i = 0, dimsizes(yyyymmdd)-1
          if(isleapyear(yyyy(i))) then
            montharray(1)= 29
          else
            montharray(1) = 28
          end if
+       do i = 0, dimsizes(yyyymmdd)-1
          globsum(i) = globsum(i) * montharray(mm(i)-1)
        end do
      end if
 
-
+    ;------------------
+    ; Year averages
+    ;------------------
     year_array = ispan(ystart,yend,1)
     year_avg_array = new((/dimsizes(year_array)/), float)
     do i = 0, dimsizes(year_array)-1
       year_ind := ind(globsum&time.gt.year_array(i)*10000.and.\
                  globsum&time.lt.(year_array(i)+1)*10000)
-print(dimsizes(year_ind))
       year_avg_array(i) = sum(globsum(year_ind))
     end do
 
      print("Year, emissions of "+tracer+" (Tg)")
      print(year_array+" "+year_avg_array)
+
+    ;------------------
+    ; Total average
+    ;------------------
+     total_avg = avg(year_avg_array)
+     print(ystart+" to "+yend+", emissions of "+tracer+" (Tg):" + total_avg)
+
+;********************************************
+; Write out to new file
+;********************************************
+if (NETCDF) then
+
+end if
 
 end
 
