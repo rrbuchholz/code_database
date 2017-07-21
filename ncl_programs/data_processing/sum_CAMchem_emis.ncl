@@ -38,7 +38,7 @@ begin
   ; emission files
   ; -------------------------------
    indir = "/data14b/buchholz/qfed/cam_0.94x1.2/allyears/"
-   outir = "/data14b/buchholz/qfed/cam_0.94x1.2/region_sums/"
+   outpath = "/data14b/buchholz/qfed/cam_0.94x1.2/region_sums/"
    e_file_in = "qfed.emis_"+tracer+"_0.94x1.2_mol_"+ystart+"_"+yend+".nc"
 
   ; -------------------------------
@@ -135,7 +135,6 @@ begin
        globsum!0 = "time"
        globsum&time = yyyymmdd
 
-
      if (emiss.eq."anthro".or.\
          emiss.eq."ocean") then
        print("monthly emissions")
@@ -167,14 +166,71 @@ begin
     ; Total average
     ;------------------
      total_avg = avg(year_avg_array)
-     print(ystart+" to "+yend+", emissions of "+tracer+" (Tg):" + total_avg)
+     print(ystart+" to "+yend+", emissions of "+tracer+" (Tg): " + total_avg)
+
+  ;********************************************
+  ; Extract regional timeseries
+   region_names = (/"Maritime SEA", "Australasia", \
+                    "Southern Africa", "South America" /)
+  ;             minlat, maxlat, minlon, maxlon
+   region_select = (/(/-10,  10, 110, 180/),\     ;Maritime SEA
+                     (/-50, -10, 110, 180/),\      ;Australasia
+                     (/-50,   4,   0,  60/),\      ;SAfrica
+                     (/-60,   4, -80, -40/)/)      ;SAmerica
+
+print(region_select)
 
 ;********************************************
 ; Write out to new file
 ;********************************************
 if (NETCDF) then
+      ;-------------------
+      ; create file for each 
+      ; CAM-chem species
+      ;-------------------
+      outfilename = "qfed.emis_"+tracer+"_"+res+"_Tg_regional.nc"
+      fout = addfile(outpath+outfilename, "c")
 
-end if
+      ;------------
+      ; File 
+      ; Attributes
+      ;------------
+      setfileoption(fout, "DefineMode",True)
+      fAtt                      = True
+        fAtt@molecular_weight   = mw
+        fAtt@conventions        = "CF"
+        fAtt@history            = "CO2 is from QFED, Level3b v2.4 "+\
+                                  "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
+                                  "FINN emission ratios applied"
+        fAtt@author             = "R. R. Buchholz"
+        fAtt@creation_date      = systemfunc ("date")
+        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
+        fAtt@title              = "Emissions of "+ tracer+\
+                                  " from FINN emission ratios applied to QFED CO2, daily"
+        fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg):" + total_avg
+        fAtt@average            = region_names
+
+       fileattdef(fout, fAtt)
+       setfileoption(fout, "DefineMode",False)
+
+      ;------------
+      ; Coordinate Variables
+      ;------------
+        dimNames = (/"time"/)  
+	dim_Sizes = (/ -1  /) 
+	dimUnlim = (/ True /)   
+	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
+
+      ;------------
+      ; Variables
+      ;------------
+
+       ;--- date
+         fout->date             = yyyymmdd
+       ;--- emissions
+         fout->bb               = voc_emiss_regrid
+
+    end if ;NetCDF
 
 end
 
