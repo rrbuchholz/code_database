@@ -44,7 +44,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2014
+  year = 2016
   outres = "0.94x1.2"
   outpath = "/data14b/buchholz/qfed/cam_"+outres+"/"+year+"/"
 
@@ -52,7 +52,7 @@ begin
   ; QFED files
   ; -------------------------------
   qfed_dir = "/data14b/buchholz/qfed/orig_0.25/co2_"+year+"/"
-  qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"01*.nc4")
+  qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
 
   ; -------------------------------
   ; FINN emission ratios
@@ -100,6 +100,10 @@ begin
   ; -------------------------------
    NAv = 6.022e23              ; Avogadro's number, molecules mole^-1
 
+   re   = 6.37122e06              ; Earth radius
+   rad  = 4.0 * atan(1.0) / 180.0 ; For area sums/avg
+   con  = re * rad                 
+
    ; load molecular weights (g/mol) from a MOZART file,
    ; augmented with additional values for:
    ; CO2, OC and BC copied from OC1 and CB1
@@ -140,6 +144,20 @@ begin
      newlat&lat        = newlat
    end if
 
+  ; -------------------------------
+  ; CAM-chem res for sums/avgs
+  ; -------------------------------
+     clat = cos(newlat * rad)        ; cosine of latitude
+     dlon = (newlon(2) - newlon(1))  ; assume dlon is constant
+     dlat = (newlat(2) - newlat(1))  ; assume dlat is constant
+     dx   = con * dlon * clat        ; dx at each latitude
+     dy   = con * dlat               ; dy is constant
+     dydx = dy * dx                  ; dydx(nlat)
+   
+     wgt_CAM  = new((/dimsizes(newlat), dimsizes(newlon)/), float)
+     wgt_CAM  = conform(wgt_CAM, dydx, 0)
+
+
 ;********************************************
 ; load files and extract
   ; -------------------------------
@@ -171,6 +189,19 @@ begin
       delete(co2_all&time )
       co2_all!0 = "time"
       co2_all&time = (time)
+
+  ; -------------------------------
+  ; QFED res for sums/avgs
+  ; -------------------------------
+     clat_q = cos(co2_all&lat * rad) ; cosine of latitude
+     dlon_q = (co2_all&lon(2) - co2_all&lon(1))  ; assume dlon is constant
+     dlat_q = (co2_all&lat(2) - co2_all&lat(1))  ; assume dlat is constant
+     dx_q   = con * dlon_q * clat_q   ; dx at each latitude
+     dy_q   = con * dlat_q            ; dy is constant
+     dydx_q = dy_q * dx_q             ; dydx(nlat)
+
+     wgt_QFED  = new((/dimsizes(co2_all&lat), dimsizes(co2_all&lon)/), float)
+     wgt_QFED  = conform(wgt_QFED, tofloat(dydx_q), 0)
 
   ; -------------------------------
   ; load FINN emission ratios
@@ -272,8 +303,8 @@ begin
      ;printVarSummary(emiss_regrid)
 
      ;--- sanity check
-     AvgOrigGrid = wgt_areaave (tracer_emiss , 1.0, 1.0, 0) 
-     Avg_Regrid = wgt_areaave (emiss_regrid, 1.0, 1.0, 0) 
+     AvgOrigGrid = wgt_areaave2 (tracer_emiss , wgt_QFED, 0)
+     Avg_Regrid = wgt_areaave2 (emiss_regrid, wgt_CAM, 0)
      AvgDiff = AvgOrigGrid-Avg_Regrid
      PercDiff = (AvgDiff/AvgOrigGrid)*100
      MaxDiff = max(PercDiff)
@@ -284,7 +315,8 @@ begin
    ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
 
    print("Maximum percent diff in "+var_names(tracer)+\
-         " from regridding after: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
+         " from regridding: "+sprintf("%2.2f",PercDiff(max_ind))+"%"+\
+         " on date: " + cd_calendar(co2_all&time(max_ind),2))
    print("-------------------------------------------------")
 
     ;--------------------------------------------
@@ -429,8 +461,8 @@ begin
     ; printVarSummary(voc_emiss_regrid)
 
      ;--- sanity check
-     AvgOrigGrid_voc = wgt_areaave (voc_tracer_emiss , 1.0, 1.0, 0) 
-     Avg_Regrid_voc = wgt_areaave (voc_emiss_regrid, 1.0, 1.0, 0) 
+     AvgOrigGrid_voc = wgt_areaave2 (voc_tracer_emiss , wgt_QFED, 0) 
+     Avg_Regrid_voc = wgt_areaave2 (voc_emiss_regrid, wgt_CAM, 0) 
      AvgDiff_voc = AvgOrigGrid_voc-Avg_Regrid_voc
 
    if (any(AvgOrigGrid_voc.eq.0)) then
@@ -450,7 +482,8 @@ begin
      ;      "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+\
      ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
      print("Maximum percent diff in "+voc_spec(voctype)+\
-        " from regridding: "+sprintf("%2.2f",PercDiff(max_ind_voc))+"%")
+        " from regridding: "+sprintf("%2.2f",PercDiff(max_ind_voc))+"%"+\
+         " on date: " + cd_calendar(co2_all&time(max_ind_voc),2))
      print("-------------------------------------------------")
 
 
@@ -553,16 +586,17 @@ begin
     ;-------------------
     ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial average = "+ AvgOrigGrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial avg = "+ AvgOrigGrid(0) ; change left title
       map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial average = "+ Avg_Regrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial avg = "+ Avg_Regrid(0) ; change left title
       map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
 
     panel_res                       = True
       panel_res@txString            = "QFED "+ tracername +" emissions"
       panel_res@gsnPanelLabelBar    = True                ; add common colorbar
       panel_res@gsnPanelFigureStrings = (/"qfed high res","qfed low res"/)
+
     gsn_panel(wks,(/map1,map2/),(/2,1/),panel_res)
 
   end if    ; PLOT
