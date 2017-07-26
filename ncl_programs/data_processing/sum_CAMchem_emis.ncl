@@ -28,23 +28,32 @@ begin
   yend = 2016
   res = "0.94x1.2"
 
-  tracer = "CO"
+  ;tracers = (/"CH3OH","CO"/)
+  tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
+              "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
+              "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
+              "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
+              "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
   ; BIGALD, BIGALK, BIGENE, C10H16, C2H4, C2H5OH, C2H6, C3H6, C3H8, CB1, CB2, CH2O, CH3CHO, CH3COCH3, CH3COCHO, CH3COOH, CH3OH, CO, CRESOL, GLYALD, HYAC, ISOP, MACR, MEK, MVK, NH3, NO, OC1, OC2, SO2, TOLUENE
-  ; not in MW file: XYLENE, HCOOH, HCN, CO2, CH3CN, C2H2, BENZ
+  ; no MW data: XYLENE, BENZ
 
-; location = "SAfrica"
+  ; -------------------------------
+  ; begin a tracer loop
+  ; -------------------------------
+do t = 0, dimsizes(tracers)-1
 
+  tracer = tracers(t)
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   indir = "/data14b/buchholz/qfed/cam_0.94x1.2/allyears/"
-   outpath = "/data14b/buchholz/qfed/cam_0.94x1.2/region_sums/"
-   e_file_in = "qfed.emis_"+tracer+"_0.94x1.2_mol_"+ystart+"_"+yend+".nc"
+   indir = "/data14b/buchholz/qfed/cam_"+res+"/allyears/"
+   outpath = "/data14b/buchholz/qfed/cam_"+res+"/region_sums/"
+   e_file_in = "qfed.emis_"+tracer+"_"+res+"_mol_"+ystart+"_"+yend+".nc"
 
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   NETCDF = False
+   NETCDF = True
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -87,9 +96,11 @@ begin
 ;********************************************
 ; load files and extract
     fin = addfile(indir+e_file_in, "r")
-      emiss_in         = fin->$emiss$
-      time = emiss_in&time
-      yyyymmdd = cd_calendar(time,-2)
+      emiss_in         := fin->$emiss$
+      time := emiss_in&time
+      yyyymmdd := cd_calendar(time,-2)
+       yyyymmdd!0 = "time"
+       yyyymmdd&time = time
       date = cd_calendar(time,0)
       yyyy = tointeger(date(:,0))
       mm = tointeger(date(:,1))
@@ -106,19 +117,43 @@ begin
     ; convert to CAM-Chem units
     ; molec. cm-2 s-1 to g per day per gridbox
     ; -------------------------------
-     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
+     ; not in MW file: XYLENE, HCOOH, HCN, CO2, CH3CN, C2H2, BENZ
+     if (tracer.eq."C2H2") then
+       mw = 26.036
+     else if (tracer.eq."CH3CN") then
+       mw = 41.054
+     else if (tracer.eq."CO2") then
+       mw = 44.008
+     else if (tracer.eq."HCN") then
+       mw = 27.028
+     else if (tracer.eq."HCOOH") then
+       mw = 46.024
+     else
+       mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
+     end if
+     end if
+     end if
+     end if
+     end if
      ; g cm-2 s-1
      tracer_emiss = (emiss_in/NAv)*mw          ; molec -> mol -> g
      ; g cm-2 d-1
      tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
      ; g m-2 d-1
      tracer_emiss = (tracer_emiss*100*100)     ; cm-2 -> m-2
+      tracer_emiss!0 = "time"
+      tracer_emiss&time = yyyymmdd
+      tracer_emiss!1 = "lat"
+      tracer_emiss&lat = lat
+      tracer_emiss!2 = "lon"
+      tracer_emiss&lon = lon
 
      ; weight by gridbox area
        ; prevent negative weights 
        ; (redundant because no emissions over artic and anatarctica)
-       lat(0)= 89.99999
-       lat(dimsizes(lat)-1)= -89.99999   
+       newlat = lat
+       newlat(0)= 89.99999
+       newlat(dimsizes(newlat)-1)= -89.99999   
 
      clat = cos(lat * rad)           ; cosine of latitude
      dlon = (lon(2) - lon(1))        ; assume dlon is constant
@@ -129,6 +164,10 @@ begin
 
      wgt  = new((/nlat, mlon/), float)
      wgt  = conform(wgt, dydx, 0)
+      wgt!0 = "lat"
+      wgt&lat = newlat
+      wgt!1 = "lon"
+      wgt&lon = lon
 
      globsum  = wgt_areasum2(tracer_emiss,wgt,0)/1e12   ; g -> Tg
        globsum@units = "Tg"
@@ -152,33 +191,54 @@ begin
     ; Year averages
     ;------------------
     year_array = ispan(ystart,yend,1)
-    year_avg_array = new((/dimsizes(year_array)/), float)
+    year_sum_array = new((/dimsizes(year_array)/), float)
     do i = 0, dimsizes(year_array)-1
       year_ind := ind(globsum&time.gt.year_array(i)*10000.and.\
                  globsum&time.lt.(year_array(i)+1)*10000)
-      year_avg_array(i) = sum(globsum(year_ind))
+      year_sum_array(i) = sum(globsum(year_ind))
     end do
 
-     print("Year, emissions of "+tracer+" (Tg)")
-     print(year_array+" "+year_avg_array)
+    ; print("Year, emissions of "+tracer+" (Tg)")
+    ; print(year_array+" "+year_sum_array)
 
     ;------------------
     ; Total average
     ;------------------
-     total_avg = avg(year_avg_array)
-     print(ystart+" to "+yend+", emissions of "+tracer+" (Tg): " + total_avg)
+     total_avg = avg(year_sum_array)
+     print(ystart+" to "+yend+", average yearly emissions of "+tracer+" (Tg): " + total_avg)
+
 
   ;********************************************
   ; Extract regional timeseries
    region_names = (/"Maritime SEA", "Australasia", \
                     "Southern Africa", "South America" /)
   ;             minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10,  10, 110, 180/),\     ;Maritime SEA
+   region_select = (/(/-10,  10, 90, 160/),\     ;Maritime SEA
                      (/-50, -10, 110, 180/),\      ;Australasia
-                     (/-50,   4,   0,  60/),\      ;SAfrica
-                     (/-60,   4, -80, -40/)/)      ;SAmerica
+                     (/-40,   5,   0,  60/),\      ;SAfrica
+                     (/-60,   4, 360-80, 360-40/)/)      ;SAmerica
 
-print(region_select)
+     ; -------------------------------
+     ; sums
+     ; -------------------------------
+     regsum = new((/dimsizes(region_names), dimsizes(yyyymmdd)/), float)
+     ; overwrite -89.999 and 89.999 so subset works correctly.
+      wgt&lat = lat
+     do r = 0, dimsizes(region_names)-1
+       emiss_region := tracer_emiss(:,{region_select(r,0):region_select(r,1)},\
+                                    {region_select(r,2):region_select(r,3)})
+       wgt_region := wgt({region_select(r,0):region_select(r,1)},\
+                         {region_select(r,2):region_select(r,3)})
+       regsum(r,:)= wgt_areasum2(emiss_region,wgt_region,0)/1e12   ; g -> Tg
+     end do
+
+       regsum@units = "Tg"
+       regsum!0 = "region"
+       regsum&region = region_names
+       regsum!1 = "time"
+       regsum&time = time
+
+       ;printVarSummary(regsum)
 
 ;********************************************
 ; Write out to new file
@@ -207,7 +267,7 @@ if (NETCDF) then
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ tracer+\
                                   " from FINN emission ratios applied to QFED CO2, daily"
-        fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg):" + total_avg
+        fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg): " + total_avg
         fAtt@average            = region_names
 
        fileattdef(fout, fAtt)
@@ -224,13 +284,18 @@ if (NETCDF) then
       ;------------
       ; Variables
       ;------------
-
        ;--- date
          fout->date             = yyyymmdd
+
+      do n = 0, dimsizes(region_names)-1
+         bb_name = "bb_"+n
        ;--- emissions
-         fout->bb               = voc_emiss_regrid
+         fout->$bb_name$             = regsum(n, :)
+      end do
 
     end if ;NetCDF
+
+end do ; tracer loop
 
 end
 
