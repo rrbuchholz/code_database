@@ -26,7 +26,7 @@ begin
 ;--------------------------------------------
   ystart = 2014
   yend = 2016
-  res = "0.94x1.2"
+  reso = "0.94x1.2"
 
   ;tracers = (/"CH3OH","CO"/)
   tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
@@ -46,9 +46,9 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   indir = "/data14b/buchholz/qfed/cam_"+res+"/allyears/"
-   outpath = "/data14b/buchholz/qfed/cam_"+res+"/region_sums/"
-   e_file_in = "qfed.emis_"+tracer+"_"+res+"_mol_"+ystart+"_"+yend+".nc"
+   indir = "/data14b/buchholz/qfed/cam_"+reso+"/allyears/"
+   outpath = "/data14b/buchholz/qfed/cam_"+reso+"/region_sums/"
+   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
 
   ; -------------------------------
   ; toggles
@@ -248,7 +248,7 @@ if (NETCDF) then
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "qfed.emis_"+tracer+"_"+res+"_Tg_regional.nc"
+      outfilename = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
       fout = addfile(outpath+outfilename, "c")
 
       ;------------
