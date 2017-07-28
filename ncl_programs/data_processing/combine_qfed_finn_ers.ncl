@@ -70,7 +70,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  netCDF         = False                       ; for netCDF output
+  netCDF         = True                       ; for netCDF output
   PLOT           = True
 ;--------------------------------------------
 ; end user input
