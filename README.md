@@ -4,3 +4,4 @@ Repository to store all my code in one place. Currently, code is present for:
 - perl
 - shell scripts in tcsh
 
+More information and examples can be found in the Wiki.
