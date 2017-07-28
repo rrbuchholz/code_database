@@ -3,11 +3,11 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - Load qfed CO2 files
+;   - Load qfed CO2 (or CO) files
 ;   - Load Christine's emission values
 ;         (separated into 4 land types)
 ;   - Calculate emission factors
-;   - Multiply CO2 by emission factors for each species
+;   - Multiply CO2 (or CO) by emission factors for each species
 ;      and change units to molec/cm^2/s
 ;   - Load Christine's VOC speciation 
 ;   - For VOC speciation - multiply NMOC
@@ -44,14 +44,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2016
+  year = 2014
   outres = "0.94x1.2"
-  outpath = "/data14b/buchholz/qfed/cam_"+outres+"/"+year+"/"
+  ratio_species = "co"
+  species = "CO"
+  outpath = "/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
 
   ; -------------------------------
   ; QFED files
   ; -------------------------------
-  qfed_dir = "/data14b/buchholz/qfed/orig_0.25/co2_"+year+"/"
+  qfed_dir = "/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
   qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
 
   ; -------------------------------
@@ -68,7 +70,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  netCDF         = True                       ; for netCDF output
+  netCDF         = False                       ; for netCDF output
   PLOT           = True
 ;--------------------------------------------
 ; end user input
@@ -243,11 +245,17 @@ begin
   ; compute factors
   ; -------------------------------
    e_factors = e_fields
-   do k=0,nlines-1                                      
-     e_factors(k,:) = e_fields(k,:)/e_fields(k,0)
-   end do
+   if (ratio_species.eq."co2") then
+     do k=0,nlines-1                                      
+       e_factors(k,:) = e_fields(k,:)/e_fields(k,0)
+     end do
+   else if (ratio_species.eq."co") then
+     do k=0,nlines-1                                      
+       e_factors(k,:) = e_fields(k,:)/e_fields(k,1)
+     end do
+   end if
+   end if
      e_factors@units = "g/m^2 per g/m^2"
-
 
   ;********************************************
   ; Non- VOCs
@@ -338,14 +346,15 @@ begin
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = "CO2 is from QFED, Level3b v2.4 "+\
+        fAtt@history            = species+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
         fAtt@author             = "R. R. Buchholz"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ var_names(tracer)+\
-                                  " from FINN emission ratios applied to QFED CO2, daily"
+                                  " from FINN emission ratios applied to QFED" +\
+                                   species+", daily"
 
        fileattdef(fout, fAtt)
        setfileoption(fout, "DefineMode",False)
@@ -373,6 +382,7 @@ begin
     end if ;NetCDF
 
   tracername := var_names(tracer)
+
   end do ;non VOC tracers
 
   ;********************************************
@@ -506,14 +516,15 @@ begin
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = "CO2 is from QFED, Level3b v2.4 "+\
+        fAtt@history            = species+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
         fAtt@author             = "R. R. Buchholz"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ voc_spec(voctype)+\
-                                  " from FINN emission ratios applied to QFED CO2, daily"
+                                  " from FINN emission ratios applied to QFED "+\
+                                   species+", daily"
 
 
        fileattdef(fout, fAtt)
