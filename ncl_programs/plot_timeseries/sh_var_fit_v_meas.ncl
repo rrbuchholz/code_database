@@ -28,7 +28,7 @@ begin
   location_title = "Maritime SEA"
   
   PLOT = True
-    plottype = "pdf"
+    plottype = "x11"
       ;plottype@wkWidth  = 1500
       ;plottype@wkHeight = 800
       plottype@wkPaperWidthF  = 7.0 ;for pdf
@@ -36,6 +36,7 @@ begin
     plotname = "~/Documents/BB_variability/Statistic_results/"+location+"_meas_v_mod"
 
   PREDICT = False
+  TOP_THREE = True
 ; =========================================
 ; SET UP
 ; =========================================
@@ -98,6 +99,15 @@ if (PREDICT) then
   fit_file2 = location+"_2014_fitted.txt"
   fit_file3 = location+"_2014_pred.txt"
 
+else if (TOP_THREE) then
+  fit_file2 = location+"2fitted.txt"
+  fit_file3 = location+"3fitted.txt"
+
+end if
+end if
+
+
+if (PREDICT.or.TOP_THREE) then
   ;---Read in Fit #2 
   linesIII  = asciiread(fit_loc+fit_file2,-1,"string")
   delim  = ""
@@ -120,6 +130,7 @@ if (PREDICT) then
   data(2,:) = fit_anom_3
 
 end if
+
 
 ; ----------------------------------------
 ; Calculate residual
@@ -187,7 +198,7 @@ if (PLOT) then
     res2@pmLegendWidthF           = 0.10            ; Change width and
     res2@lgLabelFontHeightF       = 0.024
     res2@xyExplicitLegendLabels   = "Measured anomaly"
-  if (PREDICT) then
+  if (PREDICT.or.TOP_THREE) then
     res2@pmLegendOrthogonalPosF   = -1.60
     res2@pmLegendParallelPosF     = 0.83
   else
@@ -246,6 +257,44 @@ if (PLOT) then
      res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
    plot3  = gsn_csm_xy (wks,yearfrac,data(2:1,:),res2)  ; create plot
 
+  else if (TOP_THREE) then
+    ;-----------------------------------
+    ; Remove overplot of legend
+    ;-----------------------------------
+    ;-----------------------------------
+    ; Add in legend for fits
+    ;-----------------------------------
+     res2@pmLegendDisplayMode      = "Always"        ; turn on legend
+     res2@gsnLeftString            := ""             ; Label Bar title
+     res2@xyExplicitLegendLabels   := (/ "Model 1", "Model 2", "Model 3"/)
+     res2@pmLegendOrthogonalPosF   = -1.68
+     res2@pmLegendParallelPosF     = 0.50
+
+    ;-----------------------------------
+    ; Fit
+    ;-----------------------------------
+     ; new tickmark
+     filled_tri = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 0.0)
+     filled_tri2 = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 180.0)
+
+     res2@xyMarkLineModes         := (/"Markers","Markers","Markers"/)
+     res2@xyMarkers               :=  (/16,filled_tri2,filled_tri/)    ; choose type of marker  
+     res2@xyMarkerColors          := (/"green","mediumpurple2","darkorange2"/)  ; Marker color
+     res2@xyMarkerOpacityF        := (/0.75,0.75,0.75/)
+     res2@xyMarkerSizeF           = 0.016          ; Marker size (default 0.01)
+
+   plot2  = gsn_csm_xy (wks,yearfrac,data,res2) ; create plot
+
+    ;-----------------------------------
+    ; Outlines
+    ;-----------------------------------
+    res2@xyMarkers                := (/4,8,7/)               ; choose type of marker  
+    res2@xyMarkerColors           := (/"darkgreen","mediumpurple4","darkorange4"/)         ; Marker color
+    res2@xyMarkerThicknessF       = 4
+     res2@xyMarkerOpacityF        := (/1,1,1/)
+     res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
+   plot3  = gsn_csm_xy (wks,yearfrac,data,res2)  ; create plot
+
   else
     ;-----------------------------------
     ; Add in legend for fit
@@ -270,6 +319,8 @@ if (PLOT) then
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
   end if
+  end if
+
    overlay(plot1,plot2)
    overlay(plot1,plot3)
   ;-----------------------------------
@@ -288,7 +339,7 @@ if (PLOT) then
      res2@tmYRLabelJust           = "CenterRight"
      res2@tiYAxisString           = "Residual"
      res2@xyMarkers               :=  2             ; choose type of marker  
-     res2@xyMarkerOpacityF        = 1
+     res2@xyMarkerOpacityF        := 1
      res2@xyMarkerThicknessF      = 4
      res2@xyExplicitLegendLabels  := ""
      res2@xyMarkerColor           = "grey50"       ; Marker color
@@ -325,7 +376,7 @@ if (PLOT) then
 ;  attach plots
 ; ----------------------------------------
 
-  if (PREDICT) then
+  if (PREDICT.or.TOP_THREE) then
     ; no residual
   else
   resa                     = True
