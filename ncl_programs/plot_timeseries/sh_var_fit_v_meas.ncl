@@ -29,11 +29,11 @@ begin
   
   PLOT = True
     plottype = "x11"
-      ;plottype@wkWidth  = 1500
-      ;plottype@wkHeight = 800
-      plottype@wkPaperWidthF  = 7.0 ;for pdf
-      plottype@wkPaperHeightF = 20  ;for pdf
-    plotname = "~/Documents/BB_variability/Statistic_results/"+location+"_meas_v_mod"
+      plottype@wkWidth  = 1500
+      plottype@wkHeight = 800
+      ;plottype@wkPaperWidthF  = 7.0 ;for pdf
+      ;plottype@wkPaperHeightF = 20  ;for pdf
+    plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
 
   PREDICT = False
   TOP_THREE = True
@@ -266,9 +266,9 @@ if (PLOT) then
     ;-----------------------------------
      res2@pmLegendDisplayMode      = "Always"        ; turn on legend
      res2@gsnLeftString            := ""             ; Label Bar title
-     res2@xyExplicitLegendLabels   := (/ "Model 1", "Model 2", "Model 3"/)
-     res2@pmLegendOrthogonalPosF   = -1.68
-     res2@pmLegendParallelPosF     = 0.50
+     res2@xyExplicitLegendLabels   := (/"Model 3","Model 2","Model 1" /)
+     res2@pmLegendOrthogonalPosF   = -1.70
+     res2@pmLegendParallelPosF     = 0.58
 
     ;-----------------------------------
     ; Fit
@@ -276,24 +276,25 @@ if (PLOT) then
      ; new tickmark
      filled_tri = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 0.0)
      filled_tri2 = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 180.0)
+     filled_sq = NhlNewMarker(wks, "y", 35, 0.0, 0.0, 1.0, 1.0, 0.0)
 
      res2@xyMarkLineModes         := (/"Markers","Markers","Markers"/)
-     res2@xyMarkers               :=  (/16,filled_tri2,filled_tri/)    ; choose type of marker  
-     res2@xyMarkerColors          := (/"green","mediumpurple2","darkorange2"/)  ; Marker color
+     res2@xyMarkers               :=  (/filled_sq,filled_tri,16/)    ; choose type of marker  
+     res2@xyMarkerColors          := (/"limegreen","mediumpurple2","darkorange2"/)  ; Marker color
      res2@xyMarkerOpacityF        := (/0.75,0.75,0.75/)
-     res2@xyMarkerSizeF           = 0.016          ; Marker size (default 0.01)
+     res2@xyMarkerSizes           := (/0.013,0.019,0.014/)         ; Marker size (default 0.01)
 
-   plot2  = gsn_csm_xy (wks,yearfrac,data,res2) ; create plot
+   plot2  = gsn_csm_xy (wks,yearfrac,data(2:0,:),res2) ; create plot
 
     ;-----------------------------------
     ; Outlines
     ;-----------------------------------
-    res2@xyMarkers                := (/4,8,7/)               ; choose type of marker  
+    res2@xyMarkers                := (/6,7,4/)               ; choose type of marker  
     res2@xyMarkerColors           := (/"darkgreen","mediumpurple4","darkorange4"/)         ; Marker color
     res2@xyMarkerThicknessF       = 4
-     res2@xyMarkerOpacityF        := (/1,1,1/)
-     res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
-   plot3  = gsn_csm_xy (wks,yearfrac,data,res2)  ; create plot
+     ;res2@xyMarkerOpacityF        := (/1,1,1/)
+     res2@xyMarkerSizes           := (/0.014,0.015,0.013/)    ; Marker size (default 0.01)
+   plot3  = gsn_csm_xy (wks,yearfrac,data(2:0,:),res2)  ; create plot
 
   else
     ;-----------------------------------
@@ -366,7 +367,7 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-  if (PREDICT) then
+  if (PREDICT.or.TOP_THREE) then
     gsn_text_ndc(wks,location_title,0.165,0.569,txres)
   else
     gsn_text_ndc(wks,location_title,0.150,0.590,txres)
