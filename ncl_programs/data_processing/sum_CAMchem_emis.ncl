@@ -27,6 +27,8 @@ begin
   ystart = 2014
   yend = 2016
   reso = "0.94x1.2"
+  species = "co"
+  s_name = "CO"
 
   ;tracers = (/"CH3OH","CO"/)
   tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
@@ -46,8 +48,8 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   indir = "/data14b/buchholz/qfed/cam_"+reso+"/allyears/"
-   outpath = "/data14b/buchholz/qfed/cam_"+reso+"/region_sums/"
+   indir = "/data14b/buchholz/qfed/cam_"+reso+"/from_"+species+"/allyears/"
+   outpath = "/data14b/buchholz/qfed/cam_"+reso+"/from_"+species+"/region_sums/"
    e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
 
   ; -------------------------------
@@ -259,14 +261,14 @@ if (NETCDF) then
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = "CO2 is from QFED, Level3b v2.4 "+\
+        fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
         fAtt@author             = "R. R. Buchholz"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ tracer+\
-                                  " from FINN emission ratios applied to QFED CO2, daily"
+                                  " from FINN emission ratios applied to QFED "+s_name+", daily"
         fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg): " + total_avg
         fAtt@average            = region_names
 

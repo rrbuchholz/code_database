@@ -237,7 +237,7 @@ begin
     e_fields&vegtype = ltype
     e_fields!1 = "tracer"
     e_fields&tracer = var_names
-    e_fields@units = "g/m^2"
+    e_fields@units = "g/kg"
     e_fields@_FillValue = -9999.99
     e_fields = where(ismissing(e_fields),0,e_fields) ; replace missing with zeros for calculations
 
@@ -255,7 +255,7 @@ begin
      end do
    end if
    end if
-     e_factors@units = "g/m^2 per g/m^2"
+     e_factors@units = "g/kg per g/kg"
 
   ;********************************************
   ; Non- VOCs
