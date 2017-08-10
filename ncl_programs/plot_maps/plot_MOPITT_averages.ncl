@@ -160,9 +160,9 @@ begin
       ;-------------------------------------
       mapres@mpMinLatF               = -70       ; zoom to SH
       mapres@mpMaxLatF               = 15
-      mapres@mpMinLonF               = -105
+      mapres@mpMinLonF               = -110
       mapres@mpMaxLonF               = 245
-      mapres@mpCenterLonF            = 70
+      ;mapres@mpCenterLonF            = 70
 
     ;-----------------------------------
     ; end define resources
@@ -197,17 +197,17 @@ begin
     ; SD plot
     ; ===================
     mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    mapres@lbTitleString             = "CV"             ; Label Bar title
-    labels := fspan(2.5, 40, 16)
-    labels_strings := (/"2.5","5.0","7.5","10","12.5",\
-                       "15","17.5","20","22.5","25",\
-                       "27.5","30","32.5","35","37.5","40"/)
-    ;mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    ;labels := fspan(0.5e17,7.5e17, 15)
-    ;labels_strings := (/"0.5","1.0","1.5","2.0","2.5",\
-    ;                   "3.0","3.5","4.0","4.5","5.0",\
-    ;                   "5.5","6.0","6.5","7.0","7.5"/)
-    ;print(labels)
+    mapres@lbTitleString             = "SD"             ; Label Bar title
+    ;labels := fspan(2.5, 40, 16)
+    ;labels_strings := (/"2.5","5.0","7.5","10","12.5",\
+    ;                   "15","17.5","20","22.5","25",\
+    ;                   "27.5","30","32.5","35","37.5","40"/)
+    mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
+    labels := fspan(0.0e17,8.0e17, 16)
+    labels_strings := (/"0", "0.5", "1.0","1.5","2.0","2.5",\
+                       "3.0","3.5","4.0","4.5","5.0",\
+                       "5.5","6.0","6.5","7.0","7.5"/)
+    print(labels)
     mapres@cnLevels                  := labels
     mapres@lbLabelStrings            := labels_strings
      ;tcol
@@ -220,8 +220,8 @@ begin
     ;  mapres@cnMaxLevelValF          = 30.         ; set the maximum contour level
     ;  mapres@cnLevelSpacingF         = 0.5          ; set the interval between contours
 
-    map2 = gsn_csm_contour_map_ce(wks,rel_sd(::-1,:),mapres)
-  ;  map2 = gsn_csm_contour_map_ce(wks,sd_tracer(::-1,:),mapres)
+  ;  map2 = gsn_csm_contour_map_ce(wks,rel_sd(::-1,:),mapres)
+    map2 = gsn_csm_contour_map_ce(wks,sd_tracer(::-1,:),mapres)
 
     ;-------------------
     ; draw region boxes
@@ -243,15 +243,15 @@ begin
     do j=0,dimsizes(region_name)-1
      region_lon := (/lonmin(j), lonmin(j), lonmax(j), lonmax(j), lonmin(j)/)
      region_lat := (/latmin(j), latmax(j), latmax(j), latmin(j), latmin(j)/)
-     dum(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxres)
-     ;dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxres)
+     dum(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
+     ;dum2(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
     end do
 
     ;-------------------
     ; draw climate index boxes
     ;-------------------
     boxresII = True
-      boxresII@gsLineColor      = "red"
+      boxresII@gsLineColor      = "red2"
       boxresII@gsLineThicknessF = 5
 
       index_name = (/"NINO 3.4","DMI","DMI2","TSA"/)
@@ -265,7 +265,7 @@ begin
     do j=0,dimsizes(index_name)-1
      region_lon := (/index_lonmin(j), index_lonmin(j), index_lonmax(j), index_lonmax(j), index_lonmin(j)/)
      region_lat := (/index_latmin(j), index_latmax(j), index_latmax(j), index_latmin(j), index_latmin(j)/)
-     dum2(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxresII)
+     dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxresII)
     end do
 
     ;-------------------
@@ -277,8 +277,8 @@ begin
       arrow_res@gsLineColor      = "white"
       arrow_res@gsLineThicknessF = 5.0
     do j = 0,dimsizes(aao_lines_up)-1
-      aao_lines_up(j)=add_arrow(wks, map,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
-      aao_lines_down(j)=add_arrow(wks, map,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
+      aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
+      aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
     end do
 
 
@@ -299,31 +299,31 @@ begin
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1
       if (k.eq.2) then
-        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
       else if (k.eq.5) then
-        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-35,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-35,txres)
       else if (k.eq.6)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmin(k)-2, latmax(k)-35,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-2, latmax(k)-35,txres)
       else
-        text(k) = gsn_add_text(wks,map2,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
       end if
       end if
       end if
     end do
 
-        txres@txFontColor    = "red"
+        txres@txFontColor    = "red2"
         txres@txJust         = "BottomRight"
     textII = new(dimsizes(index_name),graphic)
     do k=0,dimsizes(index_name)-1
       if (k.eq.2) then
         continue;
       else if (k.eq.0)
-        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
       else if (k.eq.1)
-        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+35, index_latmin(k)-20,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-20,txres)
       else 
-        textII(k) = gsn_add_text(wks,map,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
        end if
        end if
        end if
@@ -331,7 +331,7 @@ begin
 
         txres@txFontColor    = "white"
         txres@txJust         = "CenterCenter"
-        textIII = gsn_add_text(wks,map,"AAO",55, -55,txres)
+        textIII = gsn_add_text(wks,map2,"SAM",55, -55,txres)
 
     ; ===================
     ; panel the plots
@@ -352,7 +352,7 @@ begin
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) Coefficient of variation"/)
+  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) SD"/)
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
   panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True
