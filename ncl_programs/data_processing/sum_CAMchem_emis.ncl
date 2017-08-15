@@ -27,8 +27,9 @@ begin
   ystart = 2014
   yend = 2016
   reso = "0.94x1.2"
-  species = "co"
-  s_name = "CO"
+
+  FINN = False
+    s_name = "CO"
 
   ;tracers = (/"CH3OH","CO"/)
   tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
@@ -36,7 +37,6 @@ begin
               "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
               "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
               "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
-  ; BIGALD, BIGALK, BIGENE, C10H16, C2H4, C2H5OH, C2H6, C3H6, C3H8, CB1, CB2, CH2O, CH3CHO, CH3COCH3, CH3COCHO, CH3COOH, CH3OH, CO, CRESOL, GLYALD, HYAC, ISOP, MACR, MEK, MVK, NH3, NO, OC1, OC2, SO2, TOLUENE
   ; no MW data: XYLENE, BENZ
 
   ; -------------------------------
@@ -48,9 +48,16 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   indir = "/data14b/buchholz/qfed/cam_"+reso+"/from_"+species+"/allyears/"
-   outpath = "/data14b/buchholz/qfed/cam_"+reso+"/from_"+species+"/region_sums/"
+   top_dir = "/data14b/buchholz/"
+   emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded/"
+   indir = emis_dir+"/allyears/"
+   outpath = emis_dir+"/region_sums/"
    e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+
+    if (.not.isfilepresent(indir+e_file_in)) then
+      print("No file for tracer:" + tracer)
+      continue  ; skip all the next bit and go to next file
+    end if
 
   ; -------------------------------
   ; toggles
@@ -261,14 +268,22 @@ if (NETCDF) then
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
+        fAtt@creation_date      = systemfunc ("date")
+        fAtt@author             = "R. R. Buchholz"
+        if FINN then
+          fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
-        fAtt@author             = "R. R. Buchholz"
-        fAtt@creation_date      = systemfunc ("date")
-        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
-        fAtt@title              = "Emissions of "+ tracer+\
+          fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
+          fAtt@title              = "Emissions of "+ tracer+\
                                   " from FINN emission ratios applied to QFED "+s_name+", daily"
+        else
+          fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
+                                  "(qfed-2_4_r6) Gridded Emission Estimates"
+          fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group"
+          fAtt@title              = "Emissions of "+ tracer+" from QFED, daily"
+        end if
+
         fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg): " + total_avg
         fAtt@average            = region_names
 
