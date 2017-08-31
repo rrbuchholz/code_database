@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "SouthSAfrica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "WestSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
@@ -45,7 +45,7 @@ begin
     loc = "MaritimeSEA"
   end if
 
-  location_title = "Maritime SEA"
+  location_title = loc
     year_s = 2001
     year_e = 2017
 
@@ -254,7 +254,7 @@ print(month_co_avg(sep09))
   yi = month_co_avg(ind_data)
   xo = month_avg_yfrac
   yo = ftcurv(xi, yi, xo)
-  new_month_co_avg = where(ismissing(month_co_avg),yo,month_co_avg)
+  new_month_co_avg = tofloat(where(ismissing(month_co_avg),yo,month_co_avg))
 print(new_month_co_avg(sep09))
 
   ; -------------------------------
@@ -463,6 +463,7 @@ if (CSV) then
   print("========================================")
 end if ;CSV
 
+
 ;--------------------------------------------
 ; Write out to a netCDF file
 ;--------------------------------------------
@@ -474,12 +475,18 @@ if (NETCDF) then
   ; File 
   ; Attributes
   ;------------
+  region_def = str_split (month_co_avg@average_op_ncl,":")
+
   setfileoption(fout, "DefineMode",True)
     fAtt                      = True
-      fAtt@title              = "Anomalies from MOPITT CO for " +location
-      fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals"
+      fAtt@email              = "buchholz@ucar.edu"
+      fAtt@author             = "R. R. Buchholz"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
+      fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
+      fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
+      fAtt@region_definition  = location + " -->" +region_def(1)
+      fAtt@title              = "Month average anomalies from MOPITT CO for " +location
 
      fileattdef(fout, fAtt)
   setfileoption(fout, "DefineMode",False)
@@ -493,45 +500,56 @@ if (NETCDF) then
   time_array@units             = "YYYYMM"
   time_array!0                 = "time"
 
-  new_month_co_avg@long_name      = "MOPITTCO_TotalColumn"
-  new_month_co_avg@units          = "molec/cm^2"
-  new_month_co_avg!0              = "time"
-  new_month_co_avg&time           = climate_time
-  new_month_co_avg@_FillValue         = -999.99
-
-  month_co_avg@long_name          = "MOPITTCO_TotalColumn"
+  month_co_avg@long_name          = "MOPITT_CO_TotalColumn"
   month_co_avg@units              = "molec/cm^2"
   month_co_avg!0                  = "time"
   month_co_avg&time               = climate_time
-  month_co_avg@_FillValue         = -999.99
+  month_co_avg@_FillValue         = 9.969209968386869e+36
+  delete(month_co_avg@average_op_ncl)
 
-  month_co_sd@long_name           = "MOPITTCO_StdDev"
+  month_co_avg@long_name          = "MOPITT_CO_TotalColumn"
+  month_co_avg@units              = "molec/cm^2"
+  month_co_avg!0                  = "time"
+  month_co_avg&time               = climate_time
+  month_co_avg@_FillValue         = 9.96921e+36 
+
+  month_co_sd@long_name           = "MOPITT_CO_StdDev"
   month_co_sd@units               = "molec/cm^2"
   month_co_sd!0                   = "time"
   month_co_sd&time                = climate_time
-  month_co_sd@_FillValue          = -999.99
+  month_co_sd@_FillValue          = 9.96921e+36 
 
-  month_err_avg@long_name         = "MOPITTCO_Column_Error"
+  month_err_avg@long_name         = "MOPITT_CO_Column_Error"
   month_err_avg@units             = "molec/cm^2"
   month_err_avg!0                 = "time"
   month_err_avg&time              = climate_time
-  month_err_avg@_FillValue        = -999.99
+  month_err_avg@_FillValue        = 9.96921e+36 
+  delete(month_err_avg@average_op_ncl)
 
-  month_anomaly@long_name         = "MOPITTCO_Anomaly"
+  new_month_co_avg@long_name      = "MOPITT_CO_TotalColumn_SplineFit"
+  new_month_co_avg@units          = "molec/cm^2"
+  new_month_co_avg!0              = "time"
+  new_month_co_avg&time           = climate_time
+  new_month_co_avg@_FillValue     = 9.96921e+36
+  new_month_co_avg@comment        = "Missing values filled using spline fit. Required for regression analysis."
+
+  month_anomaly@long_name         = "MOPITT_CO_Anomaly"
   month_anomaly@units             = "molec/cm^2"
   month_anomaly!0                 = "time"
   month_anomaly&time              = climate_time
 
-  ;fout->TIME  = time_array
-  fout->MOPITT_CO_TCOL = new_month_co_avg
+  ;------------
+  ; Write to
+  ; file
+  ;------------
+  fout->MOPITT_CO_TCOL = month_co_avg
   fout->MOPITT_CO_SD = month_co_sd
   fout->MOPITT_CO_ERR = month_err_avg
+  fout->MOPITT_CO_TCOL_FILLED = new_month_co_avg
   fout->MOPITT_CO_ANOMALY = month_anomaly
 
 
 end if ;NETCDF
-
-
 
 end
 

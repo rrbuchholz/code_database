@@ -70,7 +70,7 @@ begin
   ; -------------------------------
   ; names of data structures
   ; determined from an ncl_filedump
-  sat_tcol      = "MOPITT_CO_TCOL"
+  sat_tcol      = "MOPITT_CO_TCOL_FILLED"
   sat_anom      = "MOPITT_CO_ANOMALY"
   timearray     = "time"
 
