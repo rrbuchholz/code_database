@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "WestSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
