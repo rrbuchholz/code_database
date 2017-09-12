@@ -29,7 +29,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2014
+  year = 2016
   outres = "0.94x1.2"
   input_species = "co"
   species = "CO"
@@ -143,7 +143,14 @@ begin
   ; -------------------------------
     fin = addfiles(gfas_files, "r")            ; read in
     ListSetType (fin, "cat") 
-      tracer_all       = fin[:]->$gfas_tracer$
+      tracer_dummy       = fin[:]->$gfas_tracer$
+      tracer_all:= short2flt(tracer_dummy(:,::-1,:)) ; reorder N->S to S->N
+      copy_VarAtts(tracer_dummy,tracer_all)
+      tracer_all!1 = "latitude"
+      tracer_all&latitude = tracer_dummy&latitude(::-1)
+      tracer_all!2 = "longitude"
+      tracer_all&longitude = tracer_dummy&longitude
+     printVarSummary(tracer_all)
 
       ; load and convert time format
       time_dummy       = fin[:]->$gfas_time$
@@ -180,13 +187,9 @@ begin
   ;********************************************
   ; Regrid and gfas for CAM-chem input
   ; -------------------------------
-     printVarSummary(tracer_all)
-    tracer_emiss:= tofloat(tracer_all(:,::-1,:)) ; reorder N->S to S->N
+    tracer_emiss:= tracer_all
       copy_VarAtts(tracer_all,tracer_emiss)
       copy_VarCoords(tracer_all,tracer_emiss)
-      delete(tracer_emiss&latitude)
-      tracer_emiss!1 = "latitude"
-      tracer_emiss&latitude = tracer_all&latitude(::-1)
      printVarSummary(tracer_emiss)
 
     ; -------------------------------
@@ -314,10 +317,10 @@ begin
     ;  mapres@mpMinLonF               = 100
      ; mapres@mpMaxLonF               = 160
 
-    ;mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-    ;  mapres@cnMinLevelValF          = 1e09                ; set the minimum contour level
-    ;  mapres@cnMaxLevelValF          = 5e10                ; set the maximum contour level
-    ;  mapres@cnLevelSpacingF         = 1e10                ; set the interval between contours
+    mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
+      mapres@cnMinLevelValF          = 1e11                ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 2.5e12                ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 1e11                ; set the interval between contours
 
     ;-------------------
     ; do the plotting
