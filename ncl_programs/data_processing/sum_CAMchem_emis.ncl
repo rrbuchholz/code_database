@@ -28,15 +28,16 @@ begin
   yend = 2016
   reso = "0.94x1.2"
 
-  FINN = False
-    s_name = "CO"
+  repository = "FINN"
+    s_name = ""
 
+  tracers = (/"CO"/)
   ;tracers = (/"CH3OH","CO"/)
-  tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
-              "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
-              "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
-              "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
-              "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
+  ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
+  ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
+  ;            "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
+  ;            "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
+  ;            "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
   ; no MW data: XYLENE, BENZ
 
   ; -------------------------------
@@ -49,10 +50,19 @@ do t = 0, dimsizes(tracers)-1
   ; emission files
   ; -------------------------------
    top_dir = "/data14b/buchholz/"
-   emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded/"
+  if (repository.eq."FINN") then
+   emis_dir = top_dir+ "finn/cam_0.9x1.25"
+   e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
+  else if (repository.eq."QFED/FINN".or.\
+           repository.eq."QFED") then
+   emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
+   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+  end if
+  end if
+
    indir = emis_dir+"/allyears/"
    outpath = emis_dir+"/region_sums/"
-   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+
 
     if (.not.isfilepresent(indir+e_file_in)) then
       print("No file for tracer:" + tracer)
@@ -80,7 +90,11 @@ do t = 0, dimsizes(tracers)-1
   ; names of data structures
   ; "anthro", "bb", "ocean"
   ; -------------------------------
-  emiss           = "bb"
+  if (repository.eq."FINN") then
+    emiss           = "fire"
+  else
+    emiss           = "bb"
+  end if
 
   ; -------------------------------
   ; constants
@@ -207,8 +221,8 @@ do t = 0, dimsizes(tracers)-1
       year_sum_array(i) = sum(globsum(year_ind))
     end do
 
-    ; print("Year, emissions of "+tracer+" (Tg)")
-    ; print(year_array+" "+year_sum_array)
+     print("Year, emissions of "+tracer+" (Tg)")
+     print(year_array+" "+year_sum_array)
 
     ;------------------
     ; Total average
@@ -270,18 +284,23 @@ if (NETCDF) then
         fAtt@conventions        = "CF"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@author             = "R. R. Buchholz"
-        if FINN then
+        if (repository.eq."QFED/FINN") then
           fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
           fAtt@title              = "Emissions of "+ tracer+\
                                   " from FINN emission ratios applied to QFED "+s_name+", daily"
-        else
+        else if (repository.eq."QFED") then
           fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates"
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group"
           fAtt@title              = "Emissions of "+ tracer+" from QFED, daily"
+        else if (repository.eq."FINN") then
+          fAtt@history            = s_name+" is from FINN, v1.5"
+          fAtt@title              = "Emissions of "+ tracer+" from FINN, daily"
+        end if
+        end if
         end if
 
         fAtt@globalavg          = ystart+" to "+yend+" average global yearly emissions of "+tracer+" (Tg): " + total_avg

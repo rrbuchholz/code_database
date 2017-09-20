@@ -24,29 +24,31 @@ begin
   reso = "0.94x1.2"
   
   PLOT = True
-    plottype = "x11"
-      ;plottype@wkWidth  = 1200
-      ;plottype@wkHeight = 1200
+    plottype = "png"
+      plottype@wkWidth  = 1200
+      plottype@wkHeight = 1200
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
-    ;plotname = "test"
+    plotname = "~/FINNvQFED"
 
 
 ; =========================================
 ; SET UP
 ; =========================================
 
-  order = (/"QFED x CO", "QFED x CO2", "QFED"/)
+  ;order = (/"QFED x CO", "QFED x CO2", "QFED", "FINN"/)
+  order = (/ "QFED", "FINN"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
    top_dir = "/data14b/buchholz/"
-   emis_dir = "qfed/cam_"+reso+"/"
-   indir = top_dir+emis_dir
+   qfed_dir = "qfed/cam_"+reso+"/"
+   finn_dir = "finn/cam_"+reso+"/"
    ;e_file_in = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
-   e_file_in = (/"from_co/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
-                 "from_co2/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
-                 "regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"/)  
+   e_file_in = (/;qfed_dir+"from_co/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
+                 ;qfed_dir+"from_co2/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
+                 qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
+                 finn_dir+"region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"/)  
 
   ; -------------------------------
   ; data names (from ncl_filedump)
@@ -60,9 +62,9 @@ begin
 ; ----------------------------------------
 ; Load data 1
 ; ----------------------------------------
-print(indir+e_file_in(0))
+print(top_dir+e_file_in(0))
 
-    fin = addfile(indir+e_file_in(0), "r")
+    fin = addfile(top_dir+e_file_in(0), "r")
       time := fin->time
       yfrac = tofloat(cd_calendar(time,4))
 
@@ -73,13 +75,23 @@ print(indir+e_file_in(0))
 
   ; collect each file
   do i=0,dimsizes(e_file_in)-1
-    fin := addfile(indir+e_file_in(i), "r")
-      emiss_in1(i,:)     = fin->$emiss1$
-      emiss_in2(i,:)     = fin->$emiss2$
-      emiss_in3(i,:)     = fin->$emiss3$
-      emiss_in4(i,:)     = fin->$emiss4$
+  ;do i=0,2
+    fin := addfile(top_dir+e_file_in(i), "r")
+      dummy_1     := fin->$emiss1$
+      dummy_2     := fin->$emiss2$
+      dummy_3     := fin->$emiss3$
+      dummy_4     := fin->$emiss4$
+      time_dummy  := fin->time
+      yfrac_dummy := tofloat(cd_calendar(time_dummy,4))
 
-      yfrac = tofloat(cd_calendar(time,4))
+      range_ind := ind(yfrac_dummy.ge.2014.and.yfrac_dummy.lt.2017)
+printVarSummary(range_ind)
+printVarSummary(dummy_1)
+printVarSummary(emiss_in1)
+      emiss_in1(i,:) = dummy_1(range_ind)
+      emiss_in2(i,:) = dummy_2(range_ind)
+      emiss_in3(i,:) = dummy_3(range_ind)
+      emiss_in4(i,:) = dummy_4(range_ind)
   end do
 
 printVarSummary(emiss_in1)
@@ -124,7 +136,7 @@ printVarSummary(emiss_in1)
 ; =========================================
 if (PLOT) then
 
- wks   = gsn_open_wks ("x11","xy")               ; send graphics to PNG file
+ wks   = gsn_open_wks (plottype,plotname)               ; send graphics to PNG file
 
   ;--------------------------
   ; Plot set-up
