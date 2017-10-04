@@ -35,15 +35,16 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "EastSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
 
-  version = "V7T"
+  version = "V7J"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
-  mopitt_files = systemfunc ("ls "+data_folder+"SH_regions_v7/"+loc+"*.nc")
+  mopitt_files = systemfunc ("ls "+data_folder+"SH_regions_v7/"+loc+"_"+version+"*.nc")
 
   if (loc.eq."Indonesia") then
     loc = "MaritimeSEA"
   end if
+
 
   location_title = loc
     year_s = 2001
@@ -70,12 +71,13 @@ begin
 
 
   
-  CSV            = False
+  CSV            = True
   if (CSV) then
-     outname      = loc+"_"+version+"MOPITTanomalies.csv"
+     outname      = data_folder+"/V7/anomalies/"+\
+                     loc+"_"+version+"MOPITTanomalies.csv"
   end if
 
-  NETCDF            = True
+  NETCDF            = False
   if (NETCDF) then
      nc_outname      = data_folder+"/V7/anomalies/"+\
                         loc+"_"+version+"MOPITTanomalies.nc"

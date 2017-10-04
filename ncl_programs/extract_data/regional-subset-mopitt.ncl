@@ -31,10 +31,10 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7T"
+  version = "V7J"
   year = 2016
-  ; V6 T and N work all files
-  all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02T-"+year+"*.he5")
+  ; V6 T and N work all files, V7 all versions work
+  all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02J-"+year+"*.he5")
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
   ;dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02J-"+year+"*.he5")
   ;all_files = dummy(344:346)
@@ -43,7 +43,8 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "WestSAmerica"
+  outfolder = "~/MOPITT_subset/SH_regions_v7/"
+  location = "EastSAmerica"
 ;SAmerica,Indonesia
 
   ;------------
@@ -173,7 +174,7 @@ begin
   end if
 
   if (netCDF) then
-     outname      = location+"_"+version+"subset_"+year+".nc"
+     outname      = outfolder+location+"_"+version+"subset_"+year+".nc"
   end if
 
   ; number of files to be read
