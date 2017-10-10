@@ -31,10 +31,10 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7J"
-  year = 2016
+  version = "V7T"
+  year = 2010
   ; V6 T and N work all files, V7 all versions work
-  all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02J-"+year+"*.he5")
+  all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02T-"+year+"*.he5")
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
   ;dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02J-"+year+"*.he5")
   ;all_files = dummy(344:346)
@@ -44,7 +44,7 @@ begin
   ; select location
   ;------------
   outfolder = "~/MOPITT_subset/SH_regions_v7/"
-  location = "EastSAmerica"
+  location = "WCentralSAmerica"
 ;SAmerica,Indonesia
 
   ;------------
@@ -144,6 +144,31 @@ begin
    bottomboundary  = -58.
    rightboundary   = -32.
    leftboundary    = -83.
+  else if (location.eq."NorthSAmerica") then
+   topboundary     = 10.
+   bottomboundary  = -5.
+   rightboundary   = -32.
+   leftboundary    = -83.
+  else if (location.eq."CentralSAmerica") then
+   topboundary     = -5.
+   bottomboundary  = -25.
+   rightboundary   = -32.
+   leftboundary    = -83.
+  else if (location.eq."ECentralSAmerica") then
+   topboundary     = -5.
+   bottomboundary  = -25.
+   rightboundary   = -32.
+   leftboundary    = -60.
+  else if (location.eq."WCentralSAmerica") then
+   topboundary     = -5.
+   bottomboundary  = -25.
+   rightboundary   = -60.
+   leftboundary    = -83.
+  else if (location.eq."SouthSAmerica") then
+   topboundary     = -25.
+   bottomboundary  = -58.
+   rightboundary   = -32.
+   leftboundary    = -83.
   else if (location.eq."WestSAmerica") then
    topboundary     = 5.
    bottomboundary  = -58.
@@ -159,6 +184,11 @@ begin
    bottomboundary  = -10.
    rightboundary   = 165.
    leftboundary    = 91.
+  end if
+  end if
+  end if
+  end if
+  end if
   end if
   end if
   end if
