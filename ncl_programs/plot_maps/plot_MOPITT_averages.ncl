@@ -235,7 +235,7 @@ begin
       latmin = (/-25.,-50.,-10.,-25.,-40.,-60.,-60./)
       latmax = (/-10.,-25.,10.,-10.,-25.,4.,4./)
       lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-40 + 360.,-60 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360./)
 
    ; -----------------------------------------------------
     dum = new(dimsizes(region_name),graphic)
@@ -352,7 +352,7 @@ begin
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) SD"/)
+  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) CO Std. Dev."/)
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
   panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True

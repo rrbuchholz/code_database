@@ -29,12 +29,12 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "WestSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"*.nc")
 
-  location_title = "West South America"
+  location_title = "Maritime SEA"
   sub_label = "(a) "
     year_s = 2001
     year_e = 2017
@@ -43,7 +43,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
