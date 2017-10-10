@@ -35,9 +35,9 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "EastSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "ECentralSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
 
-  version = "V7J"
+  version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
   mopitt_files = systemfunc ("ls "+data_folder+"SH_regions_v7/"+loc+"_"+version+"*.nc")
 
@@ -77,7 +77,7 @@ begin
                      loc+"_"+version+"MOPITTanomalies.csv"
   end if
 
-  NETCDF            = False
+  NETCDF            = True
   if (NETCDF) then
      nc_outname      = data_folder+"/V7/anomalies/"+\
                         loc+"_"+version+"MOPITTanomalies.nc"

@@ -231,11 +231,11 @@ begin
       boxres@gsLineThicknessF = 5
 
       region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-                       "EastSAmerica","WestSAmerica"/)
-      latmin = (/-25.,-50.,-10.,-25.,-40.,-60.,-60./)
-      latmax = (/-10.,-25.,10.,-10.,-25.,4.,4./)
-      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360./)
+                       "EastAmazon","WestAmazon", "SouthAmerica"/)
+      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60./)
+      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25./)
+      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360./)
 
    ; -----------------------------------------------------
     dum = new(dimsizes(region_name),graphic)
@@ -294,19 +294,23 @@ begin
         ;txres@txPerimOn      = True
 
       region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-                       "ESAm","WSAm"/)
+                       "EAmz","WAmz","SAm"/)
     ;gsn_text_ndc(wks,"test",0.1,0.1,txres)
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1
       if (k.eq.2) then
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
       else if (k.eq.5) then
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-35,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-10,txres)
       else if (k.eq.6)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-2, latmax(k)-35,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-2, latmax(k)-10,txres)
+      else if (k.eq.7)
+        txres@txJust         = "BottomLeft"
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-20,txres)
       else
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
+      end if
       end if
       end if
       end if

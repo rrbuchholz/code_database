@@ -29,12 +29,12 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "SouthSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"*.nc")
 
-  location_title = "Maritime SEA"
+  location_title = ""
   sub_label = "(a) "
     year_s = 2001
     year_e = 2017
@@ -42,16 +42,16 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = True
-    plttype      = "x11"
+  PLOT           = False
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
       ymin       =-5e17
       ymax       =12e17
 
-  PLOTANNUAL    = False
-    plt2type      = "x11"
+  PLOTANNUAL    = True
+    plt2type      = "png"
      plt2type@wkWidth = 1200
      plt2type@wkHeight = 1200 
       y2min       =-6e17
@@ -353,7 +353,7 @@ if (PLOTANNUAL) then
       res@pmLegendWidthF           = 0.15            ; Change width and
       res@pmLegendHeightF          = 0.4             ; height of legend
       res@lgLabelFontHeightF       = 0.020
-      res@xyExplicitLegendLabels   = tofloat(ispan(2001,year_e,1))
+      ;res@xyExplicitLegendLabels   = tofloat(ispan(2001,year_e,1))
 
 
   ; ===================
