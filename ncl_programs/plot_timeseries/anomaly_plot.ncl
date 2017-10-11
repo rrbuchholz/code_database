@@ -29,12 +29,12 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "SouthSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "ECentralSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"*.nc")
 
-  location_title = ""
+  location_title = "East Amazon"
   sub_label = "(a) "
     year_s = 2001
     year_e = 2017
@@ -51,11 +51,11 @@ begin
       ymax       =12e17
 
   PLOTANNUAL    = True
-    plt2type      = "png"
+    plt2type      = "x11"
      plt2type@wkWidth = 1200
      plt2type@wkHeight = 1200 
-      y2min       =-6e17
-      y2max       =9e17
+      y2min       =-8e17
+      y2max       =10e17
 
   
 ;--------------------------------------------

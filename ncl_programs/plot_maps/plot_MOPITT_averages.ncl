@@ -231,11 +231,11 @@ begin
       boxres@gsLineThicknessF = 5
 
       region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-                       "EastAmazon","WestAmazon", "SouthAmerica"/)
-      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60./)
-      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25./)
-      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360./)
+                       "EastAmazon","WestAmazon", "SouthAmerica","NorthernSouthAmerica"/)
+      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60.,-5./)
+      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25.,10./)
+      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360.,-80 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360.,-32 + 360./)
 
    ; -----------------------------------------------------
     dum = new(dimsizes(region_name),graphic)
@@ -294,7 +294,7 @@ begin
         ;txres@txPerimOn      = True
 
       region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-                       "EAmz","WAmz","SAm"/)
+                       "EAmz","WAmz","SAm", "NSAm"/)
     ;gsn_text_ndc(wks,"test",0.1,0.1,txres)
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1

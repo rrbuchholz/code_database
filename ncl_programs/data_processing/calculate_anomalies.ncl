@@ -35,9 +35,9 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "ECentralSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "WestSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
 
-  version = "V7T"
+  version = "V7J"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
   mopitt_files = systemfunc ("ls "+data_folder+"SH_regions_v7/"+loc+"_"+version+"*.nc")
 
@@ -71,7 +71,7 @@ begin
 
 
   
-  CSV            = True
+  CSV            = False
   if (CSV) then
      outname      = data_folder+"/V7/anomalies/"+\
                      loc+"_"+version+"MOPITTanomalies.csv"
