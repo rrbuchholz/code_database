@@ -5,7 +5,7 @@
 #
 
 $rundir = "/IASI/home/buchholz/scripts/";
-$avgfile = "MOPITT_ASON_2001_2016.nc";
+$avgfile = "MOPITT_SOND_2001_2016.nc";
 
 #------------------------------------
 # create tracer list of tagged tracers to extract
@@ -31,7 +31,7 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
      }
 
       chomp(@final_diffs = `ls *_diff.nc`);
-      $sdfile = "MOPITT_2001_2016_ASONsd.nc";
+      $sdfile = "MOPITT_2001_2016_SONDsd.nc";
       print "--------------------------------------------------\n";
       print "nces -v $tracerlist -y rmssdn @final_diffs $sdfile \n";
       `nces -O -v $tracerlist -y rmssdn @final_diffs $sdfile`;

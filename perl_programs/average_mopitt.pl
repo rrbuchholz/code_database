@@ -3,7 +3,7 @@
 # Script for averaging MOPITT month data
 #
 
-$rundir = "/MOPITT/V7T/Archive/L3/";
+$rundir = "/net/mopfl/MOPITT/V7T/Archive/L3/";
 #------------------------------------
 # create tracer list of tagged tracers to extract
 #------------------------------------
@@ -16,7 +16,7 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
     for  $i (2001..2016) {
          $to_combine = "";
          print"$to_combine\n";
-         for  $j (11..11) {
+         for  $j (12..12) {
           $dateval = $i.sprintf("%02d",$j);
           chomp($fname = `ls $rundir$dateval/month/*.he5`);
           $to_combine = $to_combine.$fname." ";
@@ -36,5 +36,5 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
 
      chomp(@final_average = `ls *dummy.nc`);
          print "Averaging all\n";
-         print "nces -O -v $tracerlist @final_average MOPITT_ASON_2001_2016.nc\n";
-         `nces -O -v $tracerlist @final_average MOPITT_ASON_2001_2016.nc`;
+         print "nces -O -v $tracerlist @final_average MOPITT_SOND_2001_2016.nc\n";
+         `nces -O -v $tracerlist @final_average MOPITT_SOND_2001_2016.nc`;

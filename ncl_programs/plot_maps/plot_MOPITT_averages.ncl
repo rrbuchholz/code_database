@@ -19,7 +19,7 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl" 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "~/code_database/ncl_programs/buchholz_global_util/arrow.ncl"
+load "/net/mopfl/home/buchholz/code_database/ncl_programs/buchholz_global_util/arrow.ncl"
 
 ; add in bash for own colormaps
 ;export NCARG_COLORMAPS=/IASI/home/buchholz/NCL_programs/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
@@ -29,8 +29,9 @@ begin
 ; User Input
 ;***************************************************************
     version = "V7T"
-    mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    sd_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_ASONsd.nc"
+    ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
+    sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
    ; -------------------------------
    ; SELECT OUTPUT
    ; -------------------------------
@@ -38,8 +39,8 @@ begin
 
    if (PLOT) then                            ; Map plot
        mapDir  = "./"                        ; directory for plot output
-       mapName = "~/MOPITT_"+version+"_tcol" ; plot name output
-       mapType = "x11"                       ; workstation type
+       mapName = "/net/mopfl/home/buchholz/MOPITT_"+version+"_tcol" ; plot name output
+       mapType = "png"                       ; workstation type
         mapType@wkWidth = 1200
         mapType@wkHeight = 1200 
    end if
@@ -228,14 +229,25 @@ begin
     ;-------------------
     boxres = True
       boxres@gsLineColor      = "black"
-      boxres@gsLineThicknessF = 5
+      boxres@gsLineThicknessF = 8
+
+      ;region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
+      ;                 "EastAmazon","WestAmazon", "SouthAmerica","NorthernSouthAmerica"/)
+      ;region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
+      ;                 "EAmz","WAmz","SAm", "NSAm"/)
+      ;latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60.,-5./)
+      ;latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25.,10./)
+      ;lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360.,-80 + 360./)
+      ;lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360.,-32 + 360./)
 
       region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-                       "EastAmazon","WestAmazon", "SouthAmerica","NorthernSouthAmerica"/)
-      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60.,-5./)
-      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25.,10./)
-      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360.,-32 + 360./)
+                       "EastSAmerica","WestSAmerica"/)
+      region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
+                       "ESam","WSAm"/)
+      latmin = (/-25.,-50.,-10.,-25.,-40.,-58.,-58./)
+      latmax = (/-10.,-25.,10.,-10.,-25.,4.,4./)
+      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360./)
 
    ; -----------------------------------------------------
     dum = new(dimsizes(region_name),graphic)
@@ -252,7 +264,7 @@ begin
     ;-------------------
     boxresII = True
       boxresII@gsLineColor      = "red2"
-      boxresII@gsLineThicknessF = 5
+      boxresII@gsLineThicknessF = 8
 
       index_name = (/"NINO 3.4","DMI","DMI2","TSA"/)
       index_latmin = (/-5.,-10.,-10.,-20./)
@@ -275,7 +287,7 @@ begin
     aao_lines_down = new(9, graphic)
     arrow_res = True
       arrow_res@gsLineColor      = "white"
-      arrow_res@gsLineThicknessF = 5.0
+      arrow_res@gsLineThicknessF = 8.0
     do j = 0,dimsizes(aao_lines_up)-1
       aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
       aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
@@ -293,18 +305,17 @@ begin
         txres@txFontColor    = "black"
         ;txres@txPerimOn      = True
 
-      region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-                       "EAmz","WAmz","SAm", "NSAm"/)
+     
     ;gsn_text_ndc(wks,"test",0.1,0.1,txres)
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1
       if (k.eq.2) then
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
       else if (k.eq.5) then
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-10,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-20,txres)
       else if (k.eq.6)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-2, latmax(k)-10,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-4, latmax(k)-20,txres)
       else if (k.eq.7)
         txres@txJust         = "BottomLeft"
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-20,txres)
@@ -360,7 +371,7 @@ begin
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
   panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True
-  panel_res@gsnPanelMainString    = "MOPITT Total column, ASON, 2001-2016"
+  panel_res@gsnPanelMainString    = "MOPITT Total column, SOND, 2001-2016"
   panel_res@gsnPanelMainFontHeightF = 0.028 
   gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
   ;frame(wks)
