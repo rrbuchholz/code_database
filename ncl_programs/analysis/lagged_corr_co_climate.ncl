@@ -28,20 +28,22 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "SouthSAfrica"
-  plot_title = "(e) South Southern Africa"
-    pltname      = "~/"+location+"_laggedcorr2"
+  location = "MaritimeSEA"
+  plot_title = "(a) Maritime SEA"
+    ;pltname      = "~/"+location+"_laggedcorr2"
+    pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-   mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
+  ; mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
+   mopitt_dir = "/net/mopfl/home/buchholz/MOPITT_subset/V7/anomalies/"
    mopitt_file = mopitt_dir+location+"_V7TMOPITTanomalies.nc"
 
   ; -------------------------------
   ; CLIMATE INDEX
   ; -------------------------------
-   ci_dir = "/IASI/home/buchholz/Climate_Indices/converted/"
+   ci_dir = "/net/mopfl/home/buchholz/Climate_Indices/converted/"
    ci_files = systemfunc ("ls "+ci_dir+"*_index_month_avg.nc")
 
   ;------------
@@ -130,15 +132,17 @@ acr = esccr(overlap_index_vals(:,0,:),mopitt_anom,maxlag)
 ; correlations for only Aug-Nov
 ;--------------------------------------------  
   split_dates = str_split_by_length(tostring(mopitt_time),4)
-  m_select_ind = ind(split_dates(:,1).eq."07".or.\
-                     split_dates(:,1).eq."08".or.\
+  m_select_ind = ind(split_dates(:,1).eq."08".or.\
                      split_dates(:,1).eq."09".or.\
-                     split_dates(:,1).eq."10")
+                     split_dates(:,1).eq."10".or.\
+                     split_dates(:,1).eq."11")
   m_select_data = mopitt_anom(m_select_ind)
   i_select_data =  overlap_index_vals(:,:,m_select_ind)
 
- ason_lagcorrs = escorc(m_select_data,i_select_data)
+ sond_lagcorrs = escorc(m_select_data,i_select_data)
  alldata_lagcorrs = escorc(overlap_index_vals,mopitt_anom)
+
+;print(sond_lagcorrs)
 
 ;--------------------------------------------
 ; plot
@@ -155,7 +159,7 @@ if (PLOT) then
     res@gsnMaximize         = True
     res@gsnRightString      = plot_title
 
-    res@xyLineThicknessF    = 5.0
+    res@xyLineThicknessF    = 10.0
     res@xyDashPatterns      = (/0,1,2,3,4/)
     res@xyLineColors         = (/"red2","orange", "forestgreen", "purple4"/)
 
@@ -187,7 +191,7 @@ if (PLOT) then
     res@tiXAxisString       = "Monthly lag"
     res@tiYAxisString       = "Correlation (r)"
 
-    res@pmLegendDisplayMode      = "Never"        ; turn on legend
+    res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@lgPerimOn                = True           ; Turn off perimeter
     res@pmLegendWidthF           = 0.20           ; Change width and
     res@pmLegendHeightF          = 0.20             ; height of legend
@@ -203,7 +207,7 @@ if (PLOT) then
     plot = gsn_csm_xy(wks,xx,acr,res)
 
     ; selected month correlations
-    plot1 = gsn_csm_xy(wks,xx,ason_lagcorrs,res)
+    plot1 = gsn_csm_xy(wks,xx,sond_lagcorrs,res)
 
     ; all data with sliding anomaly method
     plot2 = gsn_csm_xy(wks,xx,alldata_lagcorrs,res)
