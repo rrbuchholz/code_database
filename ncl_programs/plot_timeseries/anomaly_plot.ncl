@@ -29,12 +29,12 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "ECentralSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"*.nc")
 
-  location_title = "East Amazon"
+  location_title = "Maritime SEA"
   sub_label = "(a) "
     year_s = 2001
     year_e = 2017
@@ -42,7 +42,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = False
+  PLOT           = True
     plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
@@ -50,7 +50,7 @@ begin
       ymin       =-5e17
       ymax       =12e17
 
-  PLOTANNUAL    = True
+  PLOTANNUAL    = False
     plt2type      = "x11"
      plt2type@wkWidth = 1200
      plt2type@wkHeight = 1200 
@@ -178,13 +178,12 @@ if (PLOT) then
     res@tiMainString           = ""
     res@tiXAxisString          = ""
 
-    res@pmLegendDisplayMode      = "Never"               ; turn on legend
+    res@pmLegendDisplayMode      = "Always"               ; turn on legend
       res@lgPerimOn                = False               ; Turn off perimeter
       res@pmLegendWidthF           = 0.20                ; Change width and
       res@pmLegendHeightF          = 0.50                ; height of legend
-      res@lgLabelFontHeightF       = 0.060
-      res@xyExplicitLegendLabels   = "Month average"
-      res@pmLegendOrthogonalPosF   = 0.3
+      res@lgLabelFontHeightF       = 0.048
+
 
   ; ===================
   ; timeseries plot
@@ -204,21 +203,26 @@ if (PLOT) then
     res@xyMarker            = 17
     res@xyMarkerSizeF       = 0.08
     res@xyMarkerColor       = "grey34"
+    res@xyExplicitLegendLabels   = "Month average"
+    res@pmLegendOrthogonalPosF = -1.7
+    res@pmLegendParallelPosF   = 0.475
    plot1 = gsn_csm_xy(wks,plottime,mopitt_tcol,res)
 
     res@gsnRightString         = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
     res@xyMarkLineMode         = "Lines"
     res@xyLineThicknessF       = 7.0
     res@xyLineColor            = "black"
-    res@xyExplicitLegendLabels = "Climatological seasonal cycle"
-    res@pmLegendOrthogonalPosF = 0.5
-    res@pmLegendParallelPosF   = 0.615
+    res@xyExplicitLegendLabels = "Seasonal cycle"
+    res@pmLegendOrthogonalPosF = -1.85
+    res@pmLegendParallelPosF   = 0.475
    plot2 = gsn_csm_xy(wks,plottime,climate_co_ext,res)
    overlay(plot1, plot2)
+
 
   ; ===================
   ; Anomaly plot
   ; ===================
+    res@pmLegendDisplayMode  = "Never"               ; turn off legend
     res@vpHeightF            = 0.3                       ; set height of plot
     res@xyLineThicknessF     = 1.5
     res@tiYAxisString        = "Anomaly"
@@ -246,6 +250,7 @@ if (PLOT) then
    res@gsnBelowYRefLineColor = "limegreen"               ; below ref line fill blue
 
   plot3 = gsn_csm_xy(wks,plottime,mopitt_anom,res)
+
 
   ; add zero line
    res_lines                   = True                     ; polyline mods desired
@@ -295,10 +300,13 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"              ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-    gsn_text_ndc(wks,location_title,0.155,0.71,txres)
+    ;gsn_text_ndc(wks,location_title,0.155,0.71,txres)
+    gsn_text_ndc(wks,location_title,0.155,0.67,txres)
      txres@txPerimOn        = False
-    gsn_text_ndc(wks,"(a)",0.17,0.64,txres)
-    gsn_text_ndc(wks,"(b)",0.17,0.43,txres)
+    ;gsn_text_ndc(wks,"(a)",0.17,0.64,txres)
+    ;gsn_text_ndc(wks,"(b)",0.17,0.43,txres)
+    gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
+    gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
 
   draw(plot1)
   frame(wks)
