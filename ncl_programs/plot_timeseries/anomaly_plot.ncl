@@ -29,33 +29,34 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "SouthSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
-  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"*.nc")
+  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
-  location_title = "Maritime SEA"
-  sub_label = "(a) "
+
+  location_title = "East Amazon"
+  sub_label = "(g) "
     year_s = 2001
     year_e = 2017
 
   ;------------
   ; toggles
   ;------------
-  PLOT           = True
-    plttype      = "png"
+  PLOT           = False
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
       ymin       =-5e17
       ymax       =12e17
 
-  PLOTANNUAL    = False
+  PLOTANNUAL    = True
     plt2type      = "x11"
      plt2type@wkWidth = 1200
      plt2type@wkHeight = 1200 
-      y2min       =-8e17
-      y2max       =10e17
+      y2min       =-6e17
+      y2max       =6e17
 
   
 ;--------------------------------------------
@@ -178,7 +179,7 @@ if (PLOT) then
     res@tiMainString           = ""
     res@tiXAxisString          = ""
 
-    res@pmLegendDisplayMode      = "Always"               ; turn on legend
+    res@pmLegendDisplayMode      = "Never"               ; turn on legend
       res@lgPerimOn                = False               ; Turn off perimeter
       res@pmLegendWidthF           = 0.20                ; Change width and
       res@pmLegendHeightF          = 0.50                ; height of legend
@@ -192,10 +193,10 @@ if (PLOT) then
   ; MOPITT
     res@tmYLMode            = "Explicit"
       res@trYMinF             = 1e18
-      res@trYMaxF             = 3.3e18
-      res@tmYLValues          = fspan(1e18,3e18,5)
-      res@tmYLLabels          = fspan(1e18,3e18,5)/1e18
-      res@tmYLMinorValues     = fspan(1e18,3e18,10)
+      res@trYMaxF             = 3.6e18
+      res@tmYLValues          = fspan(1e18,3.5e18,6)
+      res@tmYLLabels          = fspan(1e18,3.5e18,6)/1e18
+      res@tmYLMinorValues     = fspan(1e18,3.5e18,11)
 
     res@tiYAxisString       = "CO Column"
     res@gsnRightString      = "" 
@@ -300,13 +301,13 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"              ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-    ;gsn_text_ndc(wks,location_title,0.155,0.71,txres)
-    gsn_text_ndc(wks,location_title,0.155,0.67,txres)
+    gsn_text_ndc(wks,location_title,0.155,0.71,txres)
+    ;gsn_text_ndc(wks,location_title,0.155,0.67,txres)
      txres@txPerimOn        = False
-    ;gsn_text_ndc(wks,"(a)",0.17,0.64,txres)
-    ;gsn_text_ndc(wks,"(b)",0.17,0.43,txres)
-    gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
-    gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
+    gsn_text_ndc(wks,"(a)",0.17,0.64,txres)
+    gsn_text_ndc(wks,"(b)",0.17,0.43,txres)
+    ;gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
+    ;gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
 
   draw(plot1)
   frame(wks)
