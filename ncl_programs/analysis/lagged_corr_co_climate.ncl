@@ -28,29 +28,30 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "MaritimeSEA"
-  plot_title = "(a) Maritime SEA"
+  location = "WAmazon"
+  plot_title = "(f) West Amazon"
     ;pltname      = "~/"+location+"_laggedcorr2"
     pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  ; mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
-   mopitt_dir = "/net/mopfl/home/buchholz/MOPITT_subset/V7/anomalies/"
+   mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
+  ; mopitt_dir = "/net/mopfl/home/buchholz/MOPITT_subset/V7/anomalies/"
    mopitt_file = mopitt_dir+location+"_V7TMOPITTanomalies.nc"
 
   ; -------------------------------
   ; CLIMATE INDEX
   ; -------------------------------
-   ci_dir = "/net/mopfl/home/buchholz/Climate_Indices/converted/"
+   ci_dir = "/IASI/home/buchholz/Climate_Indices/converted/"
+   ;ci_dir = "/net/mopfl/home/buchholz/Climate_Indices/converted/"
    ci_files = systemfunc ("ls "+ci_dir+"*_index_month_avg.nc")
 
   ;------------
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
@@ -132,17 +133,19 @@ acr = esccr(overlap_index_vals(:,0,:),mopitt_anom,maxlag)
 ; correlations for only Aug-Nov
 ;--------------------------------------------  
   split_dates = str_split_by_length(tostring(mopitt_time),4)
-  m_select_ind = ind(split_dates(:,1).eq."08".or.\
-                     split_dates(:,1).eq."09".or.\
+  m_select_ind = ind(split_dates(:,1).eq."09".or.\
                      split_dates(:,1).eq."10".or.\
-                     split_dates(:,1).eq."11")
+                     split_dates(:,1).eq."11".or.\
+                     split_dates(:,1).eq."12")
   m_select_data = mopitt_anom(m_select_ind)
   i_select_data =  overlap_index_vals(:,:,m_select_ind)
 
  sond_lagcorrs = escorc(m_select_data,i_select_data)
  alldata_lagcorrs = escorc(overlap_index_vals,mopitt_anom)
 
-;print(sond_lagcorrs)
+print(sond_lagcorrs)
+;print(alldata_lagcorrs)
+;print(split_dates(m_select_ind,:))
 
 ;--------------------------------------------
 ; plot
@@ -158,6 +161,7 @@ if (PLOT) then
     res@gsnFrame            = False                     ; don't advance frame
     res@gsnMaximize         = True
     res@gsnRightString      = plot_title
+    res@gsnRightStringFontHeightF =0.034
 
     res@xyLineThicknessF    = 10.0
     res@xyDashPatterns      = (/0,1,2,3,4/)
@@ -185,22 +189,22 @@ if (PLOT) then
     res@trYMaxF             = 0.8
 
     res@vpWidthF             = 1
-    res@vpHeightF            = 0.8          ; set height of plot
+    res@vpHeightF            = 0.7          ; set height of plot
 
     res@tiMainString        = ""
     res@tiXAxisString       = "Monthly lag"
     res@tiYAxisString       = "Correlation (r)"
 
-    res@pmLegendDisplayMode      = "Always"        ; turn on legend
+    res@pmLegendDisplayMode      = "Never"        ; turn on legend
     res@lgPerimOn                = True           ; Turn off perimeter
     res@pmLegendWidthF           = 0.20           ; Change width and
     res@pmLegendHeightF          = 0.20             ; height of legend
-    res@lgLabelFontHeightF       = 0.020
+    res@lgLabelFontHeightF       = 0.030
     plot_index_names = str_split_csv(index_names, "_",0)
     ;res@xyExplicitLegendLabels   = plot_index_names(:,0)
     res@xyExplicitLegendLabels   = (/"SAM", "DMI", "Nino3.4", "TSA"/)
-    res@pmLegendOrthogonalPosF   = -1.125
-    res@pmLegendParallelPosF     = 0.85
+    res@pmLegendOrthogonalPosF   = -1.155
+    res@pmLegendParallelPosF     = 0.83
   ; -------------------------------
   ; create plot
   ; -------------------------------
