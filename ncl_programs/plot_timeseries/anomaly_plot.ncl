@@ -35,7 +35,7 @@ begin
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "East Amazon"
+  location_title = "South Southern America"
   sub_label = "(g) "
     year_s = 2001
     year_e = 2017

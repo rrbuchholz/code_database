@@ -229,25 +229,17 @@ begin
     ;-------------------
     boxres = True
       boxres@gsLineColor      = "black"
-      boxres@gsLineThicknessF = 8
-
-      ;region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-      ;                 "EastAmazon","WestAmazon", "SouthAmerica","NorthernSouthAmerica"/)
-      ;region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-      ;                 "EAmz","WAmz","SAm", "NSAm"/)
-      ;latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-25.,-60.,-5./)
-      ;latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-5.,-25.,10./)
-      ;lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360.,-80 + 360.,-80 + 360./)
-      ;lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360.,-42 + 360.,-32 + 360./)
+      boxres@gsLineThicknessF = 6
 
       region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-                       "EastSAmerica","WestSAmerica"/)
+                       "CentralSAmerica", "SouthAmerica"/)
       region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-                       "ESam","WSAm"/)
-      latmin = (/-25.,-50.,-10.,-25.,-40.,-58.,-58./)
-      latmax = (/-10.,-25.,10.,-10.,-25.,4.,4./)
-      lonmin = (/110.,110.,90.,0.,0.,-60 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-60 + 360./)
+                       "CSAm","SSAm"/)
+      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-60./)
+      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-25./)
+      lonmin = (/110.,110.,90.,0.,0.,-80 + 360.,-80 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-42 + 360./)
+
 
    ; -----------------------------------------------------
     dum = new(dimsizes(region_name),graphic)
@@ -264,7 +256,7 @@ begin
     ;-------------------
     boxresII = True
       boxresII@gsLineColor      = "red2"
-      boxresII@gsLineThicknessF = 8
+      boxresII@gsLineThicknessF = 6
 
       index_name = (/"NINO 3.4","DMI","DMI2","TSA"/)
       index_latmin = (/-5.,-10.,-10.,-20./)
@@ -287,7 +279,7 @@ begin
     aao_lines_down = new(9, graphic)
     arrow_res = True
       arrow_res@gsLineColor      = "white"
-      arrow_res@gsLineThicknessF = 8.0
+      arrow_res@gsLineThicknessF = 6.0
     do j = 0,dimsizes(aao_lines_up)-1
       aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
       aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
@@ -311,18 +303,11 @@ begin
     do k=0,dimsizes(region_name)-1
       if (k.eq.2) then
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
-      else if (k.eq.5) then
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-20,txres)
-      else if (k.eq.6)
+      else if (k.eq.5.or.k.eq.6)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-4, latmax(k)-20,txres)
-      else if (k.eq.7)
-        txres@txJust         = "BottomLeft"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-20,txres)
+        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-4, latmax(k)-15,txres)
       else
         text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
-      end if
-      end if
       end if
       end if
     end do

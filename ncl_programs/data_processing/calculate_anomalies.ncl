@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "ECentralSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "SouthSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
@@ -71,7 +71,7 @@ begin
 
 
   
-  CSV            = False
+  CSV            = True
   if (CSV) then
      outname      = data_folder+"/V7/anomalies/"+\
                      loc+"_"+version+"MOPITTanomalies.csv"
