@@ -28,8 +28,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "WAmazon"
-  plot_title = "(f) West Amazon"
+  location = "CentralSAmerica"
+  plot_title = "(f) Central South America"
     ;pltname      = "~/"+location+"_laggedcorr2"
     pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
@@ -51,7 +51,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200

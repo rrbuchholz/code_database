@@ -35,28 +35,28 @@ begin
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "South Southern America"
-  sub_label = "(g) "
+  location_title = "Southern South America"
+  sub_label = "(f) "
     year_s = 2001
     year_e = 2017
 
   ;------------
   ; toggles
   ;------------
-  PLOT           = False
-    plttype      = "x11"
+  PLOT           = True
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
       ymin       =-5e17
       ymax       =12e17
 
-  PLOTANNUAL    = True
+  PLOTANNUAL    = False
     plt2type      = "x11"
      plt2type@wkWidth = 1200
      plt2type@wkHeight = 1200 
-      y2min       =-6e17
-      y2max       =6e17
+      y2min       =-7.5e17
+      y2max       =9.0e17
 
   
 ;--------------------------------------------
@@ -304,8 +304,8 @@ if (PLOT) then
     gsn_text_ndc(wks,location_title,0.155,0.71,txres)
     ;gsn_text_ndc(wks,location_title,0.155,0.67,txres)
      txres@txPerimOn        = False
-    gsn_text_ndc(wks,"(a)",0.17,0.64,txres)
-    gsn_text_ndc(wks,"(b)",0.17,0.43,txres)
+    gsn_text_ndc(wks,"(c)",0.17,0.64,txres)
+    gsn_text_ndc(wks,"(d)",0.17,0.43,txres)
     ;gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
     ;gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
 
