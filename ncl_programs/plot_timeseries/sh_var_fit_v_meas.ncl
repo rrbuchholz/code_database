@@ -28,11 +28,11 @@ begin
   location_title = "(g) Southern South America"
   
   PLOT = True
-    plottype = "x11"
-      plottype@wkWidth  = 1500
-      plottype@wkHeight = 800
-      ;plottype@wkPaperWidthF  = 7.0 ;for pdf
-      ;plottype@wkPaperHeightF = 20  ;for pdf
+    plottype = "pdf"
+      ;plottype@wkWidth  = 1500
+      ;plottype@wkHeight = 800
+      plottype@wkPaperWidthF  = 9 ;for pdf
+      plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
 
   PREDICT = False
@@ -178,7 +178,7 @@ if (PLOT) then
    res@tmYLLabelFontHeightF = 0.034
    
    res@trYMinF          = -6.1e17
-   res@trYMaxF          = 10.0e17
+   res@trYMaxF          = 10e17
    res@tmYLMode         = "Explicit"
    res@tmYLValues       = (/-5e17,0,5e17,10e17/)
    res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
