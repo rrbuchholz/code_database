@@ -48,24 +48,24 @@ begin
   outres = "0.94x1.2"
   ratio_species = "co"
   species = "CO"
-  outpath = "/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
+  outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
 
   ; -------------------------------
   ; QFED files
   ; -------------------------------
-  qfed_dir = "/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
+  qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
   qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
 
   ; -------------------------------
   ; FINN emission ratios
   ; -------------------------------
-  finn_emiss = "/home/buchholz/data/emissionsfactors_speciation_20150305.csv"
-  finn_VOC = "/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
+  finn_emiss = "/net/modeling1/home/buchholz/data/emissionsfactors_speciation_20150305.csv"
+  finn_VOC = "/net/modeling1/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
 
   ; -------------------------------
   ; MOZART molecular weights
   ; -------------------------------
-  molwts = "/home/buchholz/data/species_molwts.txt"
+  molwts = "/net/modeling1/home/buchholz/data/species_molwts.txt"
 
   ;------------
   ; toggles
