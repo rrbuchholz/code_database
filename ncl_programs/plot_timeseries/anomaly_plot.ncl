@@ -29,14 +29,14 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "SouthSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "CentralSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "Southern South America"
-  sub_label = "(f) "
+  location_title = "Central South America"
+  sub_label = "(g) "
     year_s = 2001
     year_e = 2017
 

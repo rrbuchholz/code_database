@@ -28,8 +28,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "CentralSAmerica"
-  plot_title = "(f) Central South America"
+  location = "SouthSAmerica"
+  plot_title = "(g) Southern South America"
     ;pltname      = "~/"+location+"_laggedcorr2"
     pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
