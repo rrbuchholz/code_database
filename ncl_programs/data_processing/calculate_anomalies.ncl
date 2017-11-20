@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "SouthSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
@@ -60,7 +60,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = True
+  PLOT           = False
     plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
@@ -71,7 +71,7 @@ begin
 
 
   
-  CSV            = True
+  CSV            = False
   if (CSV) then
      outname      = data_folder+"/V7/anomalies/"+\
                      loc+"_"+version+"MOPITTanomalies.csv"
@@ -478,13 +478,26 @@ if (NETCDF) then
   ; Attributes
   ;------------
   region_def = str_split (month_co_avg@average_op_ncl,":")
+  sep_lat_lon = str_split (region_def(1)," ")
+  lat_boundaries = (/tofloat(sep_lat_lon(0)),tofloat(sep_lat_lon(2))/)
+    lat_boundaries@long_name         = "latitude"
+    lat_boundaries@units             = "degrees_north"
+    lat_boundaries@description       = "Latitude_boundaries_of_region"
+    lat_boundaries@comment           = "North boundary, South Boundary"
+    lat_boundaries!0                 = "lat"
+  lon_boundaries = (/tofloat(sep_lat_lon(4)),tofloat(sep_lat_lon(6))/)
+    lon_boundaries@long_name         = "longitude"
+    lon_boundaries@units             = "degrees_east"
+    lon_boundaries@description       = "Longitude_boundaries_of_region"
+    lon_boundaries@comment           = "West boundary, East Boundary"
+    lon_boundaries!0                 = "lon"
 
   setfileoption(fout, "DefineMode",True)
     fAtt                      = True
       fAtt@email              = "buchholz@ucar.edu"
       fAtt@author             = "R. R. Buchholz"
       fAtt@creation_date      = systemfunc ("date")
-      fAtt@conventrions       = "CF"
+      fAtt@Conventions        = "CF-1.6"
       fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
       fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
       fAtt@region_definition  = location + " -->" +region_def(1)
@@ -497,48 +510,67 @@ if (NETCDF) then
   ; Variable 
   ; Attributes
   ;------------
-  time_array = climate_time
+base_julian = greg2jul(1999,1,1,0)
+splitdate = str_split_by_length(climate_time, 4)
+  day_midmonth = (toint(splitdate(:,0))*0)+16
+  hour_midmonth = (toint(splitdate(:,0))*0)-1
+juliandate = greg2jul(toint(splitdate(:,0)),toint(splitdate(:,1)),day_midmonth,hour_midmonth)-base_julian
+
+  time_array = juliandate
   time_array@long_name         = "time"
-  time_array@units             = "YYYYMM"
+  time_array@units             = "days since 1999-1-1"
   time_array!0                 = "time"
 
+  yyyymm = climate_time
+  yyyymm@long_name             = "YearMonth"
+  yyyymm@units                 = "1"
+  yyyymm@description           = "YearMonth"
+  yyyymm!0                     = "time"
+  yyyymm&time                  := time_array
+
   month_co_avg@long_name          = "MOPITT_CO_TotalColumn"
-  month_co_avg@units              = "molec/cm^2"
+  month_co_avg@units              = "mol/cm^2"
+  month_co_avg@description        = "molecules per cm^2"
   month_co_avg!0                  = "time"
-  month_co_avg&time               = climate_time
+  month_co_avg&time               = time_array
   month_co_avg@_FillValue         = 9.969209968386869e+36
   delete(month_co_avg@average_op_ncl)
 
   month_co_avg@long_name          = "MOPITT_CO_TotalColumn"
-  month_co_avg@units              = "molec/cm^2"
+  month_co_avg@units              = "mol/cm^2"
+  month_co_avg@description        = "molecules per cm^2"
   month_co_avg!0                  = "time"
-  month_co_avg&time               = climate_time
+  month_co_avg&time               = time_array
   month_co_avg@_FillValue         = 9.96921e+36 
 
   month_co_sd@long_name           = "MOPITT_CO_StdDev"
-  month_co_sd@units               = "molec/cm^2"
+  month_co_sd@units               = "mol/cm^2"
+  month_co_sd@description        = "molecules per cm^2"
   month_co_sd!0                   = "time"
-  month_co_sd&time                = climate_time
+  month_co_sd&time                = time_array
   month_co_sd@_FillValue          = 9.96921e+36 
 
   month_err_avg@long_name         = "MOPITT_CO_Column_Error"
-  month_err_avg@units             = "molec/cm^2"
+  month_err_avg@units             = "mol/cm^2"
+  month_err_avg@description       = "molecules per cm^2"
   month_err_avg!0                 = "time"
-  month_err_avg&time              = climate_time
+  month_err_avg&time              = time_array
   month_err_avg@_FillValue        = 9.96921e+36 
   delete(month_err_avg@average_op_ncl)
 
   new_month_co_avg@long_name      = "MOPITT_CO_TotalColumn_SplineFit"
-  new_month_co_avg@units          = "molec/cm^2"
+  new_month_co_avg@units          = "mol/cm^2"
+  new_month_co_avg@description    = "molecules per cm^2"
   new_month_co_avg!0              = "time"
-  new_month_co_avg&time           = climate_time
+  new_month_co_avg&time           = time_array
   new_month_co_avg@_FillValue     = 9.96921e+36
   new_month_co_avg@comment        = "Missing values filled using spline fit. Required for regression analysis."
 
   month_anomaly@long_name         = "MOPITT_CO_Anomaly"
-  month_anomaly@units             = "molec/cm^2"
+  month_anomaly@units             = "mol/cm^2"
+  month_anomaly@description       = "molecules per cm^2"
   month_anomaly!0                 = "time"
-  month_anomaly&time              = climate_time
+  month_anomaly&time              = time_array
 
   ;------------
   ; Write to
@@ -549,7 +581,9 @@ if (NETCDF) then
   fout->MOPITT_CO_ERR = month_err_avg
   fout->MOPITT_CO_TCOL_FILLED = new_month_co_avg
   fout->MOPITT_CO_ANOMALY = month_anomaly
-
+  fout->YYYYMM = yyyymm
+  fout->LATITUDE_BOUNDAIES = lat_boundaries
+  fout->LONGITUDE_BOUNDARIES = lon_boundaries
 
 end if ;NETCDF
 
