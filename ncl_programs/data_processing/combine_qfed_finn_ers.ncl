@@ -44,34 +44,52 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2016
-  outres = "0.94x1.2"
-  ratio_species = "co"
-  species = "CO"
-  outpath = "/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
+  NRT = True
+
+  if (NRT) then
+    if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD from command line?
+       YYYYMMDD = 20171101
+    end if
+    outres = "0.94x1.2"
+    ratio_species = "co2"
+    species = "CO2"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+  else
+    year = 2016
+    outres = "0.94x1.2"
+    ratio_species = "co"
+    species = "CO"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
+  end if
 
   ; -------------------------------
   ; QFED files
   ; -------------------------------
-  qfed_dir = "/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
-  qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
+
+  if (NRT) then
+    qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_nrt/"
+    qfed_files = systemfunc ("ls "+qfed_dir+"*"+YYYYMMDD+"*.nc4")
+  else
+    qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
+    qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
+  end if
 
   ; -------------------------------
   ; FINN emission ratios
   ; -------------------------------
-  finn_emiss = "/home/buchholz/data/emissionsfactors_speciation_20150305.csv"
-  finn_VOC = "/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
+  finn_emiss = "/net/modeling1/home/buchholz/data/emissionsfactors_speciation_20150305.csv"
+  finn_VOC = "/net/modeling1/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
 
   ; -------------------------------
   ; MOZART molecular weights
   ; -------------------------------
-  molwts = "/home/buchholz/data/species_molwts.txt"
+  molwts = "/net/modeling1/home/buchholz/data/species_molwts.txt"
 
   ;------------
   ; toggles
   ;------------
   netCDF         = True                       ; for netCDF output
-  PLOT           = True
+  PLOT           = False
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
@@ -335,8 +353,14 @@ begin
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
-      fout = addfile(outpath+outfilename, "c")
+      if (NRT) then
+        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+YYYYMMDD+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else 
+        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      end if
+
 
       ;------------
       ; File 
@@ -382,6 +406,7 @@ begin
     end if ;NetCDF
 
   tracername := var_names(tracer)
+
 
   end do ;non VOC tracers
 
@@ -505,8 +530,13 @@ begin
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
-      fout = addfile(outpath+outfilename, "c")
+      if (NRT) then
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+YYYYMMDD+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else 
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      end if
 
       ;------------
       ; File 
