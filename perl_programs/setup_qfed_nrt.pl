@@ -86,7 +86,8 @@ if ($check_again ne '' && $processed == 0){
       $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
      `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  chomp($last_file = `ls $dir$fname*`);
+  chomp($proc_file = `ls $camdir*XYLENE*$currentdate.nc`);
+  if ($proc_file ne '') {
     open(OUT2,">>$proclog");
     print OUT2 "processed $current_date\n";
     close(OUT2);
@@ -103,6 +104,7 @@ if ($check_again ne '' && $processed == 0){
     print MAIL $message;
     close(MAIL);
     print OUT "Email Sent Successfully\n";
+   }
 }
 
   close(OUT);
