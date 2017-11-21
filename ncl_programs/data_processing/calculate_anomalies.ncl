@@ -262,14 +262,13 @@ print(new_month_co_avg(sep09))
   ; -------------------------------
   ; ANOMALIES
   ; -------------------------------
-  month_dummy = str_split_by_length(climate_time,2)
+  month_dummy = str_split_by_length(tostring(climate_time),2)
   month_array = toint(month_dummy(:,2))-1
   month_anomaly = new(dimsizes(climate_co_ext), float)
 
   do j = 0, dimsizes(climate_time)-1
     month_anomaly(j)= tofloat(new_month_co_avg(j))-climate_co(month_array(j))
   end do
-
 
 ;--------------------------------------------
 ; plot
@@ -510,15 +509,15 @@ if (NETCDF) then
   ; Variable 
   ; Attributes
   ;------------
-base_julian = greg2jul(1999,1,1,0)
-splitdate = str_split_by_length(climate_time, 4)
+base_julian = greg2jul(2000,1,1,0)
+splitdate = str_split_by_length(tostring(climate_time), 4)
   day_midmonth = (toint(splitdate(:,0))*0)+16
-  hour_midmonth = (toint(splitdate(:,0))*0)-1
+  hour_midmonth = (toint(splitdate(:,0))*0)
 juliandate = greg2jul(toint(splitdate(:,0)),toint(splitdate(:,1)),day_midmonth,hour_midmonth)-base_julian
 
   time_array = juliandate
   time_array@long_name         = "time"
-  time_array@units             = "days since 1999-1-1"
+  time_array@units             = "days since 2000-1-1"
   time_array!0                 = "time"
 
   yyyymm = climate_time
