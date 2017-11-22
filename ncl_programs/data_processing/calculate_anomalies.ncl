@@ -517,7 +517,8 @@ juliandate = greg2jul(toint(splitdate(:,0)),toint(splitdate(:,1)),day_midmonth,h
 
   time_array = juliandate
   time_array@long_name         = "time"
-  time_array@units             = "days since 2000-1-1"
+  time_array@units             = "days since 2000-01-01 00:00:00"
+  time_array@calendar          = "gregorian"
   time_array!0                 = "time"
 
   yyyymm = climate_time
