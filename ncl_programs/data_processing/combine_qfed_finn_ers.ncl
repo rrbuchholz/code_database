@@ -50,6 +50,8 @@ begin
     if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD from command line?
        YYYYMMDD = 20171101
     end if
+    splitdate = str_split_by_length(tostring(YYYYMMDD), 4)
+    year = toint(splitdate(0))
     outres = "0.94x1.2"
     ratio_species = "co2"
     species = "CO2"
@@ -354,14 +356,25 @@ begin
       ; CAM-chem species
       ;-------------------
       if (NRT) then
-        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+YYYYMMDD+".nc"
-        fout = addfile(outpath+outfilename, "c")
+        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
+        template = addfile(outpath+outfilename, "r")            ; read in
+           date_template = template->date
+           bb_template = template->bb
+        fout = addfile(outpath+outfilename, "w")                 ; ready for some overwriting
       else 
         outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
       end if
 
+      if (NRT) then
+         ind_overwrite = ind(date_template.eq.date)
+         emiss_overwrite = bb_template
+         emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
 
+       ;--- emissions
+         fout->bb               = emiss_overwrite
+
+      else
       ;------------
       ; File 
       ; Attributes
@@ -388,7 +401,7 @@ begin
       ;------------
         dimNames = (/"time", "lat", "lon"/)  
 	dim_Sizes = (/ -1   ,  dimsizes(emiss_regrid&lat),  dimsizes(emiss_regrid&lon)/) 
-	dimUnlim = (/ True , False, False/)   
+	dimUnlim = (/ True , False, False/)
 	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
       ;------------
       ; Variables
@@ -403,10 +416,13 @@ begin
          fout->date             = date
        ;--- emissions
          fout->bb               = emiss_regrid
+      end if
+
     end if ;NetCDF
 
   tracername := var_names(tracer)
 
+exit
 
   end do ;non VOC tracers
 
@@ -531,7 +547,7 @@ begin
       ; CAM-chem species
       ;-------------------
       if (NRT) then
-        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+YYYYMMDD+".nc"
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
       else 
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"

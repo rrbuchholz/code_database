@@ -27,6 +27,9 @@ chomp($time = `date +%H`);
 chomp($year = `date +%Y`) ;
 chomp($m = `date +%m`) ;
 
+
+$current_date = 20171119;
+
 #************************TEST***********************
 print "Assessing emission file for $current_date\n";  #DEBUG
 
@@ -67,8 +70,8 @@ else{
   # download not there
   print OUT "$current_date, hour $time: Emissions neither downloaded or processed\n";
   print OUT "Downloading . . . \n";
-  print OUT  "wget --user=gmao_ops --password= $ftp_address$fname\n";
-     `wget -N -q -P $dir "$ftp_address$fname" `;
+  print OUT  "wget --user=gmao_ops --password= -N -q -P $dir $ftp_address$fname\n";
+     `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
 }
 
       $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
@@ -82,11 +85,11 @@ chomp($check_again = `ls $dir$fname*`);
 if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
-     # --- add in call to NCL processing script ---#
+     # --- call to NCL processing script ---#
       $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
      `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  chomp($proc_file = `ls $camdir*XYLENE*$currentdate.nc`);
+  chomp($proc_file = `ls $camdir*XYLENE*$current_date.nc`);
   if ($proc_file ne '') {
     open(OUT2,">>$proclog");
     print OUT2 "processed $current_date\n";
