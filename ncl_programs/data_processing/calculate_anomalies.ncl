@@ -36,6 +36,7 @@ begin
   ; MOPITT
   ; -------------------------------
   loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "Maritime Southeast Asia"
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
@@ -476,6 +477,38 @@ if (NETCDF) then
   ; File 
   ; Attributes
   ;------------
+
+  setfileoption(fout, "DefineMode",True)
+    fAtt                      = True
+      fAtt@email              = "buchholz@ucar.edu"
+      fAtt@author             = "R. R. Buchholz"
+      fAtt@creation_date      = systemfunc ("date")
+      fAtt@Conventions        = "CF-1.6"
+      fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
+      fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, "+\
+                                "doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
+      ;fAtt@region_definition  = region_name + " -->" +region_def(1)
+      fAtt@title              = "Month average anomalies in MOPITT CO for " +region_name
+
+     fileattdef(fout, fAtt)
+  setfileoption(fout, "DefineMode",False)
+
+  ;------------
+  ; Dimension 
+  ; Definitions
+  ;------------
+  base_julian = greg2jul(2000,1,1,0)
+  splitdate = str_split_by_length(tostring(climate_time), 4)
+  day_midmonth = (toint(splitdate(:,0))*0)+16
+  hour_midmonth = (toint(splitdate(:,0))*0)
+  juliandate = greg2jul(toint(splitdate(:,0)),toint(splitdate(:,1)),day_midmonth,hour_midmonth)-base_julian
+
+  time_array = juliandate
+  time_array@long_name         = "time"
+  time_array@units             = "days since 2000-01-01 00:00:00"
+  time_array@calendar          = "gregorian"
+  time_array!0                 = "time"
+
   region_def = str_split (month_co_avg@average_op_ncl,":")
   sep_lat_lon = str_split (region_def(1)," ")
   lat_boundaries = (/tofloat(sep_lat_lon(0)),tofloat(sep_lat_lon(2))/)
@@ -491,36 +524,20 @@ if (NETCDF) then
     lon_boundaries@comment           = "West boundary, East Boundary"
     lon_boundaries!0                 = "lon"
 
-  setfileoption(fout, "DefineMode",True)
-    fAtt                      = True
-      fAtt@email              = "buchholz@ucar.edu"
-      fAtt@author             = "R. R. Buchholz"
-      fAtt@creation_date      = systemfunc ("date")
-      fAtt@Conventions        = "CF-1.6"
-      fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
-      fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
-      fAtt@region_definition  = location + " -->" +region_def(1)
-      fAtt@title              = "Month average anomalies from MOPITT CO for " +location
+  nlon = dimsizes(lon_boundaries)
+  nlat = dimsizes(lat_boundaries)
+  ntim = dimsizes(time_array)
 
-     fileattdef(fout, fAtt)
-  setfileoption(fout, "DefineMode",False)
+  dim_names = (/ "time", "lon",  "lat" /)
+  dim_sizes = (/ ntim ,  nlon,  nlat  /)
+  dimUnlim = (/ True , False,   False  /)
+  filedimdef( fout, dim_names, dim_sizes, dimUnlim )
+
 
   ;------------
   ; Variable 
   ; Attributes
   ;------------
-base_julian = greg2jul(2000,1,1,0)
-splitdate = str_split_by_length(tostring(climate_time), 4)
-  day_midmonth = (toint(splitdate(:,0))*0)+16
-  hour_midmonth = (toint(splitdate(:,0))*0)
-juliandate = greg2jul(toint(splitdate(:,0)),toint(splitdate(:,1)),day_midmonth,hour_midmonth)-base_julian
-
-  time_array = juliandate
-  time_array@long_name         = "time"
-  time_array@units             = "days since 2000-01-01 00:00:00"
-  time_array@calendar          = "gregorian"
-  time_array!0                 = "time"
-
   yyyymm = climate_time
   yyyymm@long_name             = "YearMonth"
   yyyymm@units                 = "1"
