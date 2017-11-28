@@ -28,7 +28,7 @@ chomp($year = `date +%Y`) ;
 chomp($m = `date +%m`) ;
 
 
-$current_date = 20171119;
+#$current_date = 20171125;
 
 #************************TEST***********************
 print "Assessing emission file for $current_date\n";  #DEBUG
@@ -87,7 +87,7 @@ if ($check_again ne '' && $processed == 0){
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
       $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
-     `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
+     #`ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
   chomp($proc_file = `ls $camdir*XYLENE*$current_date.nc`);
   if ($proc_file ne '') {
@@ -114,7 +114,7 @@ if ($check_again ne '' && $processed == 0){
 #------------------------------
 #send to glade at 5am
 if ($time == 5 && $processed == 1){
-
+#/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1
 }
 
 #------------------------------
