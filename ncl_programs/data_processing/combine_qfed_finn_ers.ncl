@@ -47,7 +47,7 @@ begin
   NRT = True
 
   if (NRT) then
-    if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD from command line?
+    if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD=<value> from command line?
        YYYYMMDD = 20171101
     end if
     splitdate = str_split_by_length(tostring(YYYYMMDD), 4)

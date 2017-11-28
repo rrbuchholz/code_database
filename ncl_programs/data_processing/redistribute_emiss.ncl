@@ -25,18 +25,33 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "BC"
-  year = 2016
+    if (.not. isvar("year")) then      ; is year=<YYYY> from command line?
+       year = 2017
+    end if
+
+    if (.not. isvar("tracer")) then    ; is tracer=<name> from command line?
+       tracer = "BC"
+    end if
+
+
+  NRT = True
+  
   outres = "0.94x1.2"
+  emiss_type = "from_co2" ; from_co, from_co2, regridded
 
   ; -------------------------------
   ; emission files
   ; -------------------------------
-  top_dir = "/data14b/buchholz/"
-  emis_dir = top_dir+ "qfed/cam_"+outres+"/regridded/"
+  top_dir = "/net/modeling1/data14b/buchholz/"
+  emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"
 
-  e_file_in = emis_dir+year+"/qfed.emis_"+tracer+"_"+outres+"_mol_"+year+".nc"
-  outpath = emis_dir+year+"/"
+  if (NRT) then
+    e_file_in = emis_dir+"nrt/qfed.emis_"+tracer+"_"+outres+"_mol_"+year+".nc"
+    outpath = emis_dir+"nrt/"
+  else
+    e_file_in = emis_dir+year+"/qfed.emis_"+tracer+"_"+outres+"_mol_"+year+".nc"
+    outpath = emis_dir+year+"/"
+  end if
 
   ;------------
   ; toggles
@@ -125,8 +140,8 @@ begin
         copy_VarAtts(emiss_in,bb_emissions)
         copy_VarCoords(emiss_in,bb_emissions)
         bb_emissions@long_name = new_names(i)+" QFED/FINN fire emissions"
-        bb_emissions@vmax      = max(bb_emissions)
-        bb_emissions@vmin      = min(bb_emissions)
+        bb_emissions@vmax      := max(bb_emissions)
+        bb_emissions@vmin      := min(bb_emissions)
       printVarSummary(bb_emissions)
 
        ;--- emissions

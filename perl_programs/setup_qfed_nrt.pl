@@ -88,6 +88,11 @@ if ($check_again ne '' && $processed == 0){
      # --- call to NCL processing script ---#
       $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
      #`ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`
+
+  print OUT "Splitting OC and BC . . .\n";
+     # --- shell script ---#
+     $camdir
+     #`ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`
 }
 
   close(OUT);
