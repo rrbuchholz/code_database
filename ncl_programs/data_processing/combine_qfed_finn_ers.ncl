@@ -360,7 +360,7 @@ begin
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
-        fout = addfile(outpath+outfilename, "w")                 ; ready for some overwriting
+        fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else 
         outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
@@ -421,8 +421,6 @@ begin
     end if ;NetCDF
 
   tracername := var_names(tracer)
-
-exit
 
   end do ;non VOC tracers
 
@@ -548,12 +546,24 @@ exit
       ;-------------------
       if (NRT) then
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
-        fout = addfile(outpath+outfilename, "c")
+        template = addfile(outpath+outfilename, "r")            ; read in
+           date_template = template->date
+           bb_template = template->bb
+        fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else 
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
       end if
 
+      if (NRT) then
+         ind_overwrite = ind(date_template.eq.date)
+         emiss_overwrite = bb_template
+         emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
+
+       ;--- emissions
+         fout->bb               = emiss_overwrite
+
+      else
       ;------------
       ; File 
       ; Attributes
@@ -597,9 +607,11 @@ exit
          fout->date             = date
        ;--- emissions
          fout->bb               = voc_emiss_regrid
+      end if ;NRT or Reanalysis
+
     end if ;NetCDF
 
-   end do
+   end do ; VOC loop
 
 
   ;********************************************
