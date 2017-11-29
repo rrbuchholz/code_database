@@ -477,9 +477,12 @@ if (NETCDF) then
   ; File 
   ; Attributes
   ;------------
+  region_def = str_split (month_co_avg@average_op_ncl,":")
+  sep_lat_lon = str_split (region_def(1)," ")
 
   setfileoption(fout, "DefineMode",True)
     fAtt                      = True
+      fAtt@featureType        = "timeSeries"
       fAtt@email              = "buchholz@ucar.edu"
       fAtt@author             = "R. R. Buchholz"
       fAtt@creation_date      = systemfunc ("date")
@@ -487,7 +490,7 @@ if (NETCDF) then
       fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
       fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, "+\
                                 "doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
-      ;fAtt@region_definition  = region_name + " -->" +region_def(1)
+      fAtt@region_definition  = region_name + " -->" +region_def(1)
       fAtt@title              = "Month average anomalies in MOPITT CO for " +region_name
 
      fileattdef(fout, fAtt)
@@ -506,31 +509,30 @@ if (NETCDF) then
   time_array = juliandate
   time_array@long_name         = "time"
   time_array@units             = "days since 2000-01-01 00:00:00"
-  time_array@calendar          = "gregorian"
   time_array!0                 = "time"
 
-  region_def = str_split (month_co_avg@average_op_ncl,":")
-  sep_lat_lon = str_split (region_def(1)," ")
   lat_boundaries = (/tofloat(sep_lat_lon(0)),tofloat(sep_lat_lon(2))/)
     lat_boundaries@long_name         = "latitude"
     lat_boundaries@units             = "degrees_north"
-    lat_boundaries@description       = "Latitude_boundaries_of_region"
-    lat_boundaries@comment           = "North boundary, South Boundary"
-    lat_boundaries!0                 = "lat"
+    lat_boundaries@description       = "Latitude bounds, south is negative"
+    lat_boundaries!0                 = "nbounds"
   lon_boundaries = (/tofloat(sep_lat_lon(4)),tofloat(sep_lat_lon(6))/)
     lon_boundaries@long_name         = "longitude"
     lon_boundaries@units             = "degrees_east"
-    lon_boundaries@description       = "Longitude_boundaries_of_region"
-    lon_boundaries@comment           = "West boundary, East Boundary"
-    lon_boundaries!0                 = "lon"
+    lon_boundaries@description       = "Longitude bounds, west is negative"
+    lon_boundaries!0                 = "nbounds"
 
-  nlon = dimsizes(lon_boundaries)
-  nlat = dimsizes(lat_boundaries)
+   region_title = tochar(location)
+     region_title!0 = "name_strlen"
+     region_title@cf_role = "timeseries_id"
+     region_title@long_name = "region name"
+
+  nbounds = dimsizes(lat_boundaries)
   ntim = dimsizes(time_array)
 
-  dim_names = (/ "time", "lon",  "lat" /)
-  dim_sizes = (/ ntim ,  nlon,  nlat  /)
-  dimUnlim = (/ True , False,   False  /)
+  dim_names = (/ "time", "nbounds" /)
+  dim_sizes = (/ ntim ,  nbounds /)
+  dimUnlim = (/ True , False  /)
   filedimdef( fout, dim_names, dim_sizes, dimUnlim )
 
 
@@ -599,8 +601,9 @@ if (NETCDF) then
   fout->MOPITT_CO_TCOL_FILLED = new_month_co_avg
   fout->MOPITT_CO_ANOMALY = month_anomaly
   fout->YYYYMM = yyyymm
-  fout->LATITUDE_BOUNDAIES = lat_boundaries
-  fout->LONGITUDE_BOUNDARIES = lon_boundaries
+  fout->REGION_LAT_BOUNDS = lat_boundaries
+  fout->REGION_LON_BOUNDS = lon_boundaries
+  fout->REGION_NAME = region_title
 
 end if ;NETCDF
 
