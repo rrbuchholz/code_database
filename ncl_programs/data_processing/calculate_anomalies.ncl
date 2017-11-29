@@ -522,6 +522,18 @@ if (NETCDF) then
     lon_boundaries@description       = "Longitude bounds, west is negative"
     lon_boundaries!0                 = "nbounds"
 
+   lat_center = (lat_boundaries(0)+lat_boundaries(1))/2
+     lat_center@description          = "Latitude center of region, south is negative"
+     lat_center@long_name            = "latitude"
+     lat_center@units                = "degrees_north"
+     lat_center!0                    = "ncenter"
+
+   lon_center = (lon_boundaries(0)+lon_boundaries(1))/2
+     lon_center@description          = "Longitude center of region, west is negative"
+     lon_center@long_name            = "longitude"
+     lon_center@units                = "degrees_east"
+     lon_center!0                    = "ncenter"
+
    region_title = tochar(location)
      region_title!0 = "name_strlen"
      region_title@cf_role = "timeseries_id"
@@ -604,6 +616,9 @@ if (NETCDF) then
   fout->REGION_LAT_BOUNDS = lat_boundaries
   fout->REGION_LON_BOUNDS = lon_boundaries
   fout->REGION_NAME = region_title
+  fout->XLAT = lat_center
+  fout->XLON = lon_center
+
 
 end if ;NETCDF
 
