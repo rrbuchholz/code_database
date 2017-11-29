@@ -31,8 +31,8 @@ chomp($m = `date +%m`) ;
 
 #$current_date = 20171126;
 
-#************************TEST***********************
-###print "Assessing emission file for $current_date\n";  #DEBUG
+open(OUT,">$topdir/temp.out");
+print OUT "Assessing emission file for $current_date\n";  #DEBUG
 
 #------------------------------
 # set up locations
@@ -41,7 +41,7 @@ $dir = "$topdir/co2_nrt/";
 $fname = "*co2.*$current_date*.nc4";
 $ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$m/";
 
-###print "$ftp_address\n";                               #DEBUG
+print OUT "$ftp_address\n";                               #DEBUG
 
 #------------------------------
 # open log to see last time processed
@@ -51,11 +51,10 @@ chomp(@lines = <IN>);
 $processed = grep { /$current_date/ } @lines;
 close(IN);
 
-###print "Is current date processed: $processed\n";      #DEBUG
+print OUT "Is current date processed: $processed\n";      #DEBUG
 
 #------------------------------
 # Data download
-open(OUT,">$topdir/temp.out");
 chomp($last_file = `ls $dir$fname*`);
 chomp($now = `date`);
 
@@ -75,7 +74,6 @@ else{
      `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
 }
 
-
 #------------------------------
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
@@ -85,24 +83,27 @@ if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
-
      `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
+
+  print OUT "ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
      `ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
      `ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "ncl year=2017 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
-
 
 #------------------------------
 #Check Processed and send e-mail
 chomp(@check_file = `ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
 $proc_file = grep { /True/ } @check_file;
 
+print OUT "Is current date processed yet: $proc_file\n";      #DEBUG
+print OUT "@check_file\n";      #DEBUG
 
 if ($processed == 0 && $proc_file == 1){
-    print OUT "Checked: all files have some non-zero values\n";
+    print OUT "Checked: all files have some non-zero values for $current_date \n";
     open(OUT2,">>$proclog");
     print OUT2 "processed $current_date\n";
     close(OUT2);
@@ -135,7 +136,7 @@ if ($time >= 5 && $processed == 1){
 
 #------------------------------
 #send email if processing not done by 7am
-if (($time == 7 || $time == 10)&& $processed == 0){
+if ($time == 8 && $processed == 0){
   $subject = 'QFED processing not done';
   $message = 'After 7am, QFED processing not done for '. $current_date .', may need to manually process.';
 
