@@ -25,6 +25,7 @@ $topdir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25";
 chomp($today = `date +%Y%m%d`) ;
 chomp($current_date = `date --date='$today -1 day' +%Y%m%d`);
 chomp($time = `date +%H`);
+chomp($min = `date +%M`);
 chomp($year = `date +%Y`) ;
 chomp($m = `date +%m`) ;
 
@@ -129,16 +130,16 @@ else{
 }
 
 #------------------------------
-#send to glade at 5am
-if ($time >= 5 && $processed == 1){
-#/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1
+#send to glade at 8am
+if ($time >= 8 && $min >= 30 && $processed == 1){
+#`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/* buchholz@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
 }
 
 #------------------------------
 #send email if processing not done by 7am
 if ($time == 8 && $processed == 0){
   $subject = 'QFED processing not done';
-  $message = 'After 7am, QFED processing not done for '. $current_date .', may need to manually process.';
+  $message = 'After 8am, QFED processing not done for '. $current_date .', may need to manually process.';
 
   open(MAIL, "|/usr/sbin/sendmail -t");
 
