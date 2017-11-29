@@ -3,9 +3,10 @@
 #======================================================#
 #--- This Perl script sets up CAM-chem emissions for---#
 #--- forecast runs.                                 ---#
-#---    * downloads QFED CO2 NRT                     ---#
+#---    * downloads QFED CO2 NRT                    ---#
 #---    * calls the NCL script to re-grid and create---#
 #---      CAM-chem emissions                        ---#
+#---    * wites over time slice in year files       ---#
 #---    * uplopads new emissions to glade           ---#
 #---    * emails errors or completion               ---#
 #---                               rrb Apr 03, 2016 ---#
@@ -28,19 +29,19 @@ chomp($year = `date +%Y`) ;
 chomp($m = `date +%m`) ;
 
 
-#$current_date = 20171125;
+#$current_date = 20171126;
 
 #************************TEST***********************
-print "Assessing emission file for $current_date\n";  #DEBUG
+###print "Assessing emission file for $current_date\n";  #DEBUG
 
 #------------------------------
 # set up locations
 $dir = "$topdir/co2_nrt/";
-$camdir = "/net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/";
+#$camdir = "/net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/";
 $fname = "*co2.*$current_date*.nc4";
 $ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$m/";
 
-print "$ftp_address\n";  #DEBUG
+###print "$ftp_address\n";                               #DEBUG
 
 #------------------------------
 # open log to see last time processed
@@ -50,57 +51,58 @@ chomp(@lines = <IN>);
 $processed = grep { /$current_date/ } @lines;
 close(IN);
 
-print "Is current date processed: $processed\n";  #DEBUG
+###print "Is current date processed: $processed\n";      #DEBUG
 
 #------------------------------
 # Data download
 open(OUT,">$topdir/temp.out");
 chomp($last_file = `ls $dir$fname*`);
+chomp($now = `date`);
 
 if ($last_file ne '' && $processed == 0){
   # download there and not processed
-  print OUT "Download completed, end file present: $last_file\n";
+  print OUT "$now : Download completed, end file present: $last_file\n";
 }
 elsif ($last_file ne '' && $processed == 1){
   # download there and already processed
-  print OUT "$current_date: Download already completed, Emissions already processed\n";
-
+  print OUT "$now : Download already completed, Emissions already processed\n";
 }
 else{
   # download not there
-  print OUT "$current_date, hour $time: Emissions neither downloaded or processed\n";
+  print OUT "$now : Emissions neither downloaded or processed\n";
   print OUT "Downloading . . . \n";
   print OUT  "wget --user=gmao_ops --password= -N -q -P $dir $ftp_address$fname\n";
      `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
 }
 
-      $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
-     print "ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";
 
-#exit
 #------------------------------
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
+$codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
 
 if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
-      $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
-     #`ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`
+
+     `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     $camdir
-     #`ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`
+     `ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
 }
 
-  close(OUT);
 
 #------------------------------
 #Check Processed and send e-mail
-  chomp($proc_file = `ls $camdir*XYLENE*$current_date.nc`);
-if ($time == 5 && $proc_file ne ''){
+chomp(@check_file = `ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+$proc_file = grep { /True/ } @check_file;
+
+
+if ($processed == 0 && $proc_file == 1){
+    print OUT "Checked: all files have some non-zero values\n";
     open(OUT2,">>$proclog");
     print OUT2 "processed $current_date\n";
     close(OUT2);
@@ -116,20 +118,26 @@ if ($time == 5 && $proc_file ne ''){
     # Email Body
     print MAIL $message;
     close(MAIL);
-    print OUT "Email Sent Successfully\n";
+    print OUT "***** Processed, email sent successfully *****\n";
+}
+elsif ($processed == 1 && $proc_file == 1){
+    print OUT "Processed and email already sent. \n";
+}
+else{
+    print OUT "Not processed yet. \n";
 }
 
 #------------------------------
 #send to glade at 5am
-if ($time == 5 && $processed == 1){
+if ($time >= 5 && $processed == 1){
 #/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1
 }
 
 #------------------------------
-#send email if processing not done by 1pm
-if (($time == 4 || $time == 10)&& $processed == 0){
+#send email if processing not done by 7am
+if (($time == 7 || $time == 10)&& $processed == 0){
   $subject = 'QFED processing not done';
-  $message = 'After 4am, QFED processing not done for '. $current_date .', may need to manually process.';
+  $message = 'After 7am, QFED processing not done for '. $current_date .', may need to manually process.';
 
   open(MAIL, "|/usr/sbin/sendmail -t");
 
@@ -144,6 +152,5 @@ if (($time == 4 || $time == 10)&& $processed == 0){
   print "Email Sent Successfully\n";
 }
 
-
-
+  close(OUT);
 

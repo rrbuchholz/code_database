@@ -370,7 +370,8 @@ begin
          ind_overwrite = ind(date_template.eq.date)
          emiss_overwrite = bb_template
          emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
-
+           emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
+           emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
        ;--- emissions
          fout->bb               = emiss_overwrite
 
@@ -559,6 +560,9 @@ begin
          ind_overwrite = ind(date_template.eq.date)
          emiss_overwrite = bb_template
          emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
+           emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
+           emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
+
 
        ;--- emissions
          fout->bb               = emiss_overwrite

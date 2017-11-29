@@ -33,11 +33,18 @@ begin
        tracer = "BC"
     end if
 
+    if (.not. isvar("NRT")) then    ; is NRT=<boolean> from command line?
+         NRT = False
+    end if
 
-  NRT = True
-  
-  outres = "0.94x1.2"
-  emiss_type = "from_co2" ; from_co, from_co2, regridded
+    if (.not. isvar("outres")) then    ; is outres=<name> from command line?
+         outres = "0.94x1.2"
+    end if
+
+    if (.not. isvar("emiss_type")) then  ; is emiss_type=<name> from command line?
+         emiss_type = "from_co2"         ; from_co, from_co2, regridded
+    end if
+
 
   ; -------------------------------
   ; emission files
@@ -140,8 +147,8 @@ begin
         copy_VarAtts(emiss_in,bb_emissions)
         copy_VarCoords(emiss_in,bb_emissions)
         bb_emissions@long_name = new_names(i)+" QFED/FINN fire emissions"
-        bb_emissions@vmax      := max(bb_emissions)
-        bb_emissions@vmin      := min(bb_emissions)
+        bb_emissions@vmax      := tofloat(max(bb_emissions))
+        bb_emissions@vmin      := tofloat(min(bb_emissions))
       printVarSummary(bb_emissions)
 
        ;--- emissions
