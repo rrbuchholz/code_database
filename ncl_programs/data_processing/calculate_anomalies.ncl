@@ -487,7 +487,7 @@ if (NETCDF) then
       fAtt@author             = "R. R. Buchholz"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@Conventions        = "CF-1.6"
-      fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
+      ;fAtt@reference          = "Deeter et al., AMT, 2017, doi:10.5194/amt-10-2533-2017"
       fAtt@source             = "MOPITT level 2, version 7, thermal IR retrievals, "+\
                                 "doi:10.5067/TERRA/MOPITT/MOP02T_L2.007"
       fAtt@region_definition  = region_name + " -->" +region_def(1)
