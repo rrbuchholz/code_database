@@ -287,7 +287,7 @@ begin
   ; Extratropical Forest     co2_trop
 
   do tracer = 0,dimsizes(var_names)-1
-  ;do tracer = 0,1
+  ;do tracer = 2,4
     if (var_names(tracer).eq."NMOC".or.\
         var_names(tracer).eq."ignore".or.\
         var_names(tracer).eq."PM2.5".or.\
@@ -325,7 +325,7 @@ begin
     ; 1.9 x 2.5 or 0.94 x 1.2
     ; -------------------------------
      opt    = False
-     emiss_regrid  = area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \
+     emiss_regrid  := area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \
                                          tracer_emiss , \
                                          newlon, newlat, opt)  ; (ntim,96,144)
      ;printVarSummary(emiss_regrid)
@@ -333,6 +333,7 @@ begin
      ;--- sanity check
      AvgOrigGrid = wgt_areaave2 (tracer_emiss , wgt_QFED, 0)
      Avg_Regrid = wgt_areaave2 (emiss_regrid, wgt_CAM, 0)
+
      AvgDiff = AvgOrigGrid-Avg_Regrid
      PercDiff = (AvgDiff/AvgOrigGrid)*100
      MaxDiff = max(PercDiff)
@@ -360,6 +361,19 @@ begin
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
+;printVarSummary(bb_template)
+           bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
+           bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
+           delete(bb_template@_FillValue)
+           delete(bb_template@missing_value)
+           delete(bb_template@fmissing_value)
+           bb_template@_FillValue := 0.0
+           bb_template@missing_value := 0.0
+           bb_template@fmissing_value := 0.0
+
+;printVarSummary(bb_template)
+;exit
+
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else 
         outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
@@ -368,10 +382,21 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
+           delete(emiss_regrid@missing_value)
+           delete(emiss_regrid@fmissing_value)
+           emiss_regrid = where(ismissing(emiss_regrid),0,emiss_regrid) ; replace missing with zeros for calculations
+           emiss_regrid@_FillValue := 0.0
+           emiss_regrid@missing_value := 0.0
+           emiss_regrid@fmissing_value := 0.0
+           emiss_regrid@vmax   := tofloat(max(emiss_regrid))
+           emiss_regrid@vmin   := tofloat(min(emiss_regrid))
+
          emiss_overwrite = bb_template
          emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
+           
+
        ;--- emissions
          fout->bb               = emiss_overwrite
 
@@ -505,7 +530,7 @@ begin
     ; 1.9 x 2.5 or 0.94 x 1.2
     ; -------------------------------
      opt    = False
-     voc_emiss_regrid  = area_conserve_remap_Wrap(voc_tracer_emiss&lon,voc_tracer_emiss&lat, \
+     voc_emiss_regrid  := area_conserve_remap_Wrap(voc_tracer_emiss&lon,voc_tracer_emiss&lat, \
                                          voc_tracer_emiss , \
                                          newlon, newlat, opt)  ; (ntim,96,144)
     ; printVarSummary(voc_emiss_regrid)
@@ -550,6 +575,14 @@ begin
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
+           bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
+           ;bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
+           delete(bb_template@_FillValue)
+           delete(bb_template@missing_value)
+           delete(bb_template@fmissing_value)
+           bb_template@_FillValue := 0.0
+           bb_template@missing_value := 0.0
+           bb_template@fmissing_value := 0.0
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else 
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
@@ -558,11 +591,19 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
+           delete(voc_emiss_regrid@missing_value)
+           delete(voc_emiss_regrid@fmissing_value)
+           voc_emiss_regrid = where(ismissing(voc_emiss_regrid),0,voc_emiss_regrid) ; replace missing with zeros for calculations
+           voc_emiss_regrid@_FillValue := 0.0
+           voc_emiss_regrid@missing_value := 0.0
+           voc_emiss_regrid@fmissing_value := 0.0
+           voc_emiss_regrid@vmax   := tofloat(max(voc_emiss_regrid))
+           voc_emiss_regrid@vmin   := tofloat(min(voc_emiss_regrid))
+
          emiss_overwrite = bb_template
-         emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
+         emiss_overwrite(ind_overwrite,:,:) = voc_emiss_regrid
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
-
 
        ;--- emissions
          fout->bb               = emiss_overwrite

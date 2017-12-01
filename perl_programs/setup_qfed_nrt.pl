@@ -26,8 +26,8 @@ chomp($today = `date +%Y%m%d`) ;
 chomp($current_date = `date --date='$today -1 day' +%Y%m%d`);
 chomp($time = `date +%H`);
 chomp($min = `date +%M`);
-chomp($year = `date +%Y`) ;
-chomp($m = `date +%m`) ;
+chomp($year = `date --date='$today -1 day' +%Y`) ;
+chomp($month = `date --date='$today -1 day' +%m`) ;
 
 
 #$current_date = 20171126;
@@ -38,9 +38,8 @@ print OUT "Assessing emission file for $current_date\n";  #DEBUG
 #------------------------------
 # set up locations
 $dir = "$topdir/co2_nrt/";
-#$camdir = "/net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/";
 $fname = "*co2.*$current_date*.nc4";
-$ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$m/";
+$ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$month/";
 
 print OUT "$ftp_address\n";                               #DEBUG
 
@@ -80,24 +79,29 @@ else{
 chomp($check_again = `ls $dir$fname*`);
 $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
 
+#$processed = 0;
+
 if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
-     `ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
+     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  print OUT "ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
+  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-  print OUT "ncl year=2017 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+     `/usr/local/ncarg/bin/ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "/usr/local/ncarg/bin/ncl year=2017 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+}
+else{
+  print OUT "File still not available . . .\n";
 }
 
 #------------------------------
 #Check Processed and send e-mail
-chomp(@check_file = `ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
 $proc_file = grep { /True/ } @check_file;
 
 print OUT "Is current date processed yet: $proc_file\n";      #DEBUG
@@ -132,7 +136,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 8 && $min >= 30 && $processed == 1){
-#`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/* buchholz@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
 }
 
 #------------------------------
