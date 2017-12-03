@@ -395,7 +395,7 @@ begin
          emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
-           
+           emiss_overwrite@long_name := dummy_var2(tracer)+" QFED/FINN fire emissions"
 
        ;--- emissions
          fout->bb               = emiss_overwrite
@@ -604,6 +604,7 @@ begin
          emiss_overwrite(ind_overwrite,:,:) = voc_emiss_regrid
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
+           emiss_overwrite@long_name := voc_spec(voctype)+" QFED/FINN fire emissions"
 
        ;--- emissions
          fout->bb               = emiss_overwrite
