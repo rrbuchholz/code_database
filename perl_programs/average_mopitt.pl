@@ -3,7 +3,8 @@
 # Script for averaging MOPITT month data
 #
 
-$rundir = "/net/mopfl/MOPITT/V7T/Archive/L3/";
+#$rundir = "/net/mopfl/MOPITT/V7J/Archive/L3/";
+#$rundir = "/MOPITT/V7J/Archive/L3/";
 #------------------------------------
 # create tracer list of tagged tracers to extract
 #------------------------------------
@@ -13,10 +14,10 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
     #------------------------------------
     # concatenate files
     #------------------------------------
-    for  $i (2001..2016) {
+    for  $i (2001..2001) {
          $to_combine = "";
          print"$to_combine\n";
-         for  $j (12..12) {
+         for  $j (9..12) {
           $dateval = $i.sprintf("%02d",$j);
           chomp($fname = `ls $rundir$dateval/month/*.he5`);
           $to_combine = $to_combine.$fname." ";
@@ -24,7 +25,7 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
          print "\n";
 
          #$outfile = $i."_dummy.nc";
-         $outfile = $dateval."_dummy.nc";
+         $outfile = "/IASI/home/buchholz/MOPITT_subset/V7/averages/".$dateval."_dummy.nc";
          #print "$outfile\n";
          #chomp(`ls $rundir$i*/month/*.he5`);
          print "Averaging $i\n";
@@ -34,7 +35,7 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
         `nces -O -v $tracerlist $to_combine$outfile`;
      }
 
-     chomp(@final_average = `ls *dummy.nc`);
+     chomp(@final_average = `ls /IASI/home/buchholz/MOPITT_subset/V7/averages/*dummy.nc`);
          print "Averaging all\n";
-         print "nces -O -v $tracerlist @final_average MOPITT_SOND_2001_2016.nc\n";
-         `nces -O -v $tracerlist @final_average MOPITT_SOND_2001_2016.nc`;
+         print "nces -O -v $tracerlist @final_average /IASI/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2001_2016.nc\n";
+         `nces -O -v $tracerlist @final_average /IASI/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2001_2016.nc`;
