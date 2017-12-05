@@ -238,7 +238,7 @@ begin
       latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-60./)
       latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-25./)
       lonmin = (/110.,110.,90.,0.,0.,-80 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-42 + 360./)
+      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-32 + 360./)
 
 
    ; -----------------------------------------------------
@@ -258,7 +258,7 @@ begin
       boxresII@gsLineColor      = "red2"
       boxresII@gsLineThicknessF = 6
 
-      index_name = (/"NINO 3.4","DMI","DMI2","TSA"/)
+      index_name = (/"NINO 3.4","~F33~D","DMI","TSA"/)
       index_latmin = (/-5.,-10.,-10.,-20./)
       index_latmax = (/5.,10.,0.,0./)
       index_lonmin = (/-170.+360.,50.,90.,-30.+360./)
@@ -317,11 +317,12 @@ begin
     textII = new(dimsizes(index_name),graphic)
     do k=0,dimsizes(index_name)-1
       if (k.eq.2) then
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)-2, index_latmin(k)-20,txres)
         continue;
       else if (k.eq.0)
         textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
       else if (k.eq.1)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-20,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-10,txres)
       else 
         textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
        end if

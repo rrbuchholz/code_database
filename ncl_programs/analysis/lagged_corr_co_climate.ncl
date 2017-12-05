@@ -51,7 +51,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
@@ -82,7 +82,7 @@ begin
   ; -------------------------------
   m_fin = addfile(mopitt_file, "r")            ; read in
   mopitt_anom    = m_fin->MOPITT_CO_ANOMALY
-  mopitt_time    = mopitt_anom&time
+  mopitt_time  = m_fin->YYYYMM
 
   ; -------------------------------
   ; Indices
@@ -143,7 +143,8 @@ acr = esccr(overlap_index_vals(:,0,:),mopitt_anom,maxlag)
  sond_lagcorrs = escorc(m_select_data,i_select_data)
  alldata_lagcorrs = escorc(overlap_index_vals,mopitt_anom)
 
-print(sond_lagcorrs)
+print(sond_lagcorrs(2,:))
+print(max(sond_lagcorrs(2,:)))
 ;print(alldata_lagcorrs)
 ;print(split_dates(m_select_ind,:))
 
