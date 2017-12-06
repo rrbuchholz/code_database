@@ -526,13 +526,13 @@ if (NETCDF) then
      lat_center@description          = "Latitude center of region, south is negative"
      lat_center@long_name            = "latitude"
      lat_center@units                = "degrees_north"
-     lat_center!0                    = "ncenter"
+     ;lat_center!0                    = "ncenter"
 
    lon_center = (lon_boundaries(0)+lon_boundaries(1))/2
      lon_center@description          = "Longitude center of region, west is negative"
      lon_center@long_name            = "longitude"
      lon_center@units                = "degrees_east"
-     lon_center!0                    = "ncenter"
+     ;lon_center!0                    = "ncenter"
 
    region_title = tochar(location)
      region_title!0 = "name_strlen"
@@ -546,7 +546,6 @@ if (NETCDF) then
   dim_sizes = (/ ntim ,  nbounds /)
   dimUnlim = (/ True , False  /)
   filedimdef( fout, dim_names, dim_sizes, dimUnlim )
-
 
   ;------------
   ; Variable 
@@ -616,8 +615,13 @@ if (NETCDF) then
   fout->REGION_LAT_BOUNDS = lat_boundaries
   fout->REGION_LON_BOUNDS = lon_boundaries
   fout->REGION_NAME = region_title
-  fout->XLAT = lat_center
-  fout->XLON = lon_center
+
+  filevardef (fout,(/"XLAT","XLON"/), (/"float","float"/), "ncl_scalar")
+  filevarattdef (fout,"XLAT",lat_center)
+  filevarattdef (fout,"XLON",lon_center)
+
+  fout->XLAT = (/lat_center/)
+  fout->XLON = (/lon_center/)
 
 
 end if ;NETCDF
