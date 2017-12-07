@@ -516,23 +516,27 @@ if (NETCDF) then
     lat_boundaries@units             = "degrees_north"
     lat_boundaries@description       = "Latitude bounds, south is negative"
     lat_boundaries!0                 = "nbounds"
+
   lon_boundaries = (/tofloat(sep_lat_lon(4)),tofloat(sep_lat_lon(6))/)
     lon_boundaries@long_name         = "longitude"
     lon_boundaries@units             = "degrees_east"
     lon_boundaries@description       = "Longitude bounds, west is negative"
     lon_boundaries!0                 = "nbounds"
 
+
    lat_center = (lat_boundaries(0)+lat_boundaries(1))/2
      lat_center@description          = "Latitude center of region, south is negative"
      lat_center@long_name            = "latitude"
      lat_center@units                = "degrees_north"
+     lat_center@bounds               = "REGION_LAT_BOUNDS"
      ;lat_center!0                    = "ncenter"
 
    lon_center = (lon_boundaries(0)+lon_boundaries(1))/2
      lon_center@description          = "Longitude center of region, west is negative"
      lon_center@long_name            = "longitude"
      lon_center@units                = "degrees_east"
-     ;lon_center!0                    = "ncenter"
+     lon_center@bounds               = "REGION_LON_BOUNDS"
+     ;lon_center!0                   = "ncenter"
 
    region_title = tochar(location)
      region_title!0 = "name_strlen"
