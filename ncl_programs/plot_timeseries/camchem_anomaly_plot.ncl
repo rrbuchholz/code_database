@@ -66,9 +66,9 @@ begin
   ;------------
   ; define location
   ;------------
-  location = "Australasia"
-  location_name = "Australasia"
-  emissions = "variable"
+  location = "Indonesia"
+  location_name = "Maritime SEA"
+  emissions = "constant"
 
   ; -------------------------------
   ; CAM-chem files
@@ -88,7 +88,7 @@ begin
   ; toggles
   ;------------
   PLOT         = True
-    plttype      = "x11"           ; pdf or png if want to save
+    plttype      = "png"           ; pdf or png if want to save
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
      year_s = 2001
@@ -109,7 +109,7 @@ begin
   ; -------------------------------
   if (PLOT) then
     pltdir       = "./"
-    pltname      = "CAMchem_anomaly_" + location
+    pltname      = "CAMchem_anomaly_"+emissions+"_emissions_"+ location
   end if
 
 ;--------------------------------------------
@@ -296,8 +296,8 @@ if (PLOT) then
     res@gsnDraw		    = False	                ; don't draw it yet
     res@gsnFrame            = False                     ; don't advance frame
 
-    res@trYMinF             = -0.1e18
-    res@trYMaxF             = 1.85e18
+    res@trYMinF             = -0.2e18
+    res@trYMaxF             = 1.75e18
     res@trXMinF             = year_s-0.1
     res@trXMaxF             = year_e
 
@@ -306,18 +306,18 @@ if (PLOT) then
     res@tmXBMajorOutwardLengthF = 0.0               
     res@tmXBMinorOutwardLengthF = 0.0    
 
-    res@tmXBLabelFontHeightF  = 0.048
-    res@tmYLLabelFontHeightF  = 0.048
-    res@tiYAxisFontHeightF    = 0.052
-    res@tiXAxisFontHeightF    = 0.052          
+    res@tmXBLabelFontHeightF  = 0.030
+    res@tmYLLabelFontHeightF  = 0.030
+    res@tiYAxisFontHeightF    = 0.038
+    res@tiXAxisFontHeightF    = 0.038          
 
-    res@vpWidthF             = 1.8
-    res@vpHeightF            = 0.5          ; set height of plot
+    res@vpWidthF             = 0.9
+    res@vpHeightF            = 0.25          ; set height of plot
 
     res@tiMainString        = ""
     res@tiYAxisString       = "CO Column"
     res@gsnRightString      = "~F34~4~F21~10~S2~18   molec. cm~S2~-2"
-    ;res@gsnStringFontHeightF = 0.032
+    res@gsnStringFontHeightF = 0.028
    
   base_res = True
   base_res = res
@@ -365,9 +365,9 @@ if (PLOT) then
 
     res@pmLegendDisplayMode      = "Always"        ; turn on legend
       res@lgPerimOn                = False           ; Turn off perimeter
-      res@pmLegendWidthF           = 0.5            ; Change width and
-      res@pmLegendHeightF          = 0.3             ; height of legend
-      res@lgLabelFontHeightF       = 0.032
+      res@pmLegendWidthF           = 0.3            ; Change width and
+      res@pmLegendHeightF          = 0.25             ; height of legend
+      res@lgLabelFontHeightF       = 0.024
       res@lbJustification          = "TopLeft"
       res@pmLegendOrthogonalPosF = 1.2
       res@pmLegendParallelPosF   = 0.475
@@ -391,7 +391,7 @@ if (PLOT) then
       res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
       res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
     res@tiXAxisString          = "Year"
-    res@vpHeightF           = 0.3          ; set height of plot
+    res@vpHeightF           = 0.15          ; set height of plot
 
     res@tmYLMode             = "Explicit"
       res@trYMinF             := -0.28e18
@@ -431,24 +431,26 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-   gsn_text_ndc(wks,location_name,0.175,0.81,txres)
+   gsn_text_ndc(wks,location_name,0.197,0.84,txres)
 
   ; -------------------------------
   ; panel the plots
   ; -------------------------------
   res1                     = True
     res1@gsnAttachBorderOn   = False
-    res1@tiYAxisFontHeightF  = 0.024
+    res1@tiYAxisFontHeightF  = 0.028
   res2                     = True
     res2@gsnMaximize         = True
     res2@gsnAttachPlotsXAxis = True
-    res2@tiXAxisFontHeightF  = 0.024
-    res2@tiYAxisFontHeightF  = 0.024
+    res2@tiXAxisFontHeightF  = 0.028
+    res2@tiYAxisFontHeightF  = 0.028
 
   ; plot1 will be the base plot.
   amid = gsn_attach_plots(plot1,plot4,res1,res2)
   draw(plot1)    ; All three plots will be drawn.
   frame(wks)
+  ;draw(plot4)    ; All three plots will be drawn.
+  ;frame(wks)
 
 end if ; PLOT
 
@@ -460,8 +462,8 @@ if (CSV) then
 ;---Create dummy mixed data to write to CSV file
   field_strings = (/"time","anomaly","CO"/)
   dq = str_get_dq()                ; double quote character
-  field_strings = dq + field_strings + dq                      ; Pre/append quotes to field names
-  header = [/str_join(field_strings,",")/]              ; Header is field names separated
+  field_strings = dq + field_strings + dq        ; Pre/append quotes to field names
+  header = [/str_join(field_strings,",")/]       ; Header is field names separated
                                                  ;   by commas.
 
 print(climate_time)
