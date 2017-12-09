@@ -68,7 +68,7 @@ begin
   ;------------
   location = "Indonesia"
   location_name = "Maritime SEA"
-  emissions = "constant"
+  emissions = "variable"
 
   ; -------------------------------
   ; CAM-chem files
