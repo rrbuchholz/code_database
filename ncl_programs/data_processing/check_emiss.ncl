@@ -22,7 +22,7 @@ begin
   ratio_species = "co2"
   outres = "0.94x1.2"
   outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
-  emis_files = systemfunc ("ls "+outpath+"*.nc")
+  emis_files = systemfunc ("ls "+outpath+"*"+year+".nc")
 
 ;--------------------------------------------
 ; end user input
