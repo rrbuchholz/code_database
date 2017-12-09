@@ -88,7 +88,7 @@ begin
   ; toggles
   ;------------
   PLOT         = True
-    plttype      = "png"           ; pdf or png if want to save
+    plttype      = "x11"           ; pdf or png if want to save
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
      year_s = 2001
@@ -369,8 +369,8 @@ if (PLOT) then
       res@pmLegendHeightF          = 0.25             ; height of legend
       res@lgLabelFontHeightF       = 0.024
       res@lbJustification          = "TopLeft"
-      res@pmLegendOrthogonalPosF = 1.2
-      res@pmLegendParallelPosF   = 0.475
+      res@pmLegendOrthogonalPosF = 1.6
+      res@pmLegendParallelPosF   = 0.275
     res@xyExplicitLegendLabels   = (/"methane ox", "biogenic", "anthropogenic", "VOC oxidation",    \
                                      "biomass burning","total"/)
   plot1a = gsn_csm_xy(wks,plottime,data1,res)
@@ -391,7 +391,7 @@ if (PLOT) then
       res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
       res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
     res@tiXAxisString          = "Year"
-    res@vpHeightF           = 0.15          ; set height of plot
+    res@vpHeightF           = 0.25          ; set height of plot
 
     res@tmYLMode             = "Explicit"
       res@trYMinF             := -0.28e18
@@ -431,7 +431,7 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-   gsn_text_ndc(wks,location_name,0.197,0.84,txres)
+   gsn_text_ndc(wks,location_name,0.197,0.89,txres)
 
   ; -------------------------------
   ; panel the plots
