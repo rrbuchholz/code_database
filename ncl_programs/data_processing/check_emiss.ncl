@@ -13,10 +13,10 @@ begin
 ; user input
 ;--------------------------------------------
    if (.not. isvar("year")) then      ; is year=<value> from command line?
-       year = 2017
+       year = 2018
     end if
    if (.not. isvar("YYYYMMDD")) then      ; is year=<value> from command line?
-       YYYYMMDD = 20171126
+       YYYYMMDD = 20180101
     end if
 
   ratio_species = "co2"

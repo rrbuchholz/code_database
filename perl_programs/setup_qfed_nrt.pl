@@ -79,7 +79,7 @@ else{
 chomp($check_again = `ls $dir$fname*`);
 $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
 
-#$processed = 0;
+#$processed = 1;
 
 if ($check_again ne '' && $processed == 0){
   # download there and not done
@@ -91,8 +91,8 @@ if ($check_again ne '' && $processed == 0){
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `/usr/local/ncarg/bin/ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
   print OUT "/usr/local/ncarg/bin/ncl year=2017 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
 else{
@@ -101,7 +101,9 @@ else{
 
 #------------------------------
 #Check Processed and send e-mail
-chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+#print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
+
 $proc_file = grep { /True/ } @check_file;
 
 print OUT "Is current date processed yet: $proc_file\n";      #DEBUG
