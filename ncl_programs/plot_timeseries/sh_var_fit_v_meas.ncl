@@ -24,8 +24,8 @@ begin
 ; USER DEFINED
 ; =========================================
  
-  location = "SouthSAmerica"
-  location_title = "(g) Southern South America"
+  location = "MaritimeSEA"
+  location_title = "Maritime SEA"
   
   PLOT = True
     plottype = "pdf"
@@ -35,16 +35,16 @@ begin
       plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
 
-  PREDICT = False
+  PREDICT = True
   TOP_THREE = False
 ; =========================================
 ; SET UP
 ; =========================================
   anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  anom_file = location+"1coanom.txt"
+  anom_file = location+"coanom.txt"
 
   fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  fit_file = location+"1fitted.txt"
+  fit_file = location+"fitted.txt"
   
 ; ----------------------------------------
 ; Load data 1
@@ -174,11 +174,13 @@ if (PLOT) then
    res@tmXBMode         = "Explicit"
    res@tmXBValues       = (/2005,2010,2015/)
    res@tmXBLabels       = (/"2005","2010","2015"/)
-   res@tmXBLabelFontHeightF = 0.034
-   res@tmYLLabelFontHeightF = 0.034
+   res@tmXBLabelFontHeightF = 0.032
+   res@tmYLLabelFontHeightF = 0.032
+   res@tiYAxisFontHeightF   = 0.032
+   res@tiXAxisFontHeightF   = 0.032
    
    res@trYMinF          = -6.1e17
-   res@trYMaxF          = 10e17
+   res@trYMaxF          = 12.5e17
    res@tmYLMode         = "Explicit"
    res@tmYLValues       = (/-5e17,0,5e17,10e17/)
    res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
@@ -196,20 +198,23 @@ if (PLOT) then
     res2@lgPerimOn                = False           ; Turn off perimeter
     res2@pmLegendWidthF           = 0.10            ; Change width and
     res2@lgLabelFontHeightF       = 0.030
-    res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
   if (PREDICT.or.TOP_THREE) then
-    res2@pmLegendOrthogonalPosF   = -1.60
-    res2@pmLegendParallelPosF     = 0.83
+    res2@xyExplicitLegendLabels   = "Measured anomaly"
+    res2@pmLegendOrthogonalPosF   = -1.75
+    res2@pmLegendParallelPosF     = 0.60
+    res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2  "             ; Label Bar title
+    res2@gsnLeftStringFontHeightF = 0.030
   else
+    res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
     res2@pmLegendOrthogonalPosF   = -1.5
     res2@pmLegendParallelPosF     = 0.83
+    res2@gsnLeftString            := ""             ; Label Bar title
    end if
 
   ;-----------------------------------
   ; Measured
   ;-----------------------------------
     ;res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    res2@gsnLeftString            := ""             ; Label Bar title
     res2@xyMarkers                = 16               ; choose type of marker  
     res2@xyMarkerColor            = "gray70"         ; Marker color
     res2@xyMarkerOpacityF         = 0.85
@@ -229,9 +234,9 @@ if (PLOT) then
     ;-----------------------------------
      res2@pmLegendDisplayMode      = "Always"        ; turn on legend
      res2@gsnLeftString            := ""             ; Label Bar title
-     res2@xyExplicitLegendLabels   := (/ "Predicted anomaly", "Modeled anomaly to 2014"/)
-     res2@pmLegendOrthogonalPosF   = -1.68
-     res2@pmLegendParallelPosF     = 0.50
+     res2@xyExplicitLegendLabels   := (/ "Model predicted anomaly 2015-2016", "Model predicted anomaly to 2014"/)
+     res2@pmLegendOrthogonalPosF   = -2.08
+     res2@pmLegendParallelPosF     = 0.65
 
     ;-----------------------------------
     ; Fit
@@ -251,11 +256,14 @@ if (PLOT) then
     ;-----------------------------------
     ; Outlines
     ;-----------------------------------
+     res2@xyExplicitLegendLabels   := (/ "", ""/)
     res2@xyMarkers                := (/8,7/)               ; choose type of marker  
     res2@xyMarkerColors           := (/"mediumpurple4","darkorange4"/)         ; Marker color
     res2@xyMarkerThicknessF       = 4
      res2@xyMarkerOpacityF        = 1
      res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
+     res2@pmLegendOrthogonalPosF   = -2.07
+     res2@pmLegendParallelPosF     = 0.318
    plot3  = gsn_csm_xy (wks,yearfrac,data(2:1,:),res2)  ; create plot
 
   else if (TOP_THREE) then
@@ -302,7 +310,7 @@ if (PLOT) then
     ; Add in legend for fit
     ;-----------------------------------
      res2@gsnLeftString            := ""             ; Label Bar title
-     res2@xyExplicitLegendLabels   := "Modeled anomaly (x 10~S2~17   molec cm~S2~-2  )"
+     res2@xyExplicitLegendLabels   := "Model predicted anomaly (x 10~S2~17   molec cm~S2~-2  )"
      res2@pmLegendOrthogonalPosF   = -1.7
      res2@pmLegendParallelPosF     = 0.82
     ;-----------------------------------
@@ -319,7 +327,7 @@ if (PLOT) then
     res2@xyMarkerColor            = "darkorange4"         ; Marker color
     res2@xyMarkerThicknessF       = 4
     res2@xyExplicitLegendLabels   := ""
-     res2@pmLegendParallelPosF     = 0.485
+     res2@pmLegendParallelPosF     = 0.420
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
   end if
@@ -367,14 +375,15 @@ if (PLOT) then
    ;drawNDCGrid(wks)
    ; add station
     txres                   = True                     ; polyline mods desired
-     txres@txFontHeightF    = 0.022                    ; font smaller. default big
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimSpaceF    = 0.3
      txres@txPerimThicknessF= 2.0
   if (PREDICT.or.TOP_THREE) then
-    gsn_text_ndc(wks,location_title,0.165,0.569,txres)
+     txres@txFontHeightF    = 0.024                  ; font smaller. default big
+    gsn_text_ndc(wks,location_title,0.190,0.575,txres)
   else
+     txres@txFontHeightF    = 0.022                    ; font smaller. default big
     gsn_text_ndc(wks,location_title,0.175,0.575,txres)
   end if
             
