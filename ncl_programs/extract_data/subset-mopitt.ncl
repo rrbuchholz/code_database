@@ -43,15 +43,13 @@ begin
   else 
     all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
   end if
-   print(all_files(0:10))
-exit
 
   ; -------------------------------
   ; Start and truncation dates
   ; (beta files when prelim calibration)
   ; -------------------------------
    start_date = 20010101
-   truncation_date = 20010201
+   truncation_date = 20170101
 
   ;------------
   ; distance around 
@@ -430,7 +428,7 @@ exit
                 g=region_ak_col_nd(k,:)
               end if
 
-              if (.not.(isdefined("time_selected"))) then
+              if (.not.(isdefined("anom_diag_selected"))) then
                 ;--- diagnostics for anomalies
                 anom_diag_selected = new((/1,dimsizes(region_anom_diag(0,:))/),float)
                 anom_diag_selected(0,:) = d
@@ -444,17 +442,17 @@ exit
                 ak_col_nd_selected = new((/1,10/),float)
                 ak_col_nd_selected(0,:) = g
               else
-                temp13=anom_diag_selected
-                temp14=col_diag_selected
-                temp15=ak_col_selected
-                temp16=ak_col_nd_selected
+                temp13 := anom_diag_selected
+                temp14 := col_diag_selected
+                temp15 := ak_col_selected
+                temp16 := ak_col_nd_selected
 
               ;--- a posteriori (vmr profile)
-                dummy4 := new((/1,10/),float)
+                dummy4 := new((/1,dimsizes(region_anom_diag(0,:))/),float)
                 dummy4(0,:) = d
                 anom_diag_selected := array_append_record(temp13,dummy4,0)
               ;--- a posteriori (vmr profile)
-                dummy5 := new((/1,10/),float)
+                dummy5 := new((/1,dimsizes(region_col_diag(0,:))/),float)
                 dummy5(0,:) = e
                 col_diag_selected := array_append_record(temp14,dummy5,0)
               ;--- a posteriori (vmr profile)
@@ -558,6 +556,11 @@ if (netCDF) then
      fout->RetrievalAvKerMatrix          = m_ak_selected
 
    if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
+     anom_diag_selected!0        = "time"
+     col_diag_selected!0         = "time"
+     ak_col_selected!0           = "time"
+     ak_col_nd_selected!0        = "time"
+
      ;--- diagnostic 1
        fout->RetrievalAnomalyDiagnostic = anom_diag_selected
      ;--- diagnostic 2
