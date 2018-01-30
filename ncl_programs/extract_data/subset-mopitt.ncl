@@ -99,12 +99,14 @@ begin
     vmr_avker      = "RetrievalAveragingKernelMatrix"+suff
     pressure_surf  = "SurfacePressure"+suff
 
+
     ; New parameters in MOPITT files from V7 onwards
     if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
       diag_1       = "RetrievalAnomalyDiagnostic"+suff
       diag_2       = "RetrievedCOTotalColumnDiagnostics"+suff
       col_avker    = "TotalColumnAveragingKernel"+suff
       col_avker_nodim = "TotalColumnAveragingKernelDimless"+suff
+      dry_air_col    = "DryAirColumn"+suff
     end if   
 
     location = location_name
@@ -304,11 +306,17 @@ begin
       region_profile := new((/dimsizes(region),10/),float,-9999)
          region_profile (:,0)    = (/ret_surf(:)/)
          region_profile (:,1:9)  = ret_dummy(:,:)
+      ret_err_dummy    := fin->$vmr_aposterior$(region,:,1)
+      ret_err_surf     := fin->$apost_surf$(region,1)
+      region_profile_err := new((/dimsizes(region),10/),float,-9999)
+         region_profile_err (:,0)    = (/ret_err_surf(:)/)
+         region_profile_err (:,1:9)  = ret_err_dummy(:,:)
       if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
         region_anom_diag    := fin->$diag_1$(region,:)
         region_col_diag     := fin->$diag_2$(region,:)
         region_ak_col       := fin->$col_avker$(region,:)
         region_ak_col_nd    := fin->$col_avker_nodim$(region,:)
+        region_dry_air_col  := fin->$dry_air_col$(region)
       end if  
 
       region_ak           := fin->$vmr_avker$(region,:,:)
@@ -327,10 +335,12 @@ begin
             ;accounting for loss of 1st dim if only 1 pixel around station
             a=region_v_ap(:)
             b=region_profile(:)
+            b_1=region_profile_err(:)
             c=region_ak(:,:)
           else
             a=region_v_ap(k,:)
             b=region_profile(k,:)
+            b_1=region_profile_err(k,:)
             c=region_ak(k,:,:)
           end if
 
@@ -361,6 +371,9 @@ begin
           ;--- a posteriori (vmr profile)
             m_profile_selected = new((/1,10/),float)
             m_profile_selected(0,:) = b
+          ;--- a posteriori error (vmr profile error)
+            m_profile_err_selected = new((/1,10/),float)
+            m_profile_err_selected(0,:) = b_1
           ;--- zveraging kernel
             m_ak_selected = new((/1,10,10/),float)
             m_ak_selected(0,:,:) = c
@@ -378,6 +391,7 @@ begin
             temp9 := ap_selected
             temp10 := m_apriori_selected
             temp11 := m_profile_selected
+            temp11a := m_profile_err_selected
             temp12 := m_ak_selected
 
           ;--- time 
@@ -408,6 +422,10 @@ begin
             dummy2 := new((/1,10/),float)
             dummy2(0,:) = b
             m_profile_selected := array_append_record(temp11,dummy2,0)
+          ;--- a posteriori error (vmr profile error)
+            dummy2a := new((/1,10/),float)
+            dummy2a(0,:) = b_1
+            m_profile_err_selected := array_append_record(temp11a,dummy2a,0)
           ;--- averaging kernel
             dummy3 := new((/1,10,10/),float)
             dummy3(0,:,:) = c
@@ -441,28 +459,35 @@ begin
                 ;--- dimensionless column averaging kernel
                 ak_col_nd_selected = new((/1,10/),float)
                 ak_col_nd_selected(0,:) = g
+                ;--- dry air column
+                dry_air_selected = region_dry_air_col(k)
+
               else
                 temp13 := anom_diag_selected
                 temp14 := col_diag_selected
                 temp15 := ak_col_selected
                 temp16 := ak_col_nd_selected
+                temp17 := dry_air_selected 
 
-              ;--- a posteriori (vmr profile)
+              ;--- retrieval anomalies
                 dummy4 := new((/1,dimsizes(region_anom_diag(0,:))/),float)
                 dummy4(0,:) = d
                 anom_diag_selected := array_append_record(temp13,dummy4,0)
-              ;--- a posteriori (vmr profile)
+              ;--- column errors
                 dummy5 := new((/1,dimsizes(region_col_diag(0,:))/),float)
                 dummy5(0,:) = e
                 col_diag_selected := array_append_record(temp14,dummy5,0)
-              ;--- a posteriori (vmr profile)
+              ;--- column ak
                 dummy6 := new((/1,10/),float)
                 dummy6(0,:) = f
                 ak_col_selected := array_append_record(temp15,dummy6,0)
-              ;--- a posteriori (vmr profile)
+              ;--- column ak dimless
                 dummy7 := new((/1,10/),float)
                 dummy7(0,:) = g
                 ak_col_nd_selected := array_append_record(temp16,dummy7,0)
+              ;--- latitude
+                dry_air_selected := array_append_record(temp17,region_dry_air_col(k),0)
+
               end if
             end if 
 
@@ -526,6 +551,7 @@ if (netCDF) then
 
    m_apriori_selected!0           = "time"
    m_profile_selected!0           = "time"
+   m_profile_err_selected!0       = "time"
    m_ak_selected!0                = "time"
 
    ;--- total column
@@ -552,6 +578,8 @@ if (netCDF) then
      fout->APrioriCOMixingRatioProfile   = m_apriori_selected
    ;--- a posteriori (vmr profile)
      fout->RetrievedCOMixingRatioProfile = m_profile_selected
+   ;--- a posteriori error (vmr profile error)
+     fout->RetrievedCOMixingRatioProfileError = m_profile_err_selected
    ;--- averaging kernel
      fout->RetrievalAvKerMatrix          = m_ak_selected
 
@@ -560,15 +588,18 @@ if (netCDF) then
      col_diag_selected!0         = "time"
      ak_col_selected!0           = "time"
      ak_col_nd_selected!0        = "time"
+     dry_air_selected!0        = "time"
 
      ;--- diagnostic 1
-       fout->RetrievalAnomalyDiagnostic = anom_diag_selected
+       fout->RetrievalAnomalyDiagnostic         = anom_diag_selected
      ;--- diagnostic 2
-       fout->RetrievedCOTotalColumnDiagnostics = col_diag_selected
+       fout->RetrievedCOTotalColumnDiagnostics  = col_diag_selected
      ;--- column averaging kernel
-       fout->TotalColumnAveragingKernel = ak_col_selected
+       fout->TotalColumnAveragingKernel         = ak_col_selected
      ;--- column averaging kernel (dimensionless)
-       fout->TotalColumnAveragingKernelDimless = ak_col_nd_selected
+       fout->TotalColumnAveragingKernelDimless  = ak_col_nd_selected
+     ;--- dry air column
+       fout->DryAirColumn                       = dry_air_selected
    end if
 
    print("Created file: "+outname)
