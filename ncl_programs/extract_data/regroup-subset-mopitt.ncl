@@ -85,6 +85,7 @@ begin
   vmr_avker      = "RetrievalAvKerMatrix"
   col_avker      = "TotalColumnAveragingKernel"
   diag_1         = "RetrievedCOTotalColumnDiagnostics"
+  dryair         = "DryAirColumn"
 
 
   ; used for selecting, but not written out:
@@ -241,6 +242,7 @@ begin
     region_col_ak  = fin->$col_avker$(0:index_stop,:)
     region_diag_col= fin->$diag_1$(0:index_stop,:)
     region_diag_anom = fin->$diag_2$(0:index_stop,:)
+    region_dryair  = fin->$dryair$(0:index_stop)
 
 
     ;--------------------------------------------
@@ -260,6 +262,7 @@ begin
         region_dofs(anomaly_ind)   = region_dofs@_FillValue
         region_ap(anomaly_ind)     = region_ap@_FillValue
         region_psurf(anomaly_ind)  = region_psurf@_FillValue
+        region_dryair(anomaly_ind) = region_dryair@_FillValue
         if (dimsizes(region_ap).eq.1) then
           region_v_ap    = region_v_ap@_FillValue
           region_profile = region_profile@_FillValue
@@ -295,6 +298,7 @@ begin
         region_dofs(pix_ind)   = region_dofs@_FillValue
         region_ap(pix_ind)     = region_ap@_FillValue
         region_psurf(pix_ind)  = region_psurf@_FillValue
+        region_dryair(pix_ind) = region_dryair@_FillValue
         if (dimsizes(region_ap).eq.1) then
           region_v_ap    = region_v_ap@_FillValue
           region_profile = region_profile@_FillValue
@@ -325,6 +329,7 @@ begin
         region_dofs(surf_ind)   = region_dofs@_FillValue
         region_ap(surf_ind)     = region_ap@_FillValue
         region_psurf(surf_ind)  = region_psurf@_FillValue
+        region_dryair(surf_ind) = region_dryair@_FillValue
       if (dimsizes(region_ap).eq.1) then
           region_v_ap    = region_v_ap@_FillValue
           region_profile = region_profile@_FillValue
@@ -352,7 +357,15 @@ begin
 
    do i=0,dimsizes(YYYYMMDD)-1
      dayind := ind(mopitt_YYYYMMDD.eq.YYYYMMDD(i))
+
      if (any(.not.ismissing(dayind))) then
+       if (dimsizes(dayind).eq.1) then
+         print("Only one relevant MOPITT pixel at " + location +\
+            " for date " + mopitt_YYYYMMDD(dayind) +\
+            "...skipping")
+         continue  ; skip all the next bit and go to next file
+       end if
+
        print("Calculating day average")
        ;--------------------------------------------
        ; calculations
@@ -362,20 +375,28 @@ begin
        dofs_wgtavg = sum(region_dofs(dayind)*region_wgt(dayind))/sum(region_wgt(dayind))
        ap_wgtavg = sum(region_ap(dayind)*region_wgt(dayind))/sum(region_wgt(dayind))
        psurf_wgtavg = sum(region_psurf(dayind)*region_wgt(dayind))/sum(region_wgt(dayind))
+       dryair_wgtavg = sum(region_dryair(dayind)*region_wgt(dayind))/sum(region_wgt(dayind))
 
        ap_wgt := new(dimsizes(region_v_ap(dayind,:)), float)
-       ;profile_wgt := new(dimsizes(day_profile), float)
-       ;ak_wgt := new(dimsizes(day_ak), float)
+       profile_wgt := new(dimsizes(region_profile(dayind,:)), float)
+       col_ak_wgt := new(dimsizes(region_col_ak(dayind,:)), float)
+       diag_col_wgt := new(dimsizes(region_diag_col(dayind,:)), float)
+       ak_wgt := new(dimsizes(region_ak(dayind,:,:)), float)
        do j=0,dimsizes(dayind)-1
           ap_wgt(j,:) = region_v_ap(dayind(j),:)*region_wgt(dayind(j))
-       ;   profile_wgt(j,:) = day_profile(j,:)*region_wgt(dayind(j))
-       ;   ak_wgt(j,:,:) = day_ak(j,:,:)*region_wgt(dayind(j))
+          profile_wgt(j,:) = region_profile(dayind(j),:)*region_wgt(dayind(j))
+          col_ak_wgt(j,:) = region_col_ak(dayind(j),:)*region_wgt(dayind(j))
+          diag_col_wgt(j,:) = region_diag_col(dayind(j),:)*region_wgt(dayind(j))
+          ak_wgt(j,:,:) = region_ak(dayind(j),:,:)*region_wgt(dayind(j))
        end do
-         ap_v_wgtavg = dim_sum_n_Wrap(ap_wgt,0)/sum(region_wgt(dayind))
-       ;  profile_wgtavg = dim_sum_n_Wrap(profile_wgt,0)/sum(region_wgt(dayind))
-       ;  ak_wgtavg = dim_sum_n_Wrap(ak_wgt,0)/sum(region_wgt(dayind))
+       ; 2-D
+       ap_v_wgtavg = dim_sum_n_Wrap(ap_wgt,0)/sum(region_wgt(dayind))
+       profile_wgtavg = dim_sum_n_Wrap(profile_wgt,0)/sum(region_wgt(dayind))
+       col_ak_wgtavg = dim_sum_n_Wrap(col_ak_wgt,0)/sum(region_wgt(dayind))
+       diag_col_wgtavg = dim_sum_n_Wrap(diag_col_wgt,0)/sum(region_wgt(dayind))
+       ; 3-D
+       ak_wgtavg = dim_sum_n_Wrap(ak_wgt,0)/sum(region_wgt(dayind))
 
-exit
 
        ;--------------------------------------------
        ; collect into arrays
@@ -388,13 +409,18 @@ exit
          loc_dofs_wgtavg = dofs_wgtavg
          loc_ap_wgtavg   = ap_wgtavg
          loc_psurf_wgtavg = psurf_wgtavg
+         loc_dryair_wgtavg = dryair_wgtavg
 
-         ;loc_ap_v_wgtavg     = new((/1,10/),float)
-         ;loc_ap_v_wgtavg(0,:) = ap_v_wgtavg
-         ;loc_profile_wgtavg = new((/1,10/),float)
-         ;loc_profile_wgtavg(0,:) = profile_wgtavg
-         ;loc_ak_wgtavg = new((/1,10,10/),float)
-         ;loc_ak_wgtavg(0,:,:) = ak_wgtavg
+         loc_ap_v_wgtavg     = new((/1,10/),float)
+         loc_ap_v_wgtavg(0,:) = ap_v_wgtavg
+         loc_profile_wgtavg = new((/1,10/),float)
+         loc_profile_wgtavg(0,:) = profile_wgtavg
+         loc_ak_wgtavg = new((/1,10,10/),float)
+         loc_ak_wgtavg(0,:,:) = ak_wgtavg
+         loc_col_ak_wgtavg = new((/1,10/),float)
+         loc_col_ak_wgtavg(0,:) = col_ak_wgtavg
+         loc_diag_col_wgtavg = new((/1,2/),float)
+         loc_diag_col_wgtavg(0,:) = diag_col_wgtavg
 
        else
 
@@ -405,9 +431,12 @@ exit
          dummy3 := loc_dofs_wgtavg
          dummy4 := loc_ap_wgtavg
          dummy5 := loc_psurf_wgtavg
-          ;dummy6 := loc_ap_v_wgtavg
-          ;dummy7 := loc_profile_wgtavg
-          ;dummy8 := loc_ak_wgtavg
+         dummy6 := loc_ap_v_wgtavg
+         dummy7 := loc_profile_wgtavg
+         dummy8 := loc_ak_wgtavg
+         dummy9 := loc_col_ak_wgtavg
+         dummy10:= loc_diag_col_wgtavg
+         dummy11:= loc_dryair_wgtavg
 
          num_ret          :=  array_append_record(dummy, dimsizes(dayind),0)
          loc_time_avg     :=  array_append_record(dummy0,dim_avg_n_Wrap(region_time(dayind),0),0)
@@ -417,15 +446,23 @@ exit
          loc_ap_wgtavg    :=  array_append_record(dummy4,ap_wgtavg,0)
          loc_psurf_wgtavg :=  array_append_record(dummy5,psurf_wgtavg,0)
 
-          ;dummy6a := new((/1,10/),float)
-          ;dummy6a(0,:) = ap_v_wgtavg
-          ;loc_ap_v_wgtavg    := array_append_record(dummy6,dummy6a,0)
-          ;dummy7a := new((/1,10/),float)
-          ;dummy7a(0,:) = profile_wgtavg
-          ;loc_profile_wgtavg := array_append_record(dummy7,dummy7a,0)
-          ;dummy8a := new((/1,10,10/),float)
-          ;dummy8a(0,:,:) = ak_wgtavg
-          ;loc_ak_wgtavg := array_append_record(dummy8,dummy8a,0)
+         dummy6a := new((/1,10/),float)
+         dummy6a(0,:) = ap_v_wgtavg
+         loc_ap_v_wgtavg    := array_append_record(dummy6,dummy6a,0)
+         dummy7a := new((/1,10/),float)
+         dummy7a(0,:) = profile_wgtavg
+         loc_profile_wgtavg := array_append_record(dummy7,dummy7a,0)
+         dummy8a := new((/1,10,10/),float)
+         dummy8a(0,:,:) = ak_wgtavg
+         loc_ak_wgtavg := array_append_record(dummy8,dummy8a,0)
+         dummy9a := new((/1,10/),float)
+         dummy9a(0,:) = col_ak_wgtavg
+         loc_col_ak_wgtavg := array_append_record(dummy9,dummy9a,0)
+         dummy10a := new((/1,2/),float)
+         dummy10a(0,:) = diag_col_wgtavg
+         loc_diag_col_wgtavg := array_append_record(dummy10,dummy10a,0)
+
+         loc_dryair_wgtavg :=  array_append_record(dummy11,dryair_wgtavg,0)
 
        end if
 
@@ -471,7 +508,6 @@ if (PLOT) then
   frame(wks)
 end if
 
-exit
 
 ;--------------------------------------------
 ; Write out to a netCDF file
@@ -499,11 +535,11 @@ if (netCDF) then
   ; Attributes
   ;------------
   loc_tcol_wgtavg@long_name      = "RetrievedCOTotalColumn_WeightedAverage"
-  loc_tcol_wgtavg@units          = "molec/cm^2"
+  loc_tcol_wgtavg@units          = "mol/cm^2"
   loc_tcol_wgtavg!0              = "time"
 
   loc_tcol_err@long_name         = "RetrievedCOTotalColumn_CombinedError"
-  loc_tcol_err@units             = "molec/cm^2"
+  loc_tcol_err@units             = "mol/cm^2"
   loc_tcol_err!0                 = "time"
 
   loc_dofs_wgtavg@long_name      = "RetrievedCODegreesofFreedom_WeightedAverage"
@@ -511,24 +547,33 @@ if (netCDF) then
   loc_dofs_wgtavg!0              = "time"
 
   loc_ap_wgtavg@long_name        = "Apriori_tcol_WeightedAverage"
-  loc_ap_wgtavg@units            = "molec/cm^2"
+  loc_ap_wgtavg@units            = "mol/cm^2"
   loc_ap_wgtavg!0                = "time"
 
   loc_ap_v_wgtavg@long_name      = "AprioriVMR_WeightedAverage"
   loc_ap_v_wgtavg@units          = "ppb"
   loc_ap_v_wgtavg!0              = "time"
-  loc_ap_v_wgtavg!1              = "pressure"
+  loc_ap_v_wgtavg!1              = "nPrs_MOP02"
 
   loc_profile_wgtavg@long_name   = "RetrievedCOMixingRatioProfile_WeightedAverage"
   loc_profile_wgtavg@units       = "ppb"
   loc_profile_wgtavg!0           = "time"
-  loc_profile_wgtavg!1           = "pressure"
+  loc_profile_wgtavg!1           = "nPrs_MOP02"
+
+  loc_col_ak_wgtavg@long_name    = "TotalColumnAveragingKernel_WeightedAverage"
+  loc_col_ak_wgtavg@units        = "mol/(cm^2 log(VMR))"
+  loc_col_ak_wgtavg!0            = "time"
+  loc_col_ak_wgtavg!1            = "nPrs_MOP02"
+
+  loc_diag_col_wgtavg@long_name   = "RetrievedCOTotalColumnDiagnostics_WeightedAverage"
+  loc_diag_col_wgtavg@units       = "NA"
+  loc_diag_col_wgtavg!0           = "time"
 
   loc_ak_wgtavg@long_name        = "ProfileAveragingKernel_WeightedAverage"
   loc_ak_wgtavg@units            = "NA"
   loc_ak_wgtavg!0                = "time"
-  loc_ak_wgtavg!1                = "pressure"
-  loc_ak_wgtavg!2                = "pressure"
+  loc_ak_wgtavg!1                = "nPrs_MOP02"
+  loc_ak_wgtavg!2                = "nPrs_MOP02"
 
   loc_psurf_wgtavg@long_name     = "SurfacePressure_WeightedAverage"
   loc_psurf_wgtavg@units         = "hPa"
@@ -541,17 +586,26 @@ if (netCDF) then
   num_ret@long_name              = "NumberOfRetrievalsInBin"
   num_ret@units                  = "NA"
   num_ret!0                      = "time"
+
+  loc_dryair_wgtavg@long_name    = "DryAirColumn"
+  loc_dryair_wgtavg@units        = "mol/cm^2"
+  loc_dryair_wgtavg!0            = "time"
   
-  fout->MOPITT_TCOL_CO_WGT = loc_tcol_wgtavg
-  fout->MOPITT_TCOL_CO_ERR = loc_tcol_err
-  fout->MOPITT_DOFS_CO_WGT = loc_dofs_wgtavg
-  fout->MOPITT_TCOL_APRIORI_WGT = loc_ap_wgtavg
-  fout->MOPITT_APRIORI_CO_WGT = loc_ap_v_wgtavg
-  fout->MOPITT_PROFILE_CO_WGT = loc_profile_wgtavg
-  fout->MOPITT_AVKER_CO_WGT = loc_ak_wgtavg
-  fout->MOPITT_PSURF_WGT = loc_psurf_wgtavg
-  fout->TIME_AVG  = loc_time_avg
-  fout->NUMBER_OF_RET  = num_ret
+  fout->RetrievedCOTotalColumn_WGT = loc_tcol_wgtavg
+  fout->RetrievedCOTotalColumn_ERR = loc_tcol_err
+  fout->DegreesofFreedomforSignal_WGT = loc_dofs_wgtavg
+  fout->APrioriCOTotalColumn_WGT = loc_ap_wgtavg
+  fout->APrioriCOMixingRatioProfile_WGT = loc_ap_v_wgtavg
+  fout->RetrievedCOMixingRatioProfile_WGT = loc_profile_wgtavg
+  fout->RetrievalAvKerMatrix_WGT = loc_ak_wgtavg
+  fout->TotalColumnAveragingKernel_WGT = loc_col_ak_wgtavg
+  fout->RetrievedCOTotalColumnDiagnostics_WGT = loc_diag_col_wgtavg
+  fout->SurfacePressure_WGT = loc_psurf_wgtavg
+  fout->Time_AVG  = loc_time_avg
+  fout->NumberofRetrievals  = num_ret
+  fout->DryAirColumn_WGT  = loc_dryair_wgtavg
+
+  print("File created at: " + outname)
 
 end if ;NETCDF
 
