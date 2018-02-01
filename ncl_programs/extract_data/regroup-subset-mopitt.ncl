@@ -48,7 +48,7 @@ begin
   PLOT           = True
     plttype      = "x11"
 
-  netCDF         = True
+  netCDF         = False
     f1suffix     = "all_land"
 
   PIXEL_SELECT   = False
@@ -137,6 +137,8 @@ begin
     time_diff    = -5               ; from UTC
   else if (location_name.eq."Wollongong") then
     time_diff    = 10               ; from UTC
+    location_lat = -34.406
+    location_lon = 150.879
   else if (location_name.eq."Zugspitze") then
     time_diff    = 1                ; from UTC
   else
@@ -492,14 +494,17 @@ if (PLOT) then
     res@gsnDraw		    = False	                ; don't draw it yet
     res@gsnFrame            = False                     ; don't advance frame
 
-    ;res@trYMinF             = 5e17
+    res@vpWidthF             = 0.75
+    res@vpHeightF            = 0.4
+
+    res@trYMinF             = 5e17
     ;res@trYMaxF             = 2.5e18
     res@trXMinF             = 2000
     res@trXMaxF             = 2014
 
     res@tiMainString        = location + " MOPITT timeseries"
     res@tiXAxisString       = "date"
-    res@tiYAxisString       = "total column CO (molec cm^-2)"
+    res@tiYAxisString       = "Total column CO (molec. cm~S2~-2  )"
   
   plotting_t = cd_calendar(loc_time_avg,4)
   plot1 = gsn_csm_xy(wks,plotting_t,loc_tcol_wgtavg,res)
@@ -522,7 +527,8 @@ if (netCDF) then
   setfileoption(fout, "DefineMode",True)
     fAtt                      = True
       fAtt@title              = "Average of MOPITT CO at " + delta_deg + \
-                                " degrees radius around " +location+ " station"
+                                " degrees radius around " +location+ " station: "+\
+                                "Lat = " +location_lat+", Lon = "+ location_lon
       fAtt@source             = "MOPITT level 2, version 6, thermal IR retrievals"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
