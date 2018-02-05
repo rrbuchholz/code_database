@@ -35,7 +35,7 @@ begin
   ; MOPITT
   ; -------------------------------
   version = "V7J"
-  location_name = "Wollongong"
+  location_name = "Ascension"
   if (version.eq."V6J") then
    ;remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
     dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02J-*.he5")
