@@ -33,8 +33,7 @@ begin
   ; -------------------------------
   version = "V7J"
   end_year = 2017
-  location_name = "Wollongong"
-  mopitt_file = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location_name+"_1deg_V7J_20010101-20170101.nc"
+  location_name = "Lauder"
 
   ;------------
   ; distance around 
@@ -48,15 +47,15 @@ begin
   PLOT           = True
     plttype      = "x11"
 
-  netCDF         = False
-    f1suffix     = "all_land"
+  netCDF         = True
+    f1suffix     = "all_water"
 
   PIXEL_SELECT   = False
     pixelnum     = 4
     PMASK        = False      ; PMASK = True to mask pixel number, i.e. leave everything else
                               ; False to select pixel number
   SURFACE_MASK = True
-    smask        = "ocean"   ; select land, ocean, oceanland or mixed to mask
+    smask        = "land"   ; select land, ocean, oceanland or mixed to mask
                              ; i.e the opposite of what you select will be left
   
 ;--------------------------------------------
@@ -102,11 +101,16 @@ begin
     location = "ArrivalHeights"
     time_diff    = 12               ; from UTC
   else if (location_name.eq."Ascension") then
+    time_diff    = 0               ; from UTC
+    location_lat = -7.91
+    location_lon = -14.33
   else if (location_name.eq."Boulder") then
   else if (location_name.eq."Bremen") then
     time_diff    = 1                ; from UTC
   else if (location_name.eq."Darwin") then ; TCCON
     time_diff    = 9.5              ; from UTC
+    location_lat = -12.424
+    location_lon = 130.892
   else if (location_name.eq."Eureka") then
     time_diff    = -6               ; from UTC 
   else if (location_name.eq."Izana") then
@@ -118,9 +122,13 @@ begin
     time_diff    = 1                ; from UTC
   else if (location_name.eq."Lauder") then
     time_diff    = 12               ; from UTC
+    location_lat = -45.038
+    location_lon = 169.684
   else if (location_name.eq."La Reunion") then
     location = "Reunion"
     time_diff    = 4                ; from UTC
+    location_lat = -20.901
+    location_lon = 55.485
   else if (location_name.eq."Mauna Loa") then
     location = "MaunaLoa"
     time_diff    = -10              ; from UTC
@@ -166,6 +174,11 @@ begin
   end if
 
   ; -------------------------------
+  ; INPUT RELATED SETUP
+  ; -------------------------------
+  mopitt_file = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_1deg_V7J_20010101-20170101.nc"
+
+  ; -------------------------------
   ; OUTPUT RELATED SETUP
   ; -------------------------------
   if (PLOT) then
@@ -174,7 +187,7 @@ begin
   end if
 
   if (netCDF) then
-     outname      = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location_name+"_"+delta_deg+"deg_"+version+"MOPITTavg_"+f1suffix+"_new.nc"
+     outname      = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_"+delta_deg+"deg_"+version+"MOPITTavg_"+f1suffix+".nc"
   end if
 
 
@@ -354,8 +367,9 @@ begin
   ; human readable dates
   ;--------------------------------------------
    date = cd_calendar(region_time,0)
+   ind_there = ind(.not.ismissing(date(:,0)))
    mopitt_YYYYMMDD = cd_calendar(region_time,-2)
-   YYYYMMDD = yyyymmdd_time(toint(date(0,0)), end_year, "integer")
+   YYYYMMDD = yyyymmdd_time(toint(date(ind_there(0),0)), end_year, "integer")
 
    do i=0,dimsizes(YYYYMMDD)-1
      dayind := ind(mopitt_YYYYMMDD.eq.YYYYMMDD(i))
@@ -500,9 +514,9 @@ if (PLOT) then
     res@trYMinF             = 5e17
     ;res@trYMaxF             = 2.5e18
     res@trXMinF             = 2000
-    res@trXMaxF             = 2014
+    res@trXMaxF             = end_year
 
-    res@tiMainString        = location + " MOPITT timeseries"
+    res@tiMainString        = location_name + " MOPITT timeseries"
     res@tiXAxisString       = "date"
     res@tiYAxisString       = "Total column CO (molec. cm~S2~-2  )"
   
