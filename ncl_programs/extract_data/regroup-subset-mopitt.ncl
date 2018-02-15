@@ -31,7 +31,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7J"
+  version = "V7T"
   end_year = 2017
   location_name = "Lauder"
 
@@ -48,14 +48,14 @@ begin
     plttype      = "x11"
 
   netCDF         = True
-    f1suffix     = "all_water"
+    f1suffix     = "all_land"
 
   PIXEL_SELECT   = False
     pixelnum     = 4
     PMASK        = False      ; PMASK = True to mask pixel number, i.e. leave everything else
                               ; False to select pixel number
   SURFACE_MASK = True
-    smask        = "land"   ; select land, ocean, oceanland or mixed to mask
+    smask        = "ocean"   ; select land, ocean, oceanland or mixed to mask
                              ; i.e the opposite of what you select will be left
   
 ;--------------------------------------------
