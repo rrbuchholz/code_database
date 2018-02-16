@@ -176,7 +176,7 @@ begin
   ; -------------------------------
   ; INPUT RELATED SETUP
   ; -------------------------------
-  mopitt_file = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_1deg_V7J_20010101-20170101.nc"
+  mopitt_file = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_1deg_"+version+"_20010101-20170101.nc"
 
   ; -------------------------------
   ; OUTPUT RELATED SETUP

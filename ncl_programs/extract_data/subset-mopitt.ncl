@@ -34,8 +34,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7J"
-  suff = "J"
+  version = "V7T"
+  suff = "T"
   location_name = "Mauna Loa"
   if (version.eq."V6J") then
    ;remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
