@@ -42,7 +42,7 @@ begin
   ; to denote event
   ;------------
     event_scale = 2.5
-    neg_event = -2.5
+    neg_event = -3.0
 
   ;------------
   ; toggles
@@ -55,7 +55,7 @@ begin
     year_e = 2017
 
   
-  PLOTFTS        = False
+  PLOTFTS        = True
   ASCII          = False
   
 ;--------------------------------------------
@@ -167,13 +167,12 @@ begin
     ; read in MOPITT data
     print("***Reading MOPITT data at " + location)
     mopitt_tcol    = fin->$sat_tcol$(year_select_ind)
-    mopitt_time    = fin->$timearray$(year_select_ind)     
+    mopitt_time    = mopitt_time_dummy(year_select_ind)     
      ; local time in seconds since 1993-1-1 00:00:00 (TAI93)
     mopitt_date    = cd_calendar(mopitt_time, 0)
       years  = floattointeger(mopitt_date(:,0))
       months = floattointeger(mopitt_date(:,1))
       days   = floattointeger(mopitt_date(:,2))
-    doy            = day_of_year(years,months,days)
     yyyymmdd       = cd_calendar(mopitt_time, 2)
     day_yfrac      = cd_calendar(mopitt_time, 4)
 
@@ -181,11 +180,10 @@ begin
   ; -------------------------------
   ; FTS
   ; -------------------------------
-  fts_in = addfiles (fts_files, "r")
-  ListSetType (fts_in, "cat")             ; concatenate or "merge" (default)
-  ;fts_in = addfile(fts_file, "r")
+    fts_in = addfiles (fts_files, "r")
+    ListSetType (fts_in, "cat")             ; concatenate or "merge" (default)
 
-  if (sm_location.eq."darwin") then
+   if (sm_location.eq."darwin") then
     print("***Reading FTS data at " + location)
     fts_xco            = fts_in[:]->$"xco_ppb"$
     fts_psurf          = fts_in[:]->$"pout_hPa"$
@@ -195,46 +193,36 @@ begin
     ; 1970/1/1 00:00:00
     fts_mjd2000         = fts_in[:]->$"time"$
     fts_local           = fts_mjd2000+(time_diff/24.)
-    fts_local@units   = "days since 1970-01-01 00:00:0.0"
+    fts_local@units     = "days since 1970-01-01 00:00:0.0"
 
-  else
+   else
     print("***Reading FTS data at " + location)
-    fts_mjd2000_dummy      = fts_in[:]->$fts_datetime$
-    fts_local_dummy        = fts_mjd2000_dummy +(time_diff/24.)
-    fts_local_dummy@units   = "days since 2000-01-01 00:00:0.0"
-    fts_date_dummy         = cd_calendar(fts_local_dummy , 0)
-    fts_years_dummy = floattointeger(fts_date_dummy(:,0))
-    year_select_fts = ind(fts_years_dummy.ge.year_s)
+    ; SELECT FTS DATA AFTER STARTDATE
+    fts_mjd2000_dummy    = fts_in[:]->$fts_datetime$
+    fts_local_dummy      = fts_mjd2000_dummy +(time_diff/24.)
+      fts_local_dummy@units = "days since 2000-01-01 00:00:0.0"
+    fts_date_dummy       = cd_calendar(fts_local_dummy , 0)
+      fts_years_dummy    = floattointeger(fts_date_dummy(:,0))
+      year_select_fts    = ind(fts_years_dummy.ge.year_s)
 
-    print(fts_years_dummy(0:10))
-
-    fts_tcol_dummy            = fts_in[:]->$fts_tracer$
-    fts_tcol = fts_tcol_dummy(year_select_fts)
-    copy_VarMeta(fts_tcol_dummy, fts_tcol)
-    ; Date in MJD2000, fraction of days since 
-    ; Jan 1st, 2000, 00:00:00
-    fts_mjd2000         = fts_mjd2000_dummy(year_select_fts)
-    copy_VarMeta(fts_mjd2000_dummy, fts_mjd2000)
-    fts_local           = fts_mjd2000+(time_diff/24.)
-    fts_local@units   = "days since 2000-01-01 00:00:0.0"
+    fts_tcol_dummy       = fts_in[:]->$fts_tracer$
+      fts_tcol           = fts_tcol_dummy(year_select_fts)
+      copy_VarMeta(fts_tcol_dummy, fts_tcol)
+    fts_local            = fts_local_dummy(year_select_fts)
    end if
 
-  fts_date            = cd_calendar(fts_local, 0)
-  fts_years = floattointeger(fts_date(:,0))
-  fts_months = floattointeger(fts_date(:,1))
-  fts_days = floattointeger(fts_date(:,2))
-    fts_doy            = day_of_year(fts_years,fts_months,fts_days)
-  fts_yyyymmdd         = cd_calendar(fts_local, 2)
+    fts_date             = cd_calendar(fts_local, 0)
+      fts_years          = floattointeger(fts_date(:,0))
+      fts_months         = floattointeger(fts_date(:,1))
+      fts_days           = floattointeger(fts_date(:,2))
+    fts_yyyymmdd         = cd_calendar(fts_local, 2)
 
-;printVarSummary(fts_tcol)
-;print(fts_tcol(0:20))
-   end if ;(PLOTFTS)
+  end if ;(PLOTFTS)
 
-  ;--------------------------------------------
-  ; calculate averages - separate into weeks, 
-  ; months and anomalies
-  ;--------------------------------------------
-  ;********************************************
+;********************************************
+;--------------------------------------------
+; perform calculations
+;--------------------------------------------
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
@@ -259,7 +247,7 @@ begin
     do j=0,dimsizes(climate_time)-1
       ind_avail := ind(yyyymmdd.eq.climate_time(j))
       if (.not.ismissing(ind_avail(0)))then
-        mopitt_array(j,0,0) = mopitt_tcol(ind_avail)
+        mopitt_array(j,0,0) = detrend_mopitt_tcol(ind_avail)
       end if
     end do
 
@@ -268,31 +256,37 @@ begin
   ; -------------------------------
   ; SPLINE FIT TO FILL MISSING VALUES
   ; -------------------------------
-  ind_data = ind(.not.ismissing(mopitt_ClmDay(:,0,0)))
-  Clm_doy = mopitt_ClmDay&year_day                              ;366 days in climate year
-  xi = Clm_doy(ind_data)
-  yi = mopitt_ClmDay(ind_data,0,0)
-  xo = Clm_doy
-  yo = ftcurv(xi, yi, xo)
-  new_mopitt_ClmDay = mopitt_ClmDay
-  new_mopitt_ClmDay = where(ismissing(mopitt_ClmDay(:,0,0)),yo,mopitt_ClmDay(:,0,0))
+    ind_data = ind(.not.ismissing(mopitt_ClmDay(:,0,0)))
+    Clm_doy = mopitt_ClmDay&year_day                              ;366 days in climate year
+    xi = Clm_doy(ind_data)
+    yi = mopitt_ClmDay(ind_data,0,0)
+    xo = Clm_doy
+    yo = ftcurv(xi, yi, xo)
+    new_mopitt_ClmDay = mopitt_ClmDay
+    new_mopitt_ClmDay = where(ismissing(mopitt_ClmDay(:,0,0)),yo,mopitt_ClmDay(:,0,0))
 
   ; -------------------------------
-  ; SMOOTHED DAILY CLIMATOLOGY 
-  ; USING 2 HARMONCS  
+  ; CLIMATOLOGOCAL MONTHLY STDDEV
   ; -------------------------------
-   mopitt_ClmDay_sm = smthClmDayTLL(new_mopitt_ClmDay, 3)  
+    climate_year = yyyyddd_to_yyyymmdd(2004000+Clm_doy)
+    split_mm =str_split_by_length(tostring(climate_year),2)
+    climate_mopitt_day_sd = new((/dimsizes(Clm_doy),1,1/), float)
+    do kk=0,11
+      month_ind := ind(months.eq.(kk+1))
+      mm_ind    := ind(toint(split_mm(:,2)).eq.(kk+1))
+      co_to_avg := detrend_mopitt_tcol(month_ind)
+      climate_mopitt_day_sd(mm_ind,0,0) = dim_stddev_n(tofloat(co_to_avg),0)
+    end do
+    climate_mopitt_day_sd!0 = "year_day"
+    climate_mopitt_day_sd&year_day = Clm_doy
+
+  ; -------------------------------
+  ; SMOOTHED DAILY CLIMATOLOGY AND
+  ; MONTH STDDEV USING 2 HARMONCS  
+  ; -------------------------------
+    mopitt_ClmDay_sm = smthClmDayTLL(new_mopitt_ClmDay, 2)  
   ; printVarSummary(mopitt_ClmDay_sm)
-
-  ; -------------------------------
-  ; CLIMATOLOGOCAL MONTHLY STD-DEV
-  ; -------------------------------
-  climate_mopitt_month_sd = new((/12/), float)
-  do k=0,11
-     month_ind := ind(months.eq.(k+1))
-     co_to_avg := mopitt_tcol(month_ind)
-     climate_mopitt_month_sd(k) = dim_stddev_n(co_to_avg,0)
-  end do ;k=0,11
+    mopitt_ClmDaysd_sm = smthClmDayTLL(climate_mopitt_day_sd, 2)
 
   ; -------------------------------
   ; EXPAND TO WHOLE TIME PERIOD
@@ -303,242 +297,116 @@ begin
     do d=0,dimsizes(climate_doy)-1
       clm_index = toint(split_doy(d,1))
       mopitt_day_climate_sm(d)=mopitt_ClmDay_sm(clm_index-1,0,0)
-    end do
-
-    test_month = str_split_by_length(tostring(climate_time), 2)
-    do m=0,11
-      ind_months := ind(toint(test_month(:,2)).eq.m+1)
-      mopitt_day_climate_sd(ind_months)=climate_mopitt_month_sd(m)
+      mopitt_day_climate_sd(d)=mopitt_ClmDaysd_sm(clm_index-1,0,0)
     end do
 
   ; -------------------------------
   ; DAILY ANOMALIES
   ; -------------------------------
-   day_anom = mopitt_array(:,0,0)-mopitt_day_climate_sm
-
-
-  ; -------------------------------
-  ; PLOT CAPTURING
-  ; -------------------------------
-    mopitt_day_climateb = new(dimsizes(climate_time),double)
-    mopitt_day_climated = new(dimsizes(climate_time),double)
-    ;do i=0,dimsizes(climate_time)-1
-    do i=0,364
-      ;doy_match = mod(i,365)
-      mopitt_day_climateb(i)=mopitt_ClmDay(i,0,0)
-      ;mopitt_day_climatec(i)=mopitt_ClmDay_sm(i,0,0)
-      mopitt_day_climated(i)=new_mopitt_ClmDay(i,0,0)
-    end do
-
-    mopitt_day_climatec=mopitt_day_climate_sm
-
-;exit
-
+    day_anom = mopitt_array(:,0,0)-mopitt_day_climate_sm
 
   ; -------------------------------
-  ; CLIMATOLOGICAL MONTH AVERAGES 
-  ; and STANDARD DEVIATION
-  ; ------------------------------- 
-    climate_co   = new((/12/), float)
-    climate_co_sd = new((/12/), float)
-
-  do i=0,11
-     ; get indices of array related to specific month
-     month_ind := ind(months.eq.(i+1))
-     co_to_avg := mopitt_tcol(month_ind)
-
-     climate_co(i) = dim_avg_n(co_to_avg,0)
-     climate_co_sd(i) = dim_stddev_n(co_to_avg,0)
-  end do ;i=0,11
-
-  ; repeat climate values over total time period
-  startyear = year_s
-  endyear = year_e-1
-  climate_time := yyyymm_time(toint(startyear), toint(endyear), "integer")
-  years_of_record = endyear - startyear
-   climate_co_ext    = new((/toint(years_of_record+1)*12/), float)
-   climate_co_sd_ext = new((/toint(years_of_record+1)*12/), float)
-
-  do y = 0, years_of_record
-    do m=0,11
-     climate_co_ext(y*12+m) = climate_co(m)
-     climate_co_sd_ext(y*12+m) = climate_co_sd(m)
-    end do
-  end do
-
-
+  ; DETERMINE EVENTS
   ; -------------------------------
-  ; WEEK AVERAGES
-  ; -------------------------------
-   tcol_all_week = week_average(mopitt_tcol,mopitt_time)
-   week_time = tcol_all_week&time
-   week_yfrac = yyyymmdd_to_yyyyfrac(week_time,0)
+    select_events = where(day_anom.gt.(event_scale*mopitt_day_climate_sd).or.\
+                          day_anom.lt.(neg_event*mopitt_day_climate_sd),day_anom,day_anom@_FillValue)
+    ind_m_events = ind(.not.ismissing(select_events))
+    m_events = climate_time(ind_m_events)
 
-   weekly_co_compare = new(dimsizes(tcol_all_week(:,0)), float)
-   weekly_sd_compare = new(dimsizes(tcol_all_week(:,0)), float)
-
-   ; -------------------------------
-   ; CLIMATOLOGICAL WEEK AVERAGES 
-   ; and STANDARD DEVIATION
-   ; -------------------------------
-
-printVarSummary(tcol_all_week)
-
-    do m=0,51
-      weekly_co_compare(m:dimsizes(week_time)-1:52) = avg(tcol_all_week(m:dimsizes(week_time)-1:52,0))
-      weekly_sd_compare(m:dimsizes(week_time)-1:52) = avg(tcol_all_week(m:dimsizes(week_time)-1:52,1))
-    end do
-
-print( weekly_co_compare(0:57))
-;exit
-
-
-   ; -------------------------------
-   ; ANOMALIES
-   ; -------------------------------
-   weekly_anomaly = tcol_all_week(:,0)-weekly_co_compare
-   weekly_significance = new(dimsizes(tcol_all_week(:,0)), integer)
-    do w=0,dimsizes(weekly_anomaly)-1
-      weekly_significance(w) = where(weekly_anomaly(w).gt.(weekly_sd_compare(w)*event_scale).or.\
-                                     weekly_anomaly(w).lt.(weekly_sd_compare(w)*neg_event),\
-                                     week_time(w),weekly_significance@_FillValue)
-    end do
-
-printVarSummary(tcol_all_week)
-
-test2 = ind(.not.ismissing(weekly_significance))
-print(weekly_significance(test2))
-
-;exit
-
-  ; -------------------------------
-  ; WEEK AVERAGES and ANOMALIES
-  ; -------------------------------
-  do i=0,dimsizes(mopitt_time)-1
-
-       ; calculate week from day of year
-       if (doy(i)/7.0.gt.floor(doy(i)/7.0)) then
-           week=floor(doy(i)/7.0)+1.0
-       else
-           week=doy(i)/7.0
-       end if
-
-      if (week.eq.53) then 
-        week1=52.
-        week:=52.
-      end if
-
-     ; if date comparisons don't exist set them up
-       if (.not.(isdefined("currentweek"))) then
-          print("initialising sum")
-          currentyear = mopitt_date(i,0)
-          currentmonth = mopitt_date(i,1)
-          currentweek = week
-       end if
-
-     ; collect and average data in weeks
-      if (mopitt_date(i,0).eq.currentyear.and.\ 
-          week.eq.currentweek) then
-
-         if (.not.(isdefined("week_co"))) then
-           week_co = mopitt_tcol(i)
-         else
-           ; sum if the same date
-           print("collecting sum")
-           temp0 := week_co
-           week_co :=  array_append_record(temp0,mopitt_tcol(i),0)
-         end if
-
-      else ; average and append to arrays
-         print("calculating average because:")
-         print(currentyear+" "+currentweek)
-         print("...doesnt match...")
-         print(mopitt_date(i,0)+" "+week)
-         print("-------------------")
-
-
-         if (.not.(isdefined("week_co_avg"))) then
-           week_co_avg := avg(week_co)
-           week_avg_time := currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6)
-           ; anomlay from climatology
-           mop_diff := avg(week_co)- climate_co(floattointeger(currentmonth)-1)
-           week_anomaly :=  mop_diff
-           ; -------------------------------
-           ; SIGNIFICANT ANOMALIES
-           ; -------------------------------
-           ; collect event
-           if (mop_diff.ge.event_scale*climate_co_sd(floattointeger(currentmonth)-1).or.\
-               mop_diff.le.neg_event*climate_co_sd(floattointeger(currentmonth)-1)) then
-              m_event := currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6)
-           end if
-         else
-           mop_diff := avg(week_co)- climate_co(floattointeger(currentmonth)-1)
-           dummy0 := week_co_avg
-           dummy1 := week_avg_time
-           dummy2 := week_anomaly
-           week_co_avg := array_append_record(dummy0,avg(week_co),0)
-           week_avg_time:= array_append_record(dummy1,currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6),0)
-           week_anomaly:= array_append_record(dummy2,mop_diff,0)
-           ; -------------------------------
-           ; SIGNIFICANT ANOMALIES
-           ; -------------------------------
-           ; collect event
-           if (.not.(isdefined("m_event"))) then
-             if (mop_diff.ge.event_scale*climate_co_sd(floattointeger(currentmonth)-1).or.\
-                 mop_diff.le.neg_event*climate_co_sd(floattointeger(currentmonth)-1)) then
-               m_event := currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6)
-             end if
-           else
-             if (mop_diff.ge.event_scale*climate_co_sd(floattointeger(currentmonth)-1).or.\
-                 mop_diff.le.neg_event*climate_co_sd(floattointeger(currentmonth)-1)) then
-               dummy3 := m_event
-               m_event := array_append_record(dummy3,currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6),0)
-             end if
-           end if
-         end if
-
-         ; re-initialise comparison dates
-         currentyear = mopitt_date(i,0)
-         currentmonth = mopitt_date(i,1)
-         currentweek = week
-
-         ; re-initialise holding array
-         week_co := mopitt_tcol(i)
-
-      end if
-
-      ; scoop up last average
-      if (i.eq.dimsizes(mopitt_time)-1) then
-         print("calculating last average")
-         print("-------------------")
-         dummy0 := week_co_avg
-         dummy1 := week_avg_time
-         dummy2 := week_anomaly
-         week_co_avg := array_append_record(dummy0,avg(week_co),0)
-         week_avg_time:= array_append_record(dummy1,currentyear+sprinti("%0.3i",floattointeger(currentweek*7)-6),0)
-         week_anomaly:= array_append_record(dummy2,avg(week_co)- climate_co(floattointeger(currentmonth)-1),0)
-      end if
-
-  end do ;i=0,dimsizes(mopitt_time)-1; WEEK AVERAGES
-  ; clean up variables
-  delete([/currentyear, currentmonth, currentweek, week_co/])
-
-  week_avg_yyyymmdd = yyyyddd_to_yyyymmdd(stringtointeger(week_avg_time))
-  week_avg_yfrac = yyyymmdd_to_yyyyfrac(todouble(week_avg_yyyymmdd),0.5)
-
-  event_yyyymmdd = yyyyddd_to_yyyymmdd(stringtointeger(m_event))
-  print("MOPITT events: "+(event_yyyymmdd))
-print(weekly_significance(test2))
-;printVarSummary(week_co_avg)
-;print(week_co_avg-tcol_all_week)
-
-;exit
-
-  if (PLOTFTS) then
   ;********************************************
+  if (PLOTFTS) then
   ; -------------------------------
   ; FTS
   ; -------------------------------
+  ; -------------------------------
+  ; DAY AVERAGE VALUES
+  ; ------------------------------- 
+    fts_dayavg = new(dimsizes(climate_time),double)   ;needs to be 3D for climate calculations
+    do i = 0, dimsizes(climate_time)-1
+      fts_dayavg_ind := ind(toint(fts_yyyymmdd).eq.climate_time(i))
+      if (.not.ismissing(fts_dayavg_ind(0)))then
+        fts_dayavg(i) = avg(fts_tcol(fts_dayavg_ind))
+      end if
+    end do
+
+  ; -------------------------------
+  ; DETREND
+  ; ------------------------------- 
+    ind_nomissing = ind(.not.ismissing(fts_dayavg))
+    smooth_fts            = runave(fts_dayavg(ind_nomissing),300,0)
+    detrend_fts_smooth    = dtrend_msg_n (climate_yfrac(ind_nomissing),smooth_fts,False,True,0)
+    detrend_fts_tcol      = fts_dayavg(ind_nomissing) - detrend_fts_smooth@slope*(climate_yfrac(ind_nomissing)-startyear-ymid-0.5)
+    YYYYMMDD_fts_new = str_split_by_length(climate_time(ind_nomissing),2)
+    fts_months_new = toint(YYYYMMDD_fts_new(:,2))
+  ; -------------------------------
+  ; CLIMATOLOGICAL DAY AVERAGES 
+  ; ------------------------------- 
+    fts_array = new((/dimsizes(climate_time),1,1/),double)   ;needs to be 3D for climate calculations
+    fts_array(ind_nomissing,0,0) = detrend_fts_tcol
+    fts_ClmDay = clmDayTLL(fts_array, climate_doy)         ; daily climatology at each grid point
+
+  ; -------------------------------
+  ; SPLINE FIT TO FILL MISSING VALUES
+  ; -------------------------------
+    ind_data_fts = ind(.not.ismissing(fts_ClmDay(:,0,0)))
+    xii = Clm_doy(ind_data_fts)
+    yii = fts_ClmDay(ind_data_fts,0,0)
+    xoo = Clm_doy
+    yoo = ftcurv(xii, yii, xoo)
+    new_fts_ClmDay = fts_ClmDay
+    new_fts_ClmDay = where(ismissing(fts_ClmDay(:,0,0)),yoo,fts_ClmDay(:,0,0))
+
+  ; -------------------------------
+  ; CLIMATOLOGOCAL MONTHLY STDDEV
+  ; -------------------------------
+    climate_fts_day_sd = new((/dimsizes(Clm_doy),1,1/), float)
+    do kk=0,11
+      month_ind := ind(fts_months_new.eq.(kk+1))
+      mm_ind    := ind(toint(split_mm(:,2)).eq.(kk+1))
+      co_to_avg := detrend_fts_tcol(month_ind)
+      climate_fts_day_sd(mm_ind,0,0) = dim_stddev_n(tofloat(co_to_avg),0)
+    end do
+    climate_fts_day_sd!0 = "year_day"
+    climate_fts_day_sd&year_day = Clm_doy
+
+  ; -------------------------------
+  ; SMOOTHED DAILY CLIMATOLOGY AND
+  ; MONTH STDDEV USING 2 HARMONCS  
+  ; -------------------------------
+    fts_ClmDay_sm = smthClmDayTLL(new_fts_ClmDay, 2)  
+    fts_ClmDaysd_sm = smthClmDayTLL(climate_fts_day_sd, 2)
+
+  ; -------------------------------
+  ; EXPAND TO WHOLE TIME PERIOD
+  ; -------------------------------
+    split_doy = str_split_by_length(tostring(climate_doy),4)
+    fts_day_climate    = new(dimsizes(climate_time),double)
+    fts_day_climate_sm = new(dimsizes(climate_time),double)
+    fts_day_climate_sd = new(dimsizes(climate_time),double)
+    do d=0,dimsizes(climate_doy)-1
+      clm_index = toint(split_doy(d,1))
+      fts_day_climate(d)=fts_ClmDay(clm_index-1,0,0)
+      fts_day_climate_sm(d)=fts_ClmDay_sm(clm_index-1,0,0)
+      fts_day_climate_sd(d)=climate_fts_day_sd(clm_index-1,0,0)
+    end do
+
+  ; -------------------------------
+  ; DAILY ANOMALIES
+  ; -------------------------------
+    fts_day_anom = fts_array(:,0,0)-fts_day_climate_sm
+
+  ; -------------------------------
+  ; DETERMINE EVENTS
+  ; -------------------------------
+    ;select_fts_events = where(day_fts_anom.gt.(event_scale*fts_day_climate_sd).or.\
+    ;                      day_fts_anom.lt.(neg_event*mopitt_day_climate_sd),day_fts_anom,day_fts_anom@_FillValue)
+    ;ind_f_events = ind(.not.ismissing(select_fts_events))
+    ;f_events = climate_time(ind_f_events)
+
+;exit
+
+
+    fts_doy            = day_of_year(fts_years,fts_months,fts_days)
   ; -------------------------------
   ; CLIMATOLOGICAL MONTH AVERAGES 
   ; and STANDARD DEVIATION
@@ -625,7 +493,7 @@ print(weekly_significance(test2))
          print("calculating average because:")
          print(currentyear+" "+currentweek)
          print("...doesnt match...")
-         print(fts_date(i,0)+" "+week)
+         print(fts_date(i,0)+" "+fts_week)
          print("-------------------")
 
 
@@ -721,58 +589,45 @@ print(weekly_significance(test2))
   print("FTS events: "+(fts_event_yyyymmdd))
 end if ;(PLOTFTS)
 
-  print("MOPITT events: "+(event_yyyymmdd))
 
 ; -------------------------------
-; CULL SIGNIFICANT ANOMALIES
+; COMBINE SIGNIFICANT ANOMALIES
+; FOR PLOTTING
 ; -------------------------------
+  if (location.eq."Darwin") then
+   ;fts_event_indices = (/5,6,8,9,12/)
+   ;fts_event_dummy = fts_event_yyyymmdd
+   ;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
+  else if (location.eq."Lauder") then
+   ;fts_event_indices = (/5,6,8,9,12/)
+   ;fts_event_dummy = fts_event_yyyymmdd
+   ;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
+  else if (location.eq."Wollongong") then
+   ;fts_event_indices = ispan(11,25,1)
 
-; Wollongong
-;fts_event_indices = ispan(11,25,1)
+   ;fts_event_dummy = fts_event_yyyymmdd
+   ;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
 
-;fts_event_dummy = fts_event_yyyymmdd
-;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
-
-;m_event_indices = (/7,8,10,11,12,13,14,16,18,\
-;                    20,21,23,24,25,26,27,28/)
-;m_event_dummy = event_yyyymmdd
-;event_yyyymmdd := (m_event_dummy(m_event_indices))
-
-
-; Darwin
-;fts_event_indices = (/5,6,8,9,12/)
-;fts_event_dummy = fts_event_yyyymmdd
-;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
-
-; Lauder
-;fts_event_indices = (/5,6,8,9,12/)
-;fts_event_dummy = fts_event_yyyymmdd
-;fts_event_yyyymmdd := (fts_event_dummy(fts_event_indices))
-
-;--------------------------------------------
-; print spectra vals to see exact
-; dates of event
-;--------------------------------------------
-
-;ind_event_m = ind(years.eq.2006.and.(months.eq.11.or.months.eq.12))
-;ind_event_f = ind(fts_years.eq.2006.and.(fts_months.eq.11.or.fts_months.eq.12))
-
-ind_event_m = ind(years.eq.2006.and.months.eq.11)
-;ind_event_f = ind(fts_years.eq.2006.and.fts_months.eq.11)
-
-print("******************************")
-print("MOPITT")
-print(yyyymmdd(ind_event_m)+": "+mopitt_tcol(ind_event_m))
-print("FTS")
-;print(fts_yyyymmdd(ind_event_f)+": "+fts_tcol(ind_event_f))
-;exit
+   ;m_event_indices = (/7,8,10,11,12,13,14,16,18,\
+   ;                    20,21,23,24,25,26,27,28/)
+   ;m_event_dummy = event_yyyymmdd
+   ;event_yyyymmdd := (m_event_dummy(m_event_indices))
+  end if
+  end if
+  end if
 
 ;--------------------------------------------
 ; print interesting station values
 ;--------------------------------------------
-perc_trend = (detrend_mopitt_smooth@slope/(avg(detrend_mopitt_smooth)))*100
-print("MOPITT trend for "+location+" = "+perc_trend+" %")
+  perc_trend = (detrend_mopitt_smooth@slope/(avg(detrend_mopitt_smooth)))*100
+  perc_fts_trend = (detrend_fts_smooth@slope/(avg(detrend_fts_smooth)))*100
+  print("MOPITT trend for "+location+" = "+perc_trend+" %")
+  print("FTS trend for "+location+" = "+perc_fts_trend+" %")
+  print("MOPITT event dates for "+location+" = ")
+  print("  " + m_events)
 
+
+;********************************************
 ;--------------------------------------------
 ; plot
 ;--------------------------------------------
@@ -784,14 +639,13 @@ if (PLOT) then
   res                       = True                      ; plot mods desired
     res@gsnDraw		    = False	                ; don't draw it yet
     res@gsnFrame            = False                     ; don't advance frame
-    ;res@gsnMaximize         = True
 
     res@trYMinF             = 0.5e18
     res@trYMaxF             = 3.0e18
-    res@trXMinF             = tofloat(year_s)-0.5
-    res@trXMaxF             = tofloat(year_e)+0.5
-    ;res@trXMinF             = 2002
-    ;res@trXMaxF             = 2003.5
+    ;res@trXMinF             = tofloat(year_s)-0.5
+    ;res@trXMaxF             = tofloat(year_e)+0.5
+    res@trXMinF             = 2002
+    res@trXMaxF             = 2003.5
 
     res@tmYLMode        = "Manual"	
       res@tmYLTickStartF  = 0.5e18
@@ -799,9 +653,6 @@ if (PLOT) then
       res@tmYLTickSpacingF= 0.5e18
 
     res@tmXBMode        = "Manual"
-    ;res@tmXBMode            = "Explicit"
-      ;res@tmXBValues         = tofloat(ispan(year_s,year_e,1))
-      ;res@tmXBLabels         = (/"2006", "2007", "2008", "2009"/)
       res@tmXBTickStartF  = year_s
       res@tmXBTickEndF    = year_e
       res@tmXBTickSpacingF= 2
@@ -812,35 +663,29 @@ if (PLOT) then
       res@tmXBLabelFontHeightF = 0.05
 
     res@tmYLMajorOutwardLengthF = 0.0               ; draw tickmarks inward
-    res@tmYLMinorOutwardLengthF = 0.0                 ; draw minor ticsk inward
+    res@tmYLMinorOutwardLengthF = 0.0               ; draw minor ticks inward
     res@tmXBMajorOutwardLengthF = 0.0               
     res@tmXBMinorOutwardLengthF = 0.0              
 
-    ;res@vpWidthF             = 0.7
     res@vpWidthF             = 1.2
     res@vpHeightF            = 0.4          ; set height of plot
 
-    ;res@tiMainString        = location + " MOPITT and FTS timeseries"
     res@tiMainString        = ""
     res@tiXAxisString       = "Year"
-    res@tiYAxisString       = "CO Column (molec. cm~S2~-2  )"
-  
+
   ; -------------------------------
   ; timeseries - weekly averages and climatology
   ; -------------------------------
   ; MOPITT
   ; daily averages
+    res@tiYAxisString       = "CO Column (molec. cm~S2~-2  )"
     res@xyMarkLineMode      = "Markers"
     res@xyMarkerSizeF       = 0.04
     res@xyMarker            = 17
     res@xyMarkerColor       = "red"
    plot1 = gsn_csm_xy(wks,day_yfrac,mopitt_tcol,res)
 
-    res@xyMarkerSizeF       = 0.02
-    res@xyMarkerColor       = "black"
-  plot1a = gsn_csm_xy(wks,day_yfrac,detrend_mopitt_tcol,res)
-  overlay(plot1, plot1a)
-
+    res@tiYAxisString       = ""
     res@xyMarkLineMode      = "Lines"
     res@xyLineThicknessF    = 5.5
     res@xyLineColor         = "red"
@@ -851,24 +696,37 @@ if (PLOT) then
   ; FTS
   ;plottime1 = week_fts_avg_yfrac
     res@xyMarkLineMode      = "Markers"
+    res@xyMarkerSizeF       = 0.007
+    res@xyMarkerThicknessF  = 4
+    res@xyMarker            = 5
+    res@xyMarkerOpacityF    = 0.5
     res@xyMarkerColor       = "blue"
-  ;plot = gsn_csm_xy(wks,week_fts_avg_yfrac,week_fts_co_avg,res)
-  ;plot1 = gsn_csm_xy(wks,week_fts_avg_yfrac,week_fts_co_avg,res)
-  overlay(plot1, plot)
+  plot1b = gsn_csm_xy(wks,climate_yfrac,fts_dayavg,res)
+  overlay(plot1, plot1b)
+
+    res@xyMarkerSizeF       = 0.005
+  res@xyMarkerColor         = "black"
+  plot1d = gsn_csm_xy(wks,climate_yfrac(ind_nomissing),detrend_fts_tcol,res)
+  overlay(plot1, plot1d)
 
     res@xyMarkLineMode      = "Lines"
-    res@xyLineThicknessF    = 3.5
+    res@xyLineThicknessF    = 2.5
+    res@xyLineColor         = "green"
+  plot2c = gsn_csm_xy(wks,climate_yfrac,fts_day_climate,res)
+  overlay(plot1, plot2c)
+
+    res@xyLineThicknessF    = 5.5
     res@xyLineColor         = "blue"
-  plottime3 = yyyymmdd_to_yyyyfrac(stringtointeger(climate_time_fts),0.5)
-  ;plot3 = gsn_csm_xy(wks,plottime3,climate_fts_co_ext,res)
-  overlay(plot1, plot3)
+  plot2b = gsn_csm_xy(wks,climate_yfrac,fts_day_climate_sm,res)
+  overlay(plot1, plot2b)
+
   end if ;(PLOTFTS)
 
   ; -------------------------------
   ; Anomaly plot FTS
   ; -------------------------------
-    res@tiYAxisString       = ""
     res@xyLineThicknessF    = 4.5
+    res@xyLineColor         = "blue"
     res@trYMinF             = -0.8e18
     res@trYMaxF             = 1.0e18
       res@tmYLTickStartF  = -0.5e18
@@ -879,9 +737,19 @@ if (PLOT) then
     res@vpHeightF            = .15         ; set height of plot
 
   if (PLOTFTS) then
+   res@gsnYRefLine           = 0.              ; reference line   
+   res@gsnXYBarChart         = True            ; create bar chart 
     plot4 = gsn_csm_xy(wks,week_fts_avg_yfrac,week_anomaly_fts,res)
 
+    res@xyLineColor         = "black"
+   plot4a = gsn_csm_xy(wks,climate_yfrac, fts_day_anom,res)
+  overlay(plot4, plot4a)
 
+  ; -------------------------------
+  ; Add standard deviation
+  ; -------------------------------
+   res@gsnXYBarChart         = False            ; create bar chart 
+  plottime3 = yyyymmdd_to_yyyyfrac(stringtointeger(climate_time_fts),0.5)
     ; define a polygon for std-dev
     ya    = new( (/2*dimsizes(plottime3)/), float )
     yb    = new( (/2*dimsizes(plottime3)/), float )
@@ -892,13 +760,26 @@ if (PLOT) then
       ya(2*dimsizes(plottime3)-1-k) = plottime3(k)
     end do
     gsres                          = True                ; poly res
-      gsres@gsFillColor            = "blue"         ; color chosen
+      gsres@gsFillColor            = "black"         ; color chosen
       gsres@gsFillOpacityF         = 0.2                 
       dum = gsn_add_polygon(wks,plot4,ya,yb,gsres)
 
+    yaa    = new( (/2*dimsizes(climate_yfrac)/), float )
+    ybb    = new( (/2*dimsizes(climate_yfrac)/), float )
+    do k=0,dimsizes(climate_yfrac)-1
+      yaa(k) = climate_yfrac(k)
+      ybb(k) = tofloat(fts_day_climate_sd(k))
+      ybb(2*dimsizes(climate_yfrac)-1-k) = 0-tofloat(fts_day_climate_sd(k))
+      yaa(2*dimsizes(climate_yfrac)-1-k) = climate_yfrac(k)
+    end do
+    gsres                          = True                ; poly res
+      gsres@gsFillColor            = "blue"         ; color chosen
+      gsres@gsFillOpacityF         = 0.2                 
+      dumsa = gsn_add_polygon(wks,plot4,yaa,ybb,gsres)
+
   else
-    ;plot4 = gsn_csm_xy(wks,plottime2,climate_co_ext,res)\
-     dummy_plot = weekly_co_compare*0
+    plot4 = gsn_csm_xy(wks,plottime2,climate_co_ext,res)\
+    ; dummy_plot = weekly_co_compare*0
     ;plot4 = gsn_csm_xy(wks,week_yfrac,dummy_plot,res)
   end if ;(PLOTFTS)
 
@@ -910,7 +791,7 @@ if (PLOT) then
     ;res_lines@tfPolyDrawOrder   = "PreDraw"              ; send to back
   xx = (/year_s,year_e/)
   yy = (/0,0/)
-  ;dum1 = gsn_add_polyline(wks,plot4,xx,yy,res_lines)      ; add polyline
+  dum1 = gsn_add_polyline(wks,plot4,xx,yy,res_lines)      ; add polyline
 
 
   ; -------------------------------
@@ -921,12 +802,10 @@ if (PLOT) then
     res@xyLineThicknessF    = 2.5
     res@tmXBBorderOn        = True
     res@tmXBLabelsOn        = True
-    res@vpHeightF           = .15         ; set height of plot
+    res@vpHeightF           = .15              ; set height of plot
  
    res@gsnYRefLine           = 0.              ; reference line   
    res@gsnXYBarChart         = True            ; create bar chart 
-   res@gsnAboveYRefLineColor = "red"           ; above ref line fill red
-   res@gsnBelowYRefLineColor = "blue"          ; below ref line fill blue
    plot5 = gsn_csm_xy(wks,climate_yfrac, day_anom,res)
 
   ; -------------------------------
@@ -952,74 +831,44 @@ if (PLOT) then
  ; add zero line
   dum3 = gsn_add_polyline(wks,plot5,xx,yy,res_lines)      ; add polyline
 
-
-
   ; -------------------------------
-  ; Combine significant anomalies
-  ; that occur in the same month
+  ; HIGHLIGHT ANOMALIES
   ; -------------------------------
-  plottime_dummy = yyyymmdd_to_yyyyfrac(todouble(event_yyyymmdd),0.5)
-   do l=0,dimsizes(plottime_dummy)-1
-     if (.not.(isdefined("plottime4"))) then
-       plottime4 := plottime_dummy(l)
-     else
-       if (plottime_dummy(l).ge.plottime4(dimsizes(plottime4)-1)+0.04) then
-         dummy_ev := plottime4
-         plottime4 := array_append_record(dummy_ev,plottime_dummy(l),0)
-       end if
-     end if
-   end do
-
-  if (PLOTFTS) then
-  plottime_dummy2 = yyyymmdd_to_yyyyfrac(todouble(fts_event_yyyymmdd),0.5)
-   do l=0,dimsizes(plottime_dummy2)-1
-     if (.not.(isdefined("plottime5"))) then
-       plottime5 := plottime_dummy2(l)
-     else
-       if (plottime_dummy2(l).ge.plottime5(dimsizes(plottime5)-1)+0.04) then
-         dummy2_ev := plottime5
-         plottime5 := array_append_record(dummy2_ev,plottime_dummy2(l),0)
-       end if
-     end if
-   end do
-   end if ;(PLOTFTS)
-
-  ; -------------------------------
-  ; Highlight significant anomalies
-  ; -------------------------------
-   ya2    = new( (/4*dimsizes(plottime4)/), float )
-   yb2    = new( (/4*dimsizes(plottime4)/), float )
-   do l=0,dimsizes(plottime4)-1
-     yb2(l*4) = -1e18
-     yb2(l*4+1) = 5e18
-     yb2(l*4+2) = 5e18
-     yb2(l*4+3) = -1e18
-     ya2(l*4) = doubletofloat(plottime4(l))-0.06
-     ya2(l*4+1) = doubletofloat(plottime4(l))-0.06
-     ya2(l*4+2) = doubletofloat(plottime4(l))+0.06
-     ya2(l*4+3) = doubletofloat(plottime4(l))+0.06
+   plottime_m_events = yyyymmdd_to_yyyyfrac(m_events,0.5)
+   ya22    = new( (/4*dimsizes(m_events)/), float )
+   yb22    = new( (/4*dimsizes(m_events)/), float )
+   do l=0,dimsizes(m_events)-1
+     yb22(l*4) = -1e18
+     yb22(l*4+1) = 5e18
+     yb22(l*4+2) = 5e18
+     yb22(l*4+3) = -1e18
+     ya22(l*4) = plottime_m_events(l)-0.06
+     ya22(l*4+1) = plottime_m_events(l)-0.06
+     ya22(l*4+2) = plottime_m_events(l)+0.06
+     ya22(l*4+3) = plottime_m_events(l)+0.06
    end do
   anres                          = True            ; poly res
-    anres@gsFillColor            = "gold"         ; color chosen
+    anres@gsFillColor            = "orange"         ; color chosen
     anres@tfPolyDrawOrder        = "PreDraw"       ; send to back
     anres@gsFillOpacityF         = 0.2 
-;    dum6 = gsn_add_polygon(wks,plot1,ya2,yb2,anres)
-;    dum4 = gsn_add_polygon(wks,plot4,ya2,yb2,anres)              
-;    dum5 = gsn_add_polygon(wks,plot5,ya2,yb2,anres)
+    dum4 = gsn_add_polygon(wks,plot1,ya22,yb22,anres)
+    ;dum5 = gsn_add_polygon(wks,plot4,ya22,yb22,anres)
+    dum6 = gsn_add_polygon(wks,plot5,ya22,yb22,anres)
+
 
   if (PLOTFTS) then
-   ya3    = new( (/4*dimsizes(plottime5)/), float )
-   yb3    = new( (/4*dimsizes(plottime5)/), float )
-   do l=0,dimsizes(plottime5)-1
-     yb3(l*4) = -1e18
-     yb3(l*4+1) = 5e18
-     yb3(l*4+2) = 5e18
-     yb3(l*4+3) = -1e18
-     ya3(l*4) = doubletofloat(plottime5(l))-0.06
-     ya3(l*4+1) = doubletofloat(plottime5(l))-0.06
-     ya3(l*4+2) = doubletofloat(plottime5(l))+0.06
-     ya3(l*4+3) = doubletofloat(plottime5(l))+0.06
-   end do
+   ;ya3    = new( (/4*dimsizes(plottime5)/), float )
+   ;yb3    = new( (/4*dimsizes(plottime5)/), float )
+   ;do l=0,dimsizes(plottime5)-1
+   ;  yb3(l*4) = -1e18
+   ;  yb3(l*4+1) = 5e18
+   ;  yb3(l*4+2) = 5e18
+   ;  yb3(l*4+3) = -1e18
+   ;  ya3(l*4) = doubletofloat(plottime5(l))-0.06
+   ;  ya3(l*4+1) = doubletofloat(plottime5(l))-0.06
+   ;  ya3(l*4+2) = doubletofloat(plottime5(l))+0.06
+   ;  ya3(l*4+3) = doubletofloat(plottime5(l))+0.06
+   ;end do
     anres@gsFillColor            = "cyan"         ; color chosen
     anres@gsFillOpacityF         = 0.2 
 ;    dum7 = gsn_add_polygon(wks,plot1,ya3,yb3,anres)
@@ -1028,9 +877,10 @@ if (PLOT) then
    end if ;(PLOTFTS)
 
   ; -------------------------------
-  ; Add custom text
+  ; ADD CUSTOM TEXT
   ; -------------------------------
   ;drawNDCGrid(wks)
+  ; STATIONS
   txres                   = True                ; polyline mods desired
   txres@txFontHeightF = 0.022                   ; font smaller. default big
   txres@txJust = "CenterLeft"                   ; font smaller. default big
@@ -1039,44 +889,17 @@ if (PLOT) then
   txres@txFontColor = "blue"
   gsn_text_ndc(wks,"FTS",0.8,0.79,txres)
 
-  ; label events
+  ; LABEL EVENTS
   event_label = (/"a", "b", "c" , "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z","a1", "b1", "c1" , "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1", "l1", "m1", "n1", "o1", "p1"/)
-  if (PLOTFTS) then
-    event_dummy = array_append_record(plottime4,plottime5,0)
-  else
-    event_dummy = plottime4
-  end if
-
-  ; select events greater than 2001
-  event_dummy2 = event_dummy(dim_pqsort(event_dummy,1))
-  do e_date=0,dimsizes(event_dummy2)-1
-    if (event_dummy2(e_date).le.2001.) then
-       ; move onto next event
-       print("not plotting event " + event_dummy2(e_date))
-       continue
-    else
-      if (.not.(isdefined("event_times"))) then
-        event_times := event_dummy2(e_date)
-      else
-        event_dummy3 := event_times
-        event_times := array_append_record(event_dummy3,event_dummy2(e_date),0)
-      end if
-    end if
-  end do
-
-print(event_times)
 
   tres       =  True
   tres@txFontHeightF = 0.012
   tres@txJust = "CenterLeft"
-  ;if (LAUDER) then
-   do l_event=0,dimsizes(event_times)-1
-     ;text=gsn_add_text(wks,plot1,event_label(l_event),event_times(l_event),2.9e18,tres)
-   end do
-  ;end if
+     ;text=gsn_add_text(wks,plot1,event_label(0:dimsizes(m_events)-1),m_events(0:dimsizes(m_events)-1),2.9e18,tres)
+
 
   ; -------------------------------
-  ; panel the plots
+  ; PANEL PLOTS
   ; -------------------------------
   res1                     = True
     res1@gsnAttachBorderOn   = False
@@ -1092,15 +915,8 @@ print(event_times)
 
   ; plot1 will be the base plot.
 
-  ;amid = gsn_attach_plots(plot1,(/plot4, plot5/),res1,res2)
-  amid = gsn_attach_plots(plot1,(/plot5/),res1,res2)
-
-  ;panel_res                       = True
-  ;panel_res@txString              = "rows x columns"
-  ;panel_res@gsnPanelFigureStrings = (/"A","B","C"/)
-  ;gsn_panel(wks,(/plot1,plot4,plot5/),(/3,1/),panel_res)
-  ;draw(plot1)    ; All three plots will be drawn.
- ; frame(wks)
+  amid = gsn_attach_plots(plot1,(/plot4, plot5/),res1,res2)
+  ;amid = gsn_attach_plots(plot1,(/plot5/),res1,res2)
 
   psres = True                                                               
   maximize_output(wks,psres)
