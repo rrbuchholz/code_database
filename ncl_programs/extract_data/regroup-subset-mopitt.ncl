@@ -33,7 +33,7 @@ begin
   ; -------------------------------
   version = "V7T"
   end_year = 2017
-  location_name = "Lauder"
+  location_name = "Wollongong"
 
   ;------------
   ; distance around 

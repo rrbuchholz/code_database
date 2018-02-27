@@ -24,7 +24,6 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-
 begin
 
 ;--------------------------------------------
@@ -36,7 +35,7 @@ begin
   ; -------------------------------
   version = "V7T"
   suff = "T"
-  location_name = "Izana"
+  location_name = "Toronto"
   if (version.eq."V6J") then
    ;remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
     dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02"+suff+"-*.he5")
@@ -120,8 +119,8 @@ begin
     location_lat = -7.91
     location_lon = -14.33
   else if (location_name.eq."Boulder") then
-    location_lat = 48.04
-    location_lon = -105.2
+    location_lat = 39.99
+    location_lon = -105.26
   else if (location_name.eq."Bremen") then
     location_lat = 53.10
     location_lon = 8.85
@@ -172,6 +171,9 @@ begin
   else if (location_name.eq."Toronto") then
     location_lat = 43.66
     location_lon = -79.40
+  else if (location_name.eq."Tsukuba") then
+    location_lat = 36.05
+    location_lon = 140.13
   else if (location_name.eq."Wollongong") then
     location_lat = -34.406
     location_lon = 150.879
@@ -181,6 +183,7 @@ begin
   else
     print("Valid location not defined... exiting")
     exit
+  end if
   end if
   end if
   end if
