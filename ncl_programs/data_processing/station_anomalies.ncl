@@ -32,18 +32,18 @@ begin
   ; MOPITT
   ; -------------------------------
   version = "V7"
-  suff = "J"
+  suff = "T"
   location = "Lauder"
   surface = "land"
   year_s = 2001
-  network = "NDACC"
+  network = "TCCON"
 
   ;------------
   ; scale of outside sd
   ; to denote event
   ;------------
     event_scale = 3.0
-    neg_event = -3.0
+    neg_event = -2.5
 
   ;------------
   ; toggles
@@ -464,7 +464,31 @@ printVarSummary(detrend_fts_smooth)
      end if
      f_events_new := manual_fts_times((ind(.not.ismissing(manual_fts_times))))
   else if (location.eq."Wollongong") then
-
+    if (network.eq."TCCON") then 
+       manual_fts_times = where(f_events_new.gt.20100106.and.\
+                               f_events_new.lt.20100128,f_events_new@_FillValue,f_events_new)
+       manual_fts_times = where(manual_fts_times.gt.20100705.and.\
+                               manual_fts_times.lt.20100727,manual_fts_times@_FillValue,manual_fts_times)
+       manual_fts_times = where(manual_fts_times.gt.20100921.and.\
+                               manual_fts_times.lt.20101021,manual_fts_times@_FillValue,manual_fts_times)
+       manual_fts_times = where(manual_fts_times.gt.20130408.and.\
+                               manual_fts_times.lt.20130430,manual_fts_times@_FillValue,manual_fts_times)
+       manual_fts_times = where(manual_fts_times.gt.20130711.and.\
+                               manual_fts_times.lt.20130802,manual_fts_times@_FillValue,manual_fts_times)
+       manual_fts_times = where(manual_fts_times.gt.20140703.and.\
+                               manual_fts_times.lt.20140715,manual_fts_times@_FillValue,manual_fts_times)
+     else
+       manual_fts_times = where(f_events_new.gt.20021120.and.\
+                               f_events_new.lt.20021210,f_events_new@_FillValue,f_events_new)
+       manual_fts_times = where(manual_fts_times.gt.20050906.and.\
+                               manual_fts_times.lt.20050925,manual_fts_times@_FillValue,manual_fts_times)
+       manual_fts_times = where(manual_fts_times.gt.20130510.and.\
+                               manual_fts_times.lt.20130527,manual_fts_times@_FillValue,manual_fts_times)
+     end if
+     f_events_new := manual_fts_times((ind(.not.ismissing(manual_fts_times))))
+     manual_m_times = where(m_events_new.gt.20030121.and.\
+                               m_events_new.lt.20030210,m_events_new@_FillValue,m_events_new)
+     m_events_new := manual_m_times((ind(.not.ismissing(manual_m_times))))
   end if
   end if
   end if
@@ -481,6 +505,11 @@ printVarSummary(detrend_fts_smooth)
   print("FTS event dates for "+location+" = ")
   print("  " + f_events + " " + sprintf("%7.3e", fts_day_anom(ind_f_eventtime)))
 
+;above_top = ind(fts_dayavg.ge.3.8e18)
+;print(fts_dayavg(above_top))
+;print(climate_time(above_top))
+
+
 ;********************************************
 ;--------------------------------------------
 ; plot
@@ -495,15 +524,33 @@ if (PLOT) then
     res@gsnFrame            = False                     ; don't advance frame
 
     res@trYMinF             = 0.6e18
-    res@trYMaxF             = 3.7e18
+    ; MAX for Different stations
+    if (location.eq."Darwin") then
+       res@trYMaxF             = 3.8e18
+       res@trYMinF             = 0.8e18
+       loc_labels              = 3.6e18
+    else if (location.eq."Lauder") then
+       res@trYMaxF             = 3.0e18
+       res@trYMinF             = 0.4e18
+       loc_labels              = 2.8e18
+    else if (location.eq."Wollongong") then
+       res@trYMaxF             = 3.8e18
+       res@trYMinF             = 0.8e18
+       loc_labels              = 3.6e18
+    else
+       res@trYMaxF             = 3.5e18
+       loc_labels              = 3.2e18
+    end if
+    end if
+    end if
     res@trXMinF             = tofloat(year_s)-0.5
     res@trXMaxF             = tofloat(year_e)+0.5
-   ; res@trXMinF             = 2002
-   ; res@trXMaxF             = 2006.5
+    ;res@trXMinF             = 2002
+    ;res@trXMaxF             = 2003.5
 
     res@tmYLMode        = "Manual"	
       res@tmYLTickStartF  = 0.5e18
-      res@tmYLTickEndF    = 3.5e18
+      res@tmYLTickEndF    = 4.5e18
       res@tmYLTickSpacingF= 0.5e18
 
     res@tmXBMode        = "Manual"
@@ -573,10 +620,27 @@ if (PLOT) then
     res@xyLineThicknessF    = 3.0
     res@xyLineColor         = "blue"
     res@trYMinF             = -0.8e18
-    res@trYMaxF             = 1.2e18
-      res@tmYLTickStartF  = -0.5e18
-      res@tmYLTickEndF    = 0.5e18
-      res@tmYLTickSpacingF= 0.5e18
+      res@tmYLTickStartF    = -1.5e18
+      res@tmYLTickSpacingF  = 0.5e18
+    ; MAX for Different stations
+    if (location.eq."Darwin") then
+       res@trYMaxF             = 2.0e18
+       res@tmYLTickEndF        = 1.5e18
+       res@tmYLTickSpacingF    = 1.0e18
+    else if (location.eq."Lauder") then
+       res@trYMaxF             = 1.2e18
+       res@tmYLTickEndF        = 0.5e18
+    else if (location.eq."Wollongong") then
+       res@trYMaxF             = 2.5e18
+       res@tmYLTickEndF        = 1.5e18
+       res@tmYLTickSpacingF    = 1.5e18
+    else
+       res@trYMaxF             = 1.2e18
+       res@tmYLTickEndF        = 0.5e18
+    end if
+    end if
+    end if
+
       ;res@tmYLLabelsOn     = False
       ;res@tmYRLabelsOn     = True
     res@vpHeightF            = .15         ; set height of plot
@@ -601,6 +665,7 @@ if (PLOT) then
     gsres                          = True                ; poly res
       gsres@gsFillColor            = "blue"         ; color chosen
       gsres@gsFillOpacityF         = 0.3                 
+      gsres@tfPolyDrawOrder        = "PostDraw"              ; send to back
       dumsd_a = gsn_add_polygon(wks,plot4,ya,yb,gsres)
 
     ;yaa    = new( (/2*dimsizes(climate_yfrac)/), float )
@@ -707,7 +772,6 @@ if (PLOT) then
      ya33(l*4+3) = plottime_f_events_new(l)+0.05
    end do
     anres@gsFillColor            = "lightblue"         ; color chosen
-    anres@tfPolyDrawOrder        = "PreDraw"       ; send to back
     anres@gsFillOpacityF         = 0.5 
     dum7 = gsn_add_polygon(wks,plot1,ya33,yb33,anres)
     dum8 = gsn_add_polygon(wks,plot4,ya33,yb33,anres)  
@@ -724,9 +788,11 @@ if (PLOT) then
   txres@txFontHeightF = 0.022                   ; font smaller. default big
   txres@txJust = "CenterLeft"                   ; font smaller. default big
   txres@txFontColor = "red"
-  gsn_text_ndc(wks,"MOPITT",0.8,0.82,txres)
+  gsn_text_ndc(wks,"MOPITT "+version+suff,0.78,0.75,txres)
   txres@txFontColor = "blue"
-  gsn_text_ndc(wks,"FTS",0.8,0.79,txres)
+  gsn_text_ndc(wks,"FTS ("+network+")",0.78,0.72,txres)
+  txres@txFontColor = "black"
+  gsn_text_ndc(wks,location,0.18,0.72,txres)
 
   ; -------------------------------
   ; LABEL EVENTS
@@ -757,9 +823,11 @@ if (PLOT) then
 
   ; MANUAL ADJUSTMENT
   if (location.eq."Darwin") then
-    manual_times = where(event_times.gt.20061116.and.\
+    if (suff.eq."J") then 
+      manual_times = where(event_times.gt.20061116.and.\
                                 event_times.lt.20061206,event_times@_FillValue,event_times)
-    event_times := manual_times((ind(.not.ismissing(manual_times))))
+      event_times := manual_times((ind(.not.ismissing(manual_times))))
+    end if
   else if (location.eq."Lauder") then
     if (network.eq."TCCON") then 
       manual_times = where(event_times.gt.20101005.and.\
@@ -772,7 +840,17 @@ if (PLOT) then
                                 manual_times.lt.20140212,manual_times@_FillValue,manual_times)
     event_times := manual_times((ind(.not.ismissing(manual_times))))
   else if (location.eq."Wollongong") then
-
+    if (network.eq."NDACC".and.suff.eq."J") then 
+      manual_times = where(event_times.gt.20011227.and.\
+                             event_times.lt.20011230,event_times@_FillValue,event_times)
+      manual_times = where(manual_times.gt.20030121.and.\
+                             manual_times.lt.20030208,manual_times@_FillValue,manual_times)
+      manual_times = where(manual_times.gt.20041012.and.\
+                             manual_times.lt.20041014,manual_times@_FillValue,manual_times)
+      manual_times = where(manual_times.gt.20050906.and.\
+                             manual_times.lt.20050908,manual_times@_FillValue,manual_times)
+      event_times := manual_times((ind(.not.ismissing(manual_times))))
+    end if
   end if
   end if
   end if
@@ -786,7 +864,7 @@ if (PLOT) then
   tres       =  True
   tres@txFontHeightF = 0.018
   tres@txJust = "CenterLeft"
-     text=gsn_add_text(wks,plot1,event_label(0:dimsizes(event_times)-1),event_time_plot(0:dimsizes(event_times)-1),3.1e18,tres)
+     text=gsn_add_text(wks,plot1,event_label(0:dimsizes(event_times)-1),event_time_plot(0:dimsizes(event_times)-1),loc_labels,tres)
 
 
 
