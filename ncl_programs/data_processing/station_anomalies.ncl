@@ -32,18 +32,18 @@ begin
   ; MOPITT
   ; -------------------------------
   version = "V7"
-  suff = "T"
-  location = "Lauder"
+  suff = "J"
+  location = "Wollongong"
   surface = "land"
   year_s = 2001
-  network = "TCCON"
+  network = "NDACC"
 
   ;------------
   ; scale of outside sd
   ; to denote event
   ;------------
     event_scale = 3.0
-    neg_event = -2.5
+    neg_event = -3.0
 
   ;------------
   ; toggles
