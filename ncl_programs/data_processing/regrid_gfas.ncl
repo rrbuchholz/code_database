@@ -156,8 +156,8 @@ begin
       tracer_all:= short2flt(tracer_dummy(:,::-1,:)) ; reorder N->S to S->N
       delete_VarAtts(tracer_all,(/"_FillValue_original","missing_value_original"/))
 ;printVarSummary(tracer_all)
-      tracer_all=where(tracer_dummy.eq.-32766,0.,tracer_all)
 ;print(min(tracer_all))
+
       ; load and convert time format
       time_dummy       = fin[:]->$gfas_time$
       time = cd_convert(time_dummy, "hours since 1900-01-01 00:00:0.0" )
@@ -165,7 +165,7 @@ begin
         time@calendar = "Gregorian"
         time!0 = "time"
         time&time = time
-;print(tracer_all(0,0,0:20))
+
       date = cd_calendar(time_dummy,-2)
         date!0 = "time"
         date&time = time

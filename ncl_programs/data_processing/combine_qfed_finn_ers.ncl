@@ -44,7 +44,9 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  NRT = True
+  if (.not. isvar("NRT")) then        ; is NRT=<boolean> from command line?
+       NRT = False
+  end if
 
   if (NRT) then
     if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD=<value> from command line?
@@ -57,10 +59,10 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2016
+    year = 2001
     outres = "0.94x1.2"
-    ratio_species = "co"
-    species = "CO"
+    ratio_species = "co2"
+    species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
   end if
 
@@ -337,7 +339,7 @@ begin
      AvgDiff = AvgOrigGrid-Avg_Regrid
      PercDiff = (AvgDiff/AvgOrigGrid)*100
      MaxDiff = max(PercDiff)
-     max_ind = ind(PercDiff.eq.MaxDiff)
+     max_ind := ind(PercDiff.eq.MaxDiff)
    ;print("Maximum diff: lowres: "+sprintf("%2.2e",AvgOrigGrid(max_ind))+\
    ;      "  highres: "+sprintf("%2.2e",Avg_Regrid(max_ind))+   \
    ;      "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+  \
@@ -409,14 +411,16 @@ begin
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = species+" is from QFED, Level3b v2.4 "+\
-                                  "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
+        fAtt@history            = species+" is from QFED, Level3b v2.5 "+\
+                                  "(qfed-2.5_r1) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
-        fAtt@author             = "R. R. Buchholz"
+        fAtt@author             = "R. R. Buchholz (buchholz@ucar.edu)"
         fAtt@creation_date      = systemfunc ("date")
-        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
+        fAtt@source             = "QFED Level3b v2.5_r1 Gridded Emission Estimates:"+\
+                                  " NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
+                                  " FINN v1.5: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ var_names(tracer)+\
-                                  " from FINN emission ratios applied to QFED" +\
+                                  " from FINN v1.5 x QFED" +\
                                    species+", daily"
 
        fileattdef(fout, fAtt)
@@ -433,6 +437,7 @@ begin
       ; Variables
       ;------------
       emiss_regrid@long_name = dummy_var2(tracer)+" QFED/FINN fire emissions"
+      emiss_regrid@_FillValue := 0.0
       emiss_regrid@vmax      = max(emiss_regrid)
       emiss_regrid@vmin      = min(emiss_regrid)
       delete(emiss_regrid@missing_value)
@@ -519,7 +524,7 @@ begin
    ; VOC factors convert from kg to moles
    ; so no need to do mw weight step
    ; -------------------------------
-     print("No need for MW, emission factor to NMHC converts kg/s -> moles/s")
+     print("No need for MW, emission factor to NMOC converts kg/s -> moles/s")
      print(voc_spec(voctype))
      voc_tracer_emiss = voc_tracer_emiss/(10000)     ; m-2 -> cm-2
      voc_tracer_emiss = voc_tracer_emiss*NAv         ; moles -> molec
@@ -551,7 +556,7 @@ begin
    end if
 
      MaxDiff_voc = max(PercDiff_voc)
-     max_ind_voc = ind(PercDiff_voc.eq.MaxDiff_voc)
+     max_ind_voc := ind(PercDiff_voc.eq.MaxDiff_voc)
      ;print("Maximum diff: lowres: "+sprintf("%2.2e",AvgOrigGrid(max_ind))+\
      ;      "  highres: "+sprintf("%2.2e",Avg_Regrid(max_ind))+   \
      ;      "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+\
@@ -618,15 +623,17 @@ begin
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = species+" is from QFED, Level3b v2.4 "+\
-                                  "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
+        fAtt@history            = species+" is from QFED, Level3b v2.5 "+\
+                                  "(qfed-2.5_r1) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
-        fAtt@author             = "R. R. Buchholz"
+        fAtt@author             = "R. R. Buchholz (buchholz@ucar.edu)"
         fAtt@creation_date      = systemfunc ("date")
-        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
+        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
+                                  " FINN v1.5: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ voc_spec(voctype)+\
-                                  " from FINN emission ratios applied to QFED "+\
+                                  " from FINN v1.5 x QFED" +\
                                    species+", daily"
+
 
 
        fileattdef(fout, fAtt)
@@ -644,6 +651,7 @@ begin
       ; Variables
       ;------------
       voc_emiss_regrid@long_name = voc_spec(voctype)+" QFED/FINN fire emissions"
+      emiss_regrid@_FillValue   := 0.0
       voc_emiss_regrid@vmax      = max(voc_emiss_regrid)
       voc_emiss_regrid@vmin      = min(voc_emiss_regrid)
       delete(voc_emiss_regrid@missing_value)

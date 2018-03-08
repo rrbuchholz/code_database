@@ -85,9 +85,9 @@ if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
-     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
+     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
+  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
