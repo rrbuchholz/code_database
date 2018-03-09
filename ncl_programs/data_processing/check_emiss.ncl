@@ -56,7 +56,7 @@ begin
        check_array(tracer) = 0
     end if
   end do
-   
+
    val_check = sum(check_array)
 
     if (val_check.eq.dimsizes(emis_files)) then                      ; determine if values present

@@ -66,7 +66,7 @@ begin
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
   else
-    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
+    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
   end if
   
   ; OC/BC
@@ -90,7 +90,7 @@ begin
     end do
   ; SO4
   else if (tracer.eq."SO4") then
-    e_file_in = emis_dir+"qfed.emis_SO2_"+outres+"_mol_"+year+".nc"
+    e_file_in = emis_dir+"qfed.emis_SO2_orig_"+outres+"_mol_"+year+".nc"
   end if
   end if
   end if
@@ -282,7 +282,7 @@ begin
     ; therefore number emissions files are also scaled by 1/amufac
     num_emiss = emiss_so4 * mw /mass_particle        ;(particles/cm2/s)(molecules/mole)(g/kg)
     ; to write out
-    new_names = (/"SO2_new", "so4_a1", "num_so4_a1"/)
+    new_names = (/"SO2", "so4_a1", "num_so4_a1"/)
     new_emiss = (/emiss_so2_new, emiss_so4, num_emiss/)
   end if
 
@@ -308,7 +308,7 @@ begin
      ; overwrite the title and date
         fout@creation_date      = systemfunc ("date")
         fout@title              = "Emissions of "+ new_names(i)+\
-                                  " from FINN v1.5 emission ratios applied to QFED CO2, daily"
+                                  " from FINN v1.6 emission x QFED CO2, daily"
         if (new_names(i).eq."num_pom_a4".or.new_names(i).eq."num_bc_a4".or.\
             new_names(i).eq."num_so4_a1") then
           fout@data_summary     = "Number of particles of "+tracer+" aerosol emissions for MAM4. Will be scaled by ((1E-3kg/g)*(1E4cm2/m2)/Avog) when read into in CESM2 because model was originally set up to convert molec/cm2/s to kg/m2/s."

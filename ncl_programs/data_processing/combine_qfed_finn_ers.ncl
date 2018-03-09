@@ -59,11 +59,12 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2001
+    year = 2015
+    qfed_version = "v2.5"
     outres = "0.94x1.2"
     ratio_species = "co2"
     species = "CO2"
-    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+year+"/"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"/"
   end if
 
   ; -------------------------------
@@ -81,7 +82,7 @@ begin
   ; -------------------------------
   ; FINN emission ratios
   ; -------------------------------
-  finn_emiss = "/net/modeling1/home/buchholz/data/emissionsfactors_speciation_20150305.csv"
+  finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_jun2017.csv"
   finn_VOC = "/net/modeling1/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
 
   ; -------------------------------
@@ -184,50 +185,7 @@ begin
 
 ;********************************************
 ; load files and extract
-  ; -------------------------------
-  ; QFED load
-  ; -------------------------------
-    fin = addfiles(qfed_files, "r")            ; read in
-    ListSetType (fin, "cat") 
-      co2_all          = fin[:]->$qfed_co2$
-      co2_trop         = fin[:]->$qfed_co2_trop$
-      co2_xtrop        = fin[:]->$qfed_co2_extratrop$
-      co2_savan        = fin[:]->$qfed_co2_savanna$
-      co2_grass        = fin[:]->$qfed_co2_grass$
-
-      ; load and convert time format
-      time_dummy       = fin[:]->$qfed_time$
-      time = cd_convert(time_dummy, "days since 1850-01-01 00:00:00" )
-        time@long_name = "Time"
-        time@calendar = "Gregorian"
-        time!0 = "time"
-        time&time = time
-
-      date = cd_calendar(time_dummy,-2)
-        date!0 = "time"
-        date&time = time
-        date@long_name = "Date"
-        date@units = "YYYYMMDD"
-        delete(date@calendar)
-
-      delete(co2_all&time )
-      co2_all!0 = "time"
-      co2_all&time = (time)
-
-  ; -------------------------------
-  ; QFED res for sums/avgs
-  ; -------------------------------
-     clat_q = cos(co2_all&lat * rad) ; cosine of latitude
-     dlon_q = (co2_all&lon(2) - co2_all&lon(1))  ; assume dlon is constant
-     dlat_q = (co2_all&lat(2) - co2_all&lat(1))  ; assume dlat is constant
-     dx_q   = con * dlon_q * clat_q   ; dx at each latitude
-     dy_q   = con * dlat_q            ; dy is constant
-     dydx_q = dy_q * dx_q             ; dydx(nlat)
-
-     wgt_QFED  = new((/dimsizes(co2_all&lat), dimsizes(co2_all&lon)/), float)
-     wgt_QFED  = conform(wgt_QFED, tofloat(dydx_q), 0)
-
-  ; -------------------------------
+ ; -------------------------------
   ; load FINN emission ratios
   ; -------------------------------
   ;---read the values in as 1D lines
@@ -247,8 +205,8 @@ begin
   dummy_var2 = dummy_var(0,1:)
   var_names = str_upper(dummy_var2)
   ;--- replace names to be consistent with MOZART
-  var_names = where(var_names.eq."NO","ignore",var_names)      ; ignore the initial NO column
-  var_names = where(var_names.eq."NOX AS NO","NO",var_names)   ; turn the NOx value into NO
+  var_names = where(var_names.eq."NOX AS NO","ignore",var_names)   ; ignore NOx - use NO and NO2
+  var_names = where(var_names.eq."SO2","SO2_orig",var_names)   ; ignore NOx - use NO and NO2
 
   ;---reshape data to 2D array, and convert to float
   strs = str_split_csv (data, delim, 0)  
@@ -279,6 +237,50 @@ begin
    end if
      e_factors@units = "g/kg per g/kg"
 
+  ; -------------------------------
+  ; QFED load
+  ; -------------------------------
+    fin = addfiles(qfed_files, "r")            ; read in
+    ListSetType (fin, "cat") 
+      co2_all          = fin[:]->$qfed_co2$
+      co2_trop         = fin[:]->$qfed_co2_trop$
+      co2_xtrop        = fin[:]->$qfed_co2_extratrop$
+      co2_savan        = fin[:]->$qfed_co2_savanna$
+      co2_grass        = fin[:]->$qfed_co2_grass$
+
+      ; load and convert time format
+      time_dummy       = fin[:]->$qfed_time$
+      time = tofloat(cd_convert(time_dummy, "days since 1850-01-01 00:00:00" ))
+        time@long_name = "Time"
+        time@calendar = "Gregorian"
+        time!0 = "time"
+        time&time = time
+        time@units = "days since 1850-01-01 00:00:00"
+
+      date = cd_calendar(time_dummy,-2)
+        date!0 = "time"
+        date&time = time
+        date@long_name = "Date"
+        date@units = "YYYYMMDD"
+        delete(date@calendar)
+
+      delete(co2_all&time )
+      co2_all!0 = "time"
+      co2_all&time = (time)
+
+  ; -------------------------------
+  ; QFED res for sums/avgs
+  ; -------------------------------
+     clat_q = cos(co2_all&lat * rad) ; cosine of latitude
+     dlon_q = (co2_all&lon(2) - co2_all&lon(1))  ; assume dlon is constant
+     dlat_q = (co2_all&lat(2) - co2_all&lat(1))  ; assume dlat is constant
+     dx_q   = con * dlon_q * clat_q   ; dx at each latitude
+     dy_q   = con * dlat_q            ; dy is constant
+     dydx_q = dy_q * dx_q             ; dydx(nlat)
+
+     wgt_QFED  = new((/dimsizes(co2_all&lat), dimsizes(co2_all&lon)/), float)
+     wgt_QFED  = conform(wgt_QFED, tofloat(dydx_q), 0)
+
   ;********************************************
   ; Non- VOCs
   ;--- FINN                    QFED
@@ -295,7 +297,7 @@ begin
         var_names(tracer).eq."PM2.5".or.\
         var_names(tracer).eq."PM10") then
       ; Apply speciation values to total vocs
-      ; outside this loop
+      ; (NMOC) outside this loop
       ; and ignore PM2.5 and PM10
       continue
     else
@@ -316,7 +318,11 @@ begin
     ; kg s-1 m-2 to molec. cm-2 s-1
     ; -------------------------------
      print(var_names(tracer))
-     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.var_names(tracer)),1))
+     if (var_names(tracer).eq."SO2_orig")
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq."SO2"),1))
+     else
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.var_names(tracer)),1))
+     end if
      print(var_names(tracer)+" MW: "+mw)
      tracer_emiss = tracer_emiss/(10000)        ; m-2 -> cm-2
      tracer_emiss = (tracer_emiss*1000/mw)*NAv  ; kg -> g -> mol -> molec
@@ -418,9 +424,9 @@ begin
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED Level3b v2.5_r1 Gridded Emission Estimates:"+\
                                   " NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
-                                  " FINN v1.5: C. Wiedinmyer 2015"
+                                  " FINN v1.6: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ var_names(tracer)+\
-                                  " from FINN v1.5 x QFED" +\
+                                  " from FINN v1.6 x QFED " +\
                                    species+", daily"
 
        fileattdef(fout, fAtt)
@@ -440,8 +446,8 @@ begin
       emiss_regrid@_FillValue := 0.0
       emiss_regrid@vmax      = max(emiss_regrid)
       emiss_regrid@vmin      = min(emiss_regrid)
-      delete(emiss_regrid@missing_value)
-      delete(emiss_regrid@fmissing_value)
+      ;delete(emiss_regrid@missing_value)
+      ;delete(emiss_regrid@fmissing_value)
 
        ;--- date
          fout->date             = date
@@ -629,9 +635,9 @@ begin
         fAtt@author             = "R. R. Buchholz (buchholz@ucar.edu)"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
-                                  " FINN v1.5: C. Wiedinmyer 2015"
+                                  " FINN v1.6: C. Wiedinmyer 2017"
         fAtt@title              = "Emissions of "+ voc_spec(voctype)+\
-                                  " from FINN v1.5 x QFED" +\
+                                  " from FINN v1.6 x QFED" +\
                                    species+", daily"
 
 
