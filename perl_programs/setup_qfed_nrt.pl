@@ -30,7 +30,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 
-$current_date = 20180101;
+$current_date = 20180212;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -88,7 +88,7 @@ if ($check_again ne '' && $processed == 0){
      # --- call to NCL processing script ---#
      `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
+  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";            #DEBUG
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
@@ -110,8 +110,8 @@ chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date 
 
 $proc_file = grep { /True/ } @check_file;
 
-print OUT "Is current date processed yet: $proc_file\n";      #DEBUG
-print OUT "@check_file\n";      #DEBUG
+print OUT "Is current date processed yet: $proc_file\n";    #DEBUG
+print OUT "@check_file\n";                                  #DEBUG
 
 if ($processed == 0 && $proc_file == 1){
     print OUT "Checked: all files have some non-zero values for $current_date \n";
@@ -141,9 +141,9 @@ else{
 
 #------------------------------
 #send to glade at 8am
-#if ($time >= 8 && $min >= 30 && $processed == 1){
-#`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
-#}
+if ($time >= 8 && $min >= 30 && $processed == 1){
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+}
 
 #------------------------------
 #send email if processing not done by 7am

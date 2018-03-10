@@ -59,7 +59,7 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2015
+    year = 2016
     qfed_version = "v2.5"
     outres = "0.94x1.2"
     ratio_species = "co2"
