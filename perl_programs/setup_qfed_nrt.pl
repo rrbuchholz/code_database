@@ -91,12 +91,12 @@ if ($check_again ne '' && $processed == 0){
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="VBS"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SOAG"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SO4"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-  print OUT "/usr/local/ncarg/bin/ncl year=$year 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="BC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="OC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="VBS"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SOAG"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SO4"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "/usr/local/ncarg/bin/ncl year=$year 'tracer=\"BC\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
 else{
   print OUT "File still not available . . .\n";
@@ -141,7 +141,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 8 && $min >= 30 && $processed == 1){
-`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
 }
 
 #------------------------------

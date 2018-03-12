@@ -13,7 +13,7 @@
 ;   - For VOC speciation - multiply NMOC
 ;         (total VOCs) by speciation factor
 ;   - Regrid from 0.25 x 0.25 to 1.9 x2.5
-;                          or to 0.94 x 1.2
+;                          or to 0.94 x 1.25
 ;   - Regrid lon gridding,
 ;          -180 to 180 qfed : 0 to 360 CAM-chem
 ;   - Write out to netCDF - one file per tracer per year
@@ -45,7 +45,7 @@ begin
 ; user input
 ;--------------------------------------------
   year = 2014
-  outres = "0.94x1.2"
+  outres = "0.9x1.25"
   input_species = "ald2"
   species = "CH3CHO"
   outpath = "/data14b/buchholz/qfed/cam_"+outres+"/regridded/"+year+"/"
@@ -111,9 +111,9 @@ begin
   ; lat/lon for re-gridding
   ; -------------------------------
 
-  if (outres.eq."0.94x1.2") then
+  if (outres.eq."0.9x1.25") then
    ; higher res - 1 deg
-   newlon  = fspan(0,358.8, 288)
+   newlon  = fspan(0,358.75, 288)
      newlon@units      = "degrees_east"
      newlon@long_name  = "longitude"
      newlon!0          = "lon"
@@ -215,7 +215,7 @@ begin
 
     ; -------------------------------
     ; regrid to CAM-chem structure
-    ; 1.9 x 2.5 or 0.94 x 1.2
+    ; 1.9 x 2.5 or 0.94 x 1.25
     ; -------------------------------
      opt    = False
      emiss_regrid  = area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \

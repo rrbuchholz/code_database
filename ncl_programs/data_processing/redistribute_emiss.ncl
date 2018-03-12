@@ -21,7 +21,7 @@
 ;           num_so4                       SO4
 ;   
 ;   To run type:
-;        ncl  year=$year 'tracer="BC"' NRT=True 'outres="0.94x1.2"' \
+;        ncl  year=$year 'tracer="BC"' NRT=True 'outres="0.9x1.25"' \
 ;             'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl
 ;
 ;   Requires:
@@ -51,7 +51,7 @@ begin
     end if
 
     if (.not. isvar("outres")) then     ; is outres=<name> from command line?
-         outres = "0.94x1.2"
+         outres = "0.9x1.25"
     end if
 
     if (.not. isvar("emiss_type")) then  ; is emiss_type=<name> from command line?
