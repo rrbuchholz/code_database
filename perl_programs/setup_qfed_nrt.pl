@@ -76,8 +76,7 @@ else{
 #------------------------------
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
-#$codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
-$codehome = "/home/buchholz/code_database/ncl_programs/data_processing";
+$codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
 
 #$processed = 1;
 
