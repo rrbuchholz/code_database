@@ -29,7 +29,7 @@ chomp($min = `date +%M`);
 chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
-#$current_date = 20180309;
+#$current_date = 20180311;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -77,8 +77,8 @@ else{
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
 $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
+#$codehome = "/home/buchholz/code_database/ncl_programs/data_processing";
 
-#$processed = 1;
 
 if ($check_again ne '' && $processed == 0){
   # download there and not done
