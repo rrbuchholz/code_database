@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2014
+  ystart = 2016
   yend = 2016
-  reso = "0.94x1.2"
+  reso = "0.9x1.25"
 
-  repository = "FINN"
-    s_name = ""
+  repository = "QFED"
+    s_name = "CO"
 
   tracers = (/"CO"/)
   ;tracers = (/"CH3OH","CO"/)
@@ -57,8 +57,14 @@ do t = 0, dimsizes(tracers)-1
            repository.eq."QFED") then
    emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
    e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+  else if (repository.eq."QFED_native") then
+   emis_dir = top_dir+ "qfed/"
+   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
   end if
   end if
+  end if
+
+/2016/qfed.emis_CO_0.9x1.25_mol_2016.nc
 
    indir = emis_dir+"/allyears/"
    outpath = emis_dir+"/region_sums/"
