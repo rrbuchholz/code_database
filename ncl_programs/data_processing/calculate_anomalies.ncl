@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "Maritime Southeast Asia"
+  loc = "CentralSAfrica" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "Central Southern Africa"
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"

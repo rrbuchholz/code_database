@@ -13,16 +13,16 @@ begin
 ; user input
 ;--------------------------------------------
    if (.not. isvar("year")) then      ; is year=<value> from command line?
-       year = 2017
+       year = 2018
     end if
    if (.not. isvar("YYYYMMDD")) then      ; is year=<value> from command line?
-       YYYYMMDD = 20171126
+       YYYYMMDD = 20180101
     end if
 
   ratio_species = "co2"
-  outres = "0.94x1.2"
+  outres = "0.9x1.25"
   outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
-  emis_files = systemfunc ("ls "+outpath+"*.nc")
+  emis_files = systemfunc ("ls "+outpath+"*"+year+".nc")
 
 ;--------------------------------------------
 ; end user input
@@ -56,7 +56,7 @@ begin
        check_array(tracer) = 0
     end if
   end do
-   
+
    val_check = sum(check_array)
 
     if (val_check.eq.dimsizes(emis_files)) then                      ; determine if values present

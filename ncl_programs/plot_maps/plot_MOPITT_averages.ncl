@@ -41,8 +41,8 @@ begin
        mapDir  = "./"                        ; directory for plot output
        mapName = "/net/mopfl/home/buchholz/MOPITT_"+version+"_tcol" ; plot name output
        mapType = "png"                       ; workstation type
-        mapType@wkWidth = 1200
-        mapType@wkHeight = 1200 
+        mapType@wkWidth = 1800
+        mapType@wkHeight = 1800 
    end if
 
 ;***************************************************************
@@ -161,7 +161,7 @@ begin
       ;-------------------------------------
       mapres@mpMinLatF               = -70       ; zoom to SH
       mapres@mpMaxLatF               = 15
-      mapres@mpMinLonF               = -110
+      mapres@mpMinLonF               = -120
       mapres@mpMaxLonF               = 245
       ;mapres@mpCenterLonF            = 70
 
@@ -229,7 +229,7 @@ begin
     ;-------------------
     boxres = True
       boxres@gsLineColor      = "black"
-      boxres@gsLineThicknessF = 6
+      boxres@gsLineThicknessF = 15
 
       region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
                        "CentralSAmerica", "SouthAmerica"/)
@@ -256,7 +256,7 @@ begin
     ;-------------------
     boxresII = True
       boxresII@gsLineColor      = "red2"
-      boxresII@gsLineThicknessF = 6
+      boxresII@gsLineThicknessF = 15
 
       index_name = (/"NINO 3.4","~F33~D","DMI","TSA"/)
       index_latmin = (/-5.,-10.,-10.,-20./)
@@ -279,7 +279,7 @@ begin
     aao_lines_down = new(9, graphic)
     arrow_res = True
       arrow_res@gsLineColor      = "white"
-      arrow_res@gsLineThicknessF = 6.0
+      arrow_res@gsLineThicknessF = 15.0
     do j = 0,dimsizes(aao_lines_up)-1
       aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
       aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
@@ -291,7 +291,7 @@ begin
     ;-------------------
     ;drawNDCGrid(wks)
        txres = True
-        txres@txFontHeightF  = 0.012
+        txres@txFontHeightF  = 0.016
         ;txres@txFont         = "helvetica-bold"
         txres@txJust         = "BottomLeft"
         txres@txFontColor    = "black"
@@ -320,11 +320,11 @@ begin
         textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)-2, index_latmin(k)-20,txres)
         continue;
       else if (k.eq.0)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+40, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+50, index_latmin(k)-12,txres)
       else if (k.eq.1)
         textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-10,txres)
       else 
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+25, index_latmin(k)-8,txres)
+        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-12,txres)
        end if
        end if
        end if
@@ -332,7 +332,7 @@ begin
 
         txres@txFontColor    = "white"
         txres@txJust         = "CenterCenter"
-        textIII = gsn_add_text(wks,map2,"SAM",55, -55,txres)
+        textIII = gsn_add_text(wks,map2,"SAM",51, -55,txres)
 
     ; ===================
     ; panel the plots

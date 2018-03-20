@@ -4,34 +4,19 @@
 ;
 ; Concepts illustrated:
 ;   - Load qfed CO2 (or CO) files
-;   - Load Christine's emission values
-;         (separated into 4 land types)
-;   - Calculate emission factors
-;   - Multiply CO2 (or CO) by emission factors for each species
-;      and change units to molec/cm^2/s
-;   - Load Christine's VOC speciation 
-;   - For VOC speciation - multiply NMOC
-;         (total VOCs) by speciation factor
 ;   - Regrid from 0.25 x 0.25 to 1.9 x2.5
-;                          or to 0.94 x 1.2
+;                          or to 0.94 x 1.25
 ;   - Regrid lon gridding,
 ;          -180 to 180 qfed : 0 to 360 CAM-chem
 ;   - Write out to netCDF - one file per tracer per year
 ;                         - kept at daily time resolution
 ;   
 ;   To run type:
-;         ncl combine_qfed_finn_ers.ncl
+;         ncl regrid_qfed.ncl
 ;
 ;   Requires:
 ;         path to qfed files separated into years
-;         path to FINN emission ratios file
-;         path to FINN VOC speciation
-;         path to MOZART molecular weight file
-;         emission ratio files must have line (or column for VOC) order:
-;         1: Savanna Grasslands
-;         2: Shrublands/Savanna
-;         3: Tropical Forest
-;         4: Extratropical Forest
+;         molecular weights file
 ;                                  RRB March 06, 2015
 ;=======================================================;
 ; load the libraries
@@ -44,10 +29,10 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2014
-  outres = "0.94x1.2"
-  input_species = "ald2"
-  species = "CH3CHO"
+  year = 2016
+  outres = "0.9x1.25"
+  input_species = "co"
+  species = "CO"
   outpath = "/data14b/buchholz/qfed/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------
@@ -111,9 +96,9 @@ begin
   ; lat/lon for re-gridding
   ; -------------------------------
 
-  if (outres.eq."0.94x1.2") then
+  if (outres.eq."0.9x1.25") then
    ; higher res - 1 deg
-   newlon  = fspan(0,358.8, 288)
+   newlon  = fspan(0,358.75, 288)
      newlon@units      = "degrees_east"
      newlon@long_name  = "longitude"
      newlon!0          = "lon"
@@ -215,7 +200,7 @@ begin
 
     ; -------------------------------
     ; regrid to CAM-chem structure
-    ; 1.9 x 2.5 or 0.94 x 1.2
+    ; 1.9 x 2.5 or 0.94 x 1.25
     ; -------------------------------
      opt    = False
      emiss_regrid  = area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \
@@ -224,15 +209,15 @@ begin
      ;printVarSummary(emiss_regrid)
 
      ;--- sanity check
-     AvgOrigGrid = wgt_areaave2 (tracer_emiss , wgt_QFED, 0)
-     Avg_Regrid = wgt_areaave2 (emiss_regrid, wgt_CAM, 0)
-     AvgDiff = AvgOrigGrid-Avg_Regrid
-     PercDiff = (AvgDiff/AvgOrigGrid)*100
+     SumOrigGrid = wgt_areasum2 (tracer_emiss , wgt_QFED, 0)
+     Sum_Regrid = wgt_areasum2 (emiss_regrid, wgt_CAM, 0)
+     SumDiff = SumOrigGrid-Sum_Regrid
+     PercDiff = (SumDiff/SumOrigGrid)*100
      MaxDiff = max(PercDiff)
      max_ind = ind(PercDiff.eq.MaxDiff)
-   print("Maximum diff: lowres: "+sprintf("%2.2e",AvgOrigGrid(max_ind))+\
-         "  highres: "+sprintf("%2.2e",Avg_Regrid(max_ind))+   \
-         "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+  \
+   print("Maximum diff: lowres: "+sprintf("%2.2e",SumOrigGrid(max_ind))+\
+         "  highres: "+sprintf("%2.2e",Sum_Regrid(max_ind))+   \
+         "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+  \
          "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
 
    print("Maximum percent diff in "+species+\
@@ -259,8 +244,8 @@ begin
       fAtt                      = True
         fAtt@molecular_weight   = mw
         fAtt@conventions        = "CF"
-        fAtt@history            = species+" is from QFED, Level3b v2.4 "+\
-                                  "(qfed-2_4_r6) Gridded Emission Estimates"
+        fAtt@history            = species+" is from QFED, Level3b v2.5 "+\
+                                  "(qfed-2_5_r1) Gridded Emission Estimates"
         fAtt@author             = "R. R. Buchholz"
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group"
@@ -334,10 +319,10 @@ begin
     ;-------------------
     ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial avg = "+ AvgOrigGrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial sum = "+ SumOrigGrid(0) ; change left title
       map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial avg = "+ Avg_Regrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial sum = "+ Sum_Regrid(0) ; change left title
       map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
 
     panel_res                       = True

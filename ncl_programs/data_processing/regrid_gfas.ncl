@@ -20,19 +20,21 @@
 ;                                  RRB September 11, 20157
 ;=======================================================;
 ; load the libraries
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
 begin
 
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2016
+  if (.not. isvar("year")) then      ; is YYYYMMDD=<value> from command line?
+       year = 2014
+  end if
   outres = "0.94x1.2"
   input_species = "co"
-  species = "CO"
+  output_species = "CO"
   outpath = "/data14b/buchholz/gfas/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------
@@ -144,13 +146,17 @@ begin
     fin = addfiles(gfas_files, "r")            ; read in
     ListSetType (fin, "cat") 
       tracer_dummy       = fin[:]->$gfas_tracer$
+;print(min(tracer_dummy))
+;tracer_dummy=where(tracer_dummy.eq.-32766,tracer_dummy@_FillValue,tracer_dummy)
+;print(min(tracer_dummy))
+;print(tracer_dummy(0,0,0:20))
+;print(num(ismissing(tracer_dummy)))
+;printVarSummary(tracer_dummy)
+
       tracer_all:= short2flt(tracer_dummy(:,::-1,:)) ; reorder N->S to S->N
-      copy_VarAtts(tracer_dummy,tracer_all)
-      tracer_all!1 = "latitude"
-      tracer_all&latitude = tracer_dummy&latitude(::-1)
-      tracer_all!2 = "longitude"
-      tracer_all&longitude = tracer_dummy&longitude
-     printVarSummary(tracer_all)
+      delete_VarAtts(tracer_all,(/"_FillValue_original","missing_value_original"/))
+;printVarSummary(tracer_all)
+;print(min(tracer_all))
 
       ; load and convert time format
       time_dummy       = fin[:]->$gfas_time$
@@ -196,9 +202,9 @@ begin
     ; convert to CAM-Chem units
     ; kg s-1 m-2 to molec. cm-2 s-1
     ; -------------------------------
-     print(species)
-     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.species),1))
-     print(species+" MW: "+mw)
+     print(output_species)
+     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.output_species),1))
+     print(output_species+" MW: "+mw)
      tracer_emiss = tracer_emiss/(10000)        ; m-2 -> cm-2
      tracer_emiss = (tracer_emiss*1000/mw)*NAv  ; kg -> g -> mol -> molec
        tracer_emiss@units = "molecules/cm2/s"
@@ -213,7 +219,6 @@ begin
                                          newlon, newlat, opt)  ; (ntim,nlat,nlon)
      printVarSummary(emiss_regrid)
 
-
      ;--- sanity check
      AvgOrigGrid = wgt_areaave2 (tracer_emiss , wgt_gfas, 0)
      Avg_Regrid = wgt_areaave2 (emiss_regrid, wgt_CAM, 0)
@@ -226,65 +231,13 @@ begin
          "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+  \
          "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
 
-   print("Maximum percent diff in "+species+\
+   print("Maximum percent diff in "+output_species+\
          " from regridding: "+sprintf("%2.2f",PercDiff(max_ind))+"%"+\
          " on date: " + cd_calendar(tracer_all&time(max_ind),2))
    print("-------------------------------------------------")
 
-    ;--------------------------------------------
-    ; Write out to an netCDF file
-    ;--------------------------------------------
-    if (netCDF) then
-      ;-------------------
-      ; create file for each 
-      ; CAM-chem species
-      ;-------------------
-      outfilename = "gfas.emis_"+species+"_"+outres+"_mol_"+year+".nc"
-      fout = addfile(outpath+outfilename, "c")
 
-      ;------------
-      ; File 
-      ; Attributes
-      ;------------
-      setfileoption(fout, "DefineMode",True)
-      fAtt                      = True
-        fAtt@molecular_weight   = mw
-        fAtt@conventions        = "CF"
-        fAtt@history            = species+" is from Global Fire Assimilation System (GFAS),"+\
-                                  "regridded from 0.1 x 0.1 deg."
-        fAtt@reference          = "Contains modified Copernicus Atmosphere Monitoring Service Information [dwld 2017]"
-        fAtt@author             = "R. R. Buchholz"
-        fAtt@creation_date      = systemfunc ("date")
-        fAtt@source             = "GFASv1.2: ECMWF Copernicus Atmosphere Monitoring Service (CAMS)"
-
-        fAtt@title              = "Emissions of "+ species + " from GFAS, daily"
-
-       fileattdef(fout, fAtt)
-       setfileoption(fout, "DefineMode",False)
-
-      ;------------
-      ; Coordinate Variables
-      ;------------
-        dimNames = (/"time", "lat", "lon"/)  
-	dim_Sizes = (/ -1   ,  dimsizes(emiss_regrid&lat),  dimsizes(emiss_regrid&lon)/) 
-	dimUnlim = (/ True , False, False/)   
-	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
-      ;------------
-      ; Variables
-      ;------------
-      emiss_regrid@long_name = species +" gfas fire emissions"
-      emiss_regrid@vmax      = max(emiss_regrid)
-      emiss_regrid@vmin      = min(emiss_regrid)
-      delete(emiss_regrid@missing_value)
-      delete(emiss_regrid@fmissing_value)
-
-       ;--- date
-         fout->date             = date
-       ;--- emissions
-         fout->bb               = emiss_regrid
-    end if ;NetCDF
-
-  tracername := species
+  tracername := output_species
 
   ;********************************************
   ; panel plots for consistency check
@@ -342,6 +295,58 @@ begin
 
   end if    ; PLOT
 
+    ;--------------------------------------------
+    ; Write out to an netCDF file
+    ;--------------------------------------------
+    if (netCDF) then
+      ;-------------------
+      ; create file for each 
+      ; CAM-chem species
+      ;-------------------
+      outfilename = "gfas.emis_"+output_species+"_"+outres+"_mol_"+year+"new.nc"
+      fout = addfile(outpath+outfilename, "c")
+
+      ;------------
+      ; File 
+      ; Attributes
+      ;------------
+      setfileoption(fout, "DefineMode",True)
+      fAtt                      = True
+        fAtt@molecular_weight   = mw
+        fAtt@conventions        = "CF"
+        fAtt@history            = output_species+" is from Global Fire Assimilation System (GFAS),"+\
+                                  "regridded from 0.1 x 0.1 deg."
+        fAtt@reference          = "Contains modified Copernicus Atmosphere Monitoring Service Information [dwld 2017]"
+        fAtt@author             = "R. R. Buchholz"
+        fAtt@creation_date      = systemfunc ("date")
+        fAtt@source             = "GFASv1.2: ECMWF Copernicus Atmosphere Monitoring Service (CAMS)"
+
+        fAtt@title              = "Emissions of "+ output_species + " from GFAS, daily"
+
+       fileattdef(fout, fAtt)
+       setfileoption(fout, "DefineMode",False)
+
+      ;------------
+      ; Coordinate Variables
+      ;------------
+        dimNames = (/"time", "lat", "lon"/)  
+	dim_Sizes = (/ -1   ,  dimsizes(emiss_regrid&lat),  dimsizes(emiss_regrid&lon)/) 
+	dimUnlim = (/ True , False, False/)   
+	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
+      ;------------
+      ; Variables
+      ;------------
+      emiss_regrid@long_name = output_species +" gfas fire emissions"
+      emiss_regrid@vmax      = max(emiss_regrid)
+      emiss_regrid@vmin      = min(emiss_regrid)
+      delete(emiss_regrid@missing_value)
+      delete(emiss_regrid@fmissing_value)
+
+       ;--- date
+         fout->date             = date
+       ;--- emissions
+         fout->bb               = emiss_regrid
+    end if ;NetCDF
 
 end
 

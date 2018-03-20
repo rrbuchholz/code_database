@@ -29,8 +29,7 @@ chomp($min = `date +%M`);
 chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
-
-#$current_date = 20171126;
+#$current_date = 20180311;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -78,22 +77,25 @@ else{
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
 $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
+#$codehome = "/home/buchholz/code_database/ncl_programs/data_processing";
 
-#$processed = 0;
 
 if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
      # --- call to NCL processing script ---#
-     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
+     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";      #DEBUG
+  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";            #DEBUG
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `/usr/local/ncarg/bin/ncl year=2017 'tracer="BC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=2017 'tracer="OC"' NRT=True 'outres="0.94x1.2"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-  print OUT "/usr/local/ncarg/bin/ncl year=2017 'tracer=\"BC\"' NRT=True 'outres=\"0.94x1.2\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="BC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="OC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="VBS"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SOAG"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SO4"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "/usr/local/ncarg/bin/ncl year=$year 'tracer=\"BC\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
 else{
   print OUT "File still not available . . .\n";
@@ -101,11 +103,13 @@ else{
 
 #------------------------------
 #Check Processed and send e-mail
-chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+#print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
+
 $proc_file = grep { /True/ } @check_file;
 
-print OUT "Is current date processed yet: $proc_file\n";      #DEBUG
-print OUT "@check_file\n";      #DEBUG
+print OUT "Is current date processed yet: $proc_file\n";    #DEBUG
+print OUT "@check_file\n";                                  #DEBUG
 
 if ($processed == 0 && $proc_file == 1){
     print OUT "Checked: all files have some non-zero values for $current_date \n";
@@ -136,7 +140,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 8 && $min >= 30 && $processed == 1){
-`scp /net/modeling1/data14b/buchholz/qfed/cam_0.94x1.2/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
 }
 
 #------------------------------
