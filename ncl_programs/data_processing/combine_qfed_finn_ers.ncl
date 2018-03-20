@@ -59,7 +59,7 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2010
+    year = 2000
     qfed_version = "v2.5"
     outres = "0.9x1.25"
     ratio_species = "co2"
@@ -339,16 +339,29 @@ begin
      ;printVarSummary(emiss_regrid)
 
      ;--- sanity check
-     AvgOrigGrid = wgt_areaave2 (tracer_emiss , wgt_QFED, 0)
-     Avg_Regrid = wgt_areaave2 (emiss_regrid, wgt_CAM, 0)
+     SumOrigGrid = wgt_areasum2 (tracer_emiss , wgt_QFED, 0)
+     Sum_Regrid = wgt_areasum2 (emiss_regrid, wgt_CAM, 0)
+     SumDiff = SumOrigGrid-Sum_Regrid
 
-     AvgDiff = AvgOrigGrid-Avg_Regrid
-     PercDiff = (AvgDiff/AvgOrigGrid)*100
+   if (any(SumOrigGrid.eq.0)) then
+     print("No emissions for "+var_names(tracer)+" in some entries of " + year)
+     nonzero_ind = ind(SumOrigGrid.ne.0)
+     print("Specifically:")
+     zero_ind = ind(SumOrigGrid.eq.0)
+     print(date(zero_ind))
+     PercDiff = (SumDiff(nonzero_ind)/SumOrigGrid(nonzero_ind))*100
+     print("-------------------------------------------------")
+     print("lowres: "+SumOrigGrid+", highres: "+Sum_Regrid)
+   else
+     PercDiff_voc = (SumDiff_voc/SumOrigGrid_voc)*100
+   end if
+
+     ;PercDiff = (SumDiff/SumOrigGrid)*100
      MaxDiff = max(PercDiff)
      max_ind := ind(PercDiff.eq.MaxDiff)
-   ;print("Maximum diff: lowres: "+sprintf("%2.2e",AvgOrigGrid(max_ind))+\
-   ;      "  highres: "+sprintf("%2.2e",Avg_Regrid(max_ind))+   \
-   ;      "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+  \
+   ;print("Maximum diff: lowres: "+sprintf("%2.2e",SumOrigGrid(max_ind))+\
+   ;      "  highres: "+sprintf("%2.2e",Sum_Regrid(max_ind))+   \
+   ;      "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+  \
    ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
 
    print("Maximum percent diff in "+var_names(tracer)+\
@@ -547,25 +560,25 @@ begin
     ; printVarSummary(voc_emiss_regrid)
 
      ;--- sanity check
-     AvgOrigGrid_voc = wgt_areaave2 (voc_tracer_emiss , wgt_QFED, 0) 
-     Avg_Regrid_voc = wgt_areaave2 (voc_emiss_regrid, wgt_CAM, 0) 
-     AvgDiff_voc = AvgOrigGrid_voc-Avg_Regrid_voc
+     SumOrigGrid_voc = wgt_areasum2 (voc_tracer_emiss , wgt_QFED, 0) 
+     Sum_Regrid_voc = wgt_areasum2 (voc_emiss_regrid, wgt_CAM, 0) 
+     SumDiff_voc = SumOrigGrid_voc-Sum_Regrid_voc
 
-   if (any(AvgOrigGrid_voc.eq.0)) then
+   if (any(SumOrigGrid_voc.eq.0)) then
      print("No emissions for "+voc_spec(voctype)+" in some entries of " + year)
-     nonzero_ind = ind(AvgOrigGrid_voc.ne.0)
-     PercDiff_voc = (AvgDiff_voc(nonzero_ind)/AvgOrigGrid_voc(nonzero_ind))*100
+     nonzero_ind = ind(SumOrigGrid_voc.ne.0)
+     PercDiff_voc = (SumDiff_voc(nonzero_ind)/SumOrigGrid_voc(nonzero_ind))*100
      print("-------------------------------------------------")
-     print("lowres: "+AvgOrigGrid_voc+", highres: "+Avg_Regrid_voc)
+     print("lowres: "+SumOrigGrid_voc+", highres: "+Sum_Regrid_voc)
    else
-     PercDiff_voc = (AvgDiff_voc/AvgOrigGrid_voc)*100
+     PercDiff_voc = (SumDiff_voc/SumOrigGrid_voc)*100
    end if
 
      MaxDiff_voc = max(PercDiff_voc)
      max_ind_voc := ind(PercDiff_voc.eq.MaxDiff_voc)
-     ;print("Maximum diff: lowres: "+sprintf("%2.2e",AvgOrigGrid(max_ind))+\
-     ;      "  highres: "+sprintf("%2.2e",Avg_Regrid(max_ind))+   \
-     ;      "    diff: "+sprintf("%2.2e",AvgDiff(max_ind))+\
+     ;print("Maximum diff: lowres: "+sprintf("%2.2e",SumOrigGrid(max_ind))+\
+     ;      "  highres: "+sprintf("%2.2e",Sum_Regrid(max_ind))+   \
+     ;      "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+\
      ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
      print("Maximum percent diff in "+voc_spec(voctype)+\
         " from regridding: "+sprintf("%2.2f",PercDiff(max_ind_voc))+"%"+\
@@ -715,10 +728,10 @@ begin
     ;-------------------
     ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial avg = "+ AvgOrigGrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial sum = "+ SumOrigGrid(0) ; change left title
       map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
 
-    mapres@gsnLeftString            = "spatial avg = "+ Avg_Regrid(0) ; change left title
+    mapres@gsnLeftString            = "spatial sum = "+ Sum_Regrid(0) ; change left title
       map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
 
     panel_res                       = True
