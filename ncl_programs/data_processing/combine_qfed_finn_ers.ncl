@@ -59,7 +59,7 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2000
+    year = 2017
     qfed_version = "v2.5"
     outres = "0.9x1.25"
     ratio_species = "co2"
@@ -353,7 +353,7 @@ begin
      print("-------------------------------------------------")
      print("lowres: "+SumOrigGrid+", highres: "+Sum_Regrid)
    else
-     PercDiff_voc = (SumDiff_voc/SumOrigGrid_voc)*100
+     PercDiff = (SumDiff/SumOrigGrid)*100
    end if
 
      ;PercDiff = (SumDiff/SumOrigGrid)*100

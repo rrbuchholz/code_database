@@ -24,14 +24,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2016
+  ystart = 2014
   yend = 2016
   reso = "0.9x1.25"
 
-  repository = "QFED"
+  repository = "FINN"
     s_name = "CO"
 
   tracers = (/"CO"/)
+  sm_tracers = (/"co"/)
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -46,34 +47,42 @@ begin
 do t = 0, dimsizes(tracers)-1
 
   tracer = tracers(t)
+  sm_tracer = sm_tracers(t)
   ; -------------------------------
   ; emission files
   ; -------------------------------
    top_dir = "/data14b/buchholz/"
+
   if (repository.eq."FINN") then
    emis_dir = top_dir+ "finn/cam_0.9x1.25"
    e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
-  else if (repository.eq."QFED/FINN".or.\
-           repository.eq."QFED") then
+  else if (repository.eq."QFED/FINN") then
+   emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
+   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+  else if (repository.eq."QFED") then
    emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
    e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
   else if (repository.eq."QFED_native") then
-   emis_dir = top_dir+ "qfed/"
-   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+   emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
+  end if
   end if
   end if
   end if
 
-/2016/qfed.emis_CO_0.9x1.25_mol_2016.nc
-
+  if (repository.eq."QFED".or.repository.eq."QFED/FINN".or.\
+      repository.eq."FINN") then
    indir = emis_dir+"/allyears/"
    outpath = emis_dir+"/region_sums/"
+  else if (repository.eq."QFED_native") then
+   outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
+   e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
+  end if
+  end if
 
-
-    if (.not.isfilepresent(indir+e_file_in)) then
-      print("No file for tracer:" + tracer)
-      continue  ; skip all the next bit and go to next file
-    end if
+   ; if (.not.isfilepresent(indir+e_file_in)) then
+   ;   print("No file for tracer:" + tracer)
+   ;   continue  ; skip all the next bit and go to next file
+   ; end if
 
   ; -------------------------------
   ; toggles
@@ -98,10 +107,12 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   if (repository.eq."FINN") then
     emiss           = "fire"
+  else if (repository.eq."QFED_native") then
+    emiss           = "biomass"
   else
     emiss           = "bb"
   end if
-
+  end if
   ; -------------------------------
   ; constants
   ; -------------------------------
@@ -124,9 +135,21 @@ do t = 0, dimsizes(tracers)-1
 
 ;********************************************
 ; load files and extract
+  if (repository.eq."QFED_native") then
+    fin = addfiles(e_file_in, "r")
+    ListSetType (fin, "cat") 
+      emiss_in_dummy          = fin[:]->$emiss$
+      emiss_in = lonFlip(emiss_in_dummy)
+      time := emiss_in&time
+      lat = tofloat(emiss_in&lat)
+      lon = tofloat(emiss_in&lon)
+  else
     fin = addfile(indir+e_file_in, "r")
       emiss_in         := fin->$emiss$
       time := emiss_in&time
+      lat = emiss_in&lat
+      lon = emiss_in&lon
+  end if
       yyyymmdd := cd_calendar(time,-2)
        yyyymmdd!0 = "time"
        yyyymmdd&time = time
@@ -134,10 +157,9 @@ do t = 0, dimsizes(tracers)-1
       yyyy = tointeger(date(:,0))
       mm = tointeger(date(:,1))
       ttime = dimsizes(time)
-      lat = emiss_in&lat
       nlat = dimsizes(lat)
-      lon = emiss_in&lon
       mlon = dimsizes(lon)
+
 
   ;********************************************
   ; Calculate emission totals
@@ -164,6 +186,13 @@ do t = 0, dimsizes(tracers)-1
      end if
      end if
      end if
+
+     if (repository.eq."QFED_native") then
+       emiss_in = emiss_in/(10000)        ; m-2 -> cm-2
+       emiss_in = (emiss_in*1000/mw)*NAv  ; kg -> g -> mol -> molec
+         emiss_in@units = "molecules/cm2/s"
+     end if
+
      ; g cm-2 s-1
      tracer_emiss = (emiss_in/NAv)*mw          ; molec -> mol -> g
      ; g cm-2 d-1
@@ -180,6 +209,7 @@ do t = 0, dimsizes(tracers)-1
      ; weight by gridbox area
        ; prevent negative weights 
        ; (redundant because no emissions over artic and anatarctica)
+
        newlat = lat
        newlat(0)= 89.99999
        newlat(dimsizes(newlat)-1)= -89.99999   
@@ -240,12 +270,15 @@ do t = 0, dimsizes(tracers)-1
   ;********************************************
   ; Extract regional timeseries
    region_names = (/"Maritime SEA", "Australasia", \
-                    "Southern Africa", "South America" /)
-  ;             minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10,  10, 90, 160/),\     ;Maritime SEA
-                     (/-50, -10, 110, 180/),\      ;Australasia
-                     (/-40,   5,   0,  60/),\      ;SAfrica
-                     (/-60,   4, 360-80, 360-40/)/)      ;SAmerica
+                    "Southern Africa", "South America",\
+                    "Siberia", "North America" /)
+  ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+                     (/-50., -10.,     110.,     180./),\ ;Australasia
+                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
+                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
+                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
+                     (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
 
      ; -------------------------------
      ; sums
@@ -277,7 +310,11 @@ if (NETCDF) then
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
+      if (repository.eq."QFED_native") then
+        outfilename = "qfed.emis_"+tracer+"_Tg_regional_"+ystart+".nc"
+      else
+        outfilename = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
+      end if
       fout = addfile(outpath+outfilename, "c")
 
       ;------------
@@ -291,7 +328,7 @@ if (NETCDF) then
         fAtt@creation_date      = systemfunc ("date")
         fAtt@author             = "R. R. Buchholz"
         if (repository.eq."QFED/FINN") then
-          fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
+          fAtt@history            = s_name+" is from QFED, Level3b v2.5 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates, with "+\
                                   "FINN emission ratios applied"
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"

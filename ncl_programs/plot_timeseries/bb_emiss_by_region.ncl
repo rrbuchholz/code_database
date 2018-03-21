@@ -21,7 +21,9 @@ begin
 ; USER DEFINED
 ; =========================================
   tracer = "CO"
-  reso = "0.94x1.2"
+  reso = "0.9x1.25"
+  ystart = 2016
+  yend = 2017
   
   PLOT = True
     plottype = "png"
@@ -29,7 +31,7 @@ begin
       plottype@wkHeight = 1200
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
-    plotname = "~/FINNvQFED"
+    plotname = "~/BB_Emiss"
 
 
 ; =========================================
@@ -37,17 +39,17 @@ begin
 ; =========================================
 
   ;order = (/"QFED x CO", "QFED x CO2", "QFED", "FINN"/)
-  order = (/ "QFED", "FINN"/)
+  ;order = (/ "QFED", "FINN"/)
+  order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
    top_dir = "/data14b/buchholz/"
    qfed_dir = "qfed/cam_"+reso+"/"
    finn_dir = "finn/cam_"+reso+"/"
-   ;e_file_in = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
-   e_file_in = (/;qfed_dir+"from_co/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
-                 ;qfed_dir+"from_co2/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
-                 qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
+   e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
+                 qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
+                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\                 
                  finn_dir+"region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"/)  
 
   ; -------------------------------
@@ -58,43 +60,56 @@ begin
    emiss2           = "bb_1"
    emiss3           = "bb_2"
    emiss4           = "bb_3"
+   emiss5           = "bb_4"
+   emiss6           = "bb_5"
+
+   ;region_names = (/"Maritime SEA", "Australasia", \
+   ;                 "Southern Africa", "South America",\
+   ;                 "Siberia", "North America" /)
 
 ; ----------------------------------------
-; Load data 1
+; Load data
 ; ----------------------------------------
 print(top_dir+e_file_in(0))
 
     fin = addfile(top_dir+e_file_in(0), "r")
-      time := fin->time
+      time_dummy := fin->time
+      yfrac_dummy:= tofloat(cd_calendar(time_dummy,4))
+      range_ind  := ind(yfrac_dummy.ge.ystart.and.yfrac_dummy.lt.yend)
+      time = time_dummy(range_ind)
       yfrac = tofloat(cd_calendar(time,4))
 
    emiss_in1 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in2 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in3 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in4 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
+   emiss_in5 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
+   emiss_in6 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
 
   ; collect each file
   do i=0,dimsizes(e_file_in)-1
   ;do i=0,2
     fin := addfile(top_dir+e_file_in(i), "r")
+      time_2_dummy := fin->time
+      yfrac_2_dummy:= tofloat(cd_calendar(time_2_dummy,4))
+      range_2_ind  := ind(yfrac_2_dummy.ge.ystart.and.yfrac_2_dummy.lt.yend)
       dummy_1     := fin->$emiss1$
       dummy_2     := fin->$emiss2$
       dummy_3     := fin->$emiss3$
       dummy_4     := fin->$emiss4$
-      time_dummy  := fin->time
-      yfrac_dummy := tofloat(cd_calendar(time_dummy,4))
+      dummy_5     := fin->$emiss5$
+      dummy_6     := fin->$emiss6$
 
-      range_ind := ind(yfrac_dummy.ge.2014.and.yfrac_dummy.lt.2017)
-printVarSummary(range_ind)
+printVarSummary(range_2_ind)
 printVarSummary(dummy_1)
 printVarSummary(emiss_in1)
-      emiss_in1(i,:) = dummy_1(range_ind)
-      emiss_in2(i,:) = dummy_2(range_ind)
-      emiss_in3(i,:) = dummy_3(range_ind)
-      emiss_in4(i,:) = dummy_4(range_ind)
+      emiss_in1(i,:) = dummy_1(range_2_ind)
+      emiss_in2(i,:) = dummy_2(range_2_ind)
+      emiss_in3(i,:) = dummy_3(range_2_ind)
+      emiss_in4(i,:) = dummy_4(range_2_ind)
+      emiss_in5(i,:) = dummy_5(range_2_ind)
+      emiss_in6(i,:) = dummy_6(range_2_ind)
   end do
-
-printVarSummary(emiss_in1)
 
 ; ----------------------------------------
 ; Calculate week averages
@@ -111,6 +126,8 @@ printVarSummary(emiss_in1)
  emiss_in2_cut = emiss_in2(:,0:(days_per_week*nweeks)-1)
  emiss_in3_cut = emiss_in3(:,0:(days_per_week*nweeks)-1)
  emiss_in4_cut = emiss_in4(:,0:(days_per_week*nweeks)-1)
+ emiss_in5_cut = emiss_in5(:,0:(days_per_week*nweeks)-1)
+ emiss_in6_cut = emiss_in6(:,0:(days_per_week*nweeks)-1)
 
 ; Reshape into nregions x number of weeks x 7 days
  time_reshape = reshape(time_cut,(/nweeks,days_per_week/))
@@ -118,6 +135,8 @@ printVarSummary(emiss_in1)
  emiss2_4d  = reshape(emiss_in2_cut,(/nregions,nweeks,days_per_week/))
  emiss3_4d  = reshape(emiss_in3_cut,(/nregions,nweeks,days_per_week/))
  emiss4_4d  = reshape(emiss_in4_cut,(/nregions,nweeks,days_per_week/))
+ emiss5_4d  = reshape(emiss_in5_cut,(/nregions,nweeks,days_per_week/))
+ emiss6_4d  = reshape(emiss_in6_cut,(/nregions,nweeks,days_per_week/))
 
 ; average across the "week" dimension
  time_weekly_avg = dim_avg_n(time_reshape,1)
@@ -128,7 +147,8 @@ printVarSummary(emiss_in1)
  emiss2_weekly_avg = dim_avg_n(emiss2_4d,2)
  emiss3_weekly_avg = dim_avg_n(emiss3_4d,2)
  emiss4_weekly_avg = dim_avg_n(emiss4_4d,2)
-
+ emiss5_weekly_avg = dim_avg_n(emiss5_4d,2)
+ emiss6_weekly_avg = dim_avg_n(emiss6_4d,2)
 
 
 ; =========================================
@@ -169,11 +189,14 @@ if (PLOT) then
 
   ; daily
    res@xyExplicitLegendLabels   = "daily " + order
+    res@pmLegendOrthogonalPosF   = -1.8
   plot1  = gsn_csm_xy(wks,yfrac,emiss_in1,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
   plot2  = gsn_csm_xy(wks,yfrac,emiss_in2,res) ; create plot
   plot3  = gsn_csm_xy(wks,yfrac,emiss_in3,res) ; create plot
   plot4  = gsn_csm_xy(wks,yfrac,emiss_in4,res) ; create plot
+  plot5  = gsn_csm_xy(wks,yfrac,emiss_in5,res) ; create plot
+  plot6  = gsn_csm_xy(wks,yfrac,emiss_in6,res) ; create plot
 
    res@xyMarkLineModes  := "Lines"                               ; choose which have markers
    res@xyDashPatterns      = (/0,16,14,3/)
@@ -183,24 +206,28 @@ if (PLOT) then
   ; weekly
   res@xyExplicitLegendLabels   = "weekly " + order
   res@pmLegendDisplayMode        = "Always"        ; turn on legend
-    res@pmLegendOrthogonalPosF   = -0.9
+    res@pmLegendOrthogonalPosF   = -1.5
   plot1a  = gsn_csm_xy(wks,yfrac2,emiss1_weekly_avg,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
   plot2a  = gsn_csm_xy(wks,yfrac2,emiss2_weekly_avg,res) ; create plot
   plot3a  = gsn_csm_xy(wks,yfrac2,emiss3_weekly_avg,res) ; create plot
   plot4a  = gsn_csm_xy(wks,yfrac2,emiss4_weekly_avg,res) ; create plot
+  plot5a  = gsn_csm_xy(wks,yfrac2,emiss5_weekly_avg,res) ; create plot
+  plot6a  = gsn_csm_xy(wks,yfrac2,emiss6_weekly_avg,res) ; create plot
 
   overlay(plot1,plot1a)
   overlay(plot2,plot2a)
   overlay(plot3,plot3a)
   overlay(plot4,plot4a)
+  overlay(plot5,plot5a)
+  overlay(plot6,plot6a)
 
   panel_res                       = True
-      panel_res@txString              = "BB emissions for "+ tracer
-      panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region/)
+      panel_res@txString              = "BB emissions for "+ tracer + " " + ystart
+      panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopRight"
 
-    gsn_panel(wks,(/plot1,plot2,plot3,plot4/),(/2,2/),panel_res)
+    gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
 
 
 end if
