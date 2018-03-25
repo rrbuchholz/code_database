@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   version = "V7T"
   suff = "T"
-  location_name = "Zugspitze"
+  location_name = "Paramaribo"
   if (version.eq."V6J") then
    ;remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
     dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02"+suff+"-*.he5")
@@ -111,7 +111,10 @@ begin
 
     location = location_name
 
-  if (location_name.eq."Arrival Heights") then
+  if (location_name.eq."Altzomoni") then
+    location_lat = 19.12
+    location_lon = -98.66
+  else if (location_name.eq."Arrival Heights") then
     location_lat = -77.82
     location_lon = 166.65
     location = "ArrivalHeights"
@@ -158,6 +161,9 @@ begin
   else if (location_name.eq."Paris") then
     location_lat = 48.97
     location_lon = 2.366
+  else if (location_name.eq."Paramaribo") then
+    location_lat = 5.75
+    location_lon = -55.2
   else if (location_name.eq."Rikubetsu") then
     location_lat = 43.46
     location_lon = 143.8
@@ -183,6 +189,8 @@ begin
   else
     print("Valid location not defined... exiting")
     exit
+  end if
+  end if
   end if
   end if
   end if
