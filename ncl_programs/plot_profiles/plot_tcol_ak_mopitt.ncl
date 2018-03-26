@@ -63,8 +63,8 @@ begin
      titlestring2          = "MOPITT and FTS Averaging kernels,  for Lauder, 2000-2012"
      y2max                 = 1000
      y2min                 = 100
-     x2min                 = -0.05
-     x2max                 = 2e19
+     x2min                 = -1.2
+     x2max                 = 0.4
 
   ; -------------------------------
   ; MOPITT
@@ -80,8 +80,6 @@ begin
   sat_profile   = "RetrievedCOMixingRatioProfile_MOP02"
   sat_surf      = "RetrievedCOSurfaceMixingRatio_MOP02"
   sat_psurf     = "SurfacePressure_MOP02"
-  sat_ap        = "APrioriCOMixingRatioProfile_MOP02"
-  sat_ap_surf   = "APrioriCOSurfaceMixingRatio_MOP02"
   sat_ak        = "RetrievalAveragingKernelMatrix_MOP02"
 
   diag_1       = "RetrievalAnomalyDiagnostic"+suff
@@ -130,6 +128,8 @@ fin = addfile(mopitt_general, "r")            ;--- read in
 
   ;--------------------------------------------
   ; select daytime retrievals
+  ; within a boundary
+  ; and quality controlled
   ;--------------------------------------------
   day_retrievals := ind(sza.le.dayflag.and.\
                  lat.le.topboundary.and.\
@@ -146,9 +146,12 @@ fin = addfile(mopitt_general, "r")            ;--- read in
   lat            := lat(day_retrievals)
   lon            := lon(day_retrievals)
 
-  anom_diag      := fin->$diag_1$(day_retrievals,:)
   ak_col         := fin->$col_avker$(day_retrievals,:)
   psurf          := fin->$sat_psurf$(day_retrievals)
+  prof           := fin->$sat_profile$(day_retrievals,:,0)
+  surf_vmr       := fin->$sat_surf$(day_retrievals,0)
+  sat_ak_matrix  := fin->$sat_ak$(day_retrievals,:,:)
+
 
   ;--------------------------------------------
   ; select surface pressure less than 900 hPa
@@ -166,14 +169,111 @@ fin = addfile(mopitt_general, "r")            ;--- read in
     high_psurf = (psurf(ind_high_press))
     high_psurf_ak = ak_col(ind_high_press,:)
 
-printVarSummary(psurf)
-printVarSummary(high_psurf_ak)
-printVarSummary(low_psurf_ak)
+  ;--------------------------------------------
+  ; Set up MOPITT pressure arrays
+  ;--------------------------------------------
+    parray = new((/dimsizes(psurf), 10/), float)
+    parray(:,0) = psurf
+    do i=0,dimsizes(psurf)-1
+      parray(i,1:9) = pvect
+    end do
 
+  ;--------------------------------------------------------------
+  ; Correct for where surface pressure <900 hPa
+  ;--------------------------------------------------------------
+    dp = new((/dimsizes(psurf), 10/), float) ; Pressure difference array
+      do z= 0, 8, 1
+        dp(:,z) = parray(:,0) - parray(:,z+1)
+      end do
+     dp(:,9) = 1000
+
+  ; Repeat surface values at all levels to replace if needed
+  psurfarray = new((/dimsizes(psurf), 10/), float) 
+   do z= 0, 9, 1
+    psurfarray(:,z) = psurf
+   end do
+
+   parray = where(dp.le.0,parray@_FillValue,parray)
+   parray = where((dp.le.100 .and. dp.ge.0),psurfarray,parray)
+
+  ; Repeat surface values for retrieved profiles
+    ret_prof =  new((/dimsizes(psurf), 10/), float)
+    ret_prof(:,0) = surf_vmr
+    do i=0,dimsizes(psurf)-1
+      ret_prof(i,1:9) = prof(i,:)
+    end do
+
+  ; Repeat surface values for retrieved profiles
+  vmrsurfarray = new((/dimsizes(psurf), 10/), float) 
+   do z= 0, 9, 1
+    vmrsurfarray(:,z) = surf_vmr
+   end do
+
+   ret_prof = where(dp.le.0,ret_prof@_FillValue,ret_prof)
+   ret_prof = where((dp.le.100 .and. dp.ge.0),vmrsurfarray,ret_prof)
+
+   ;--------------------------------------------
+   ; Pressure difference array
+   ;--------------------------------------------
+   ; MOPITT pressures are level edges.
+   ; see V5 User Guide for more info
+    delta_p = new((/dimsizes(psurf),10/), float)
+    do z= 0, 8, 1
+       delta_p(:,z) = parray(:,z)-parray(:,z+1)
+    end do
+      delta_p(:,9) = 74   ; 26 top level
 
   ;--------------------------------------------
   ; calculate tcol AK from ak matrix
   ;--------------------------------------------
+    log10e = log10(exp(1.))
+      prof_dummy = ret_prof
+      prof_dummy  = where(ismissing(prof_dummy),0,prof_dummy)
+      ak = sat_ak_matrix
+      ak  = where(ismissing(ak),0,ak)
+      delta_p_dummy = delta_p
+      delta_p_dummy  = where(ismissing(delta_p_dummy),0,delta_p_dummy)
+    ak_colm = new((/dimsizes(psurf),10/),float)
+    ak_colm2 = new((/dimsizes(psurf),10/),float)
+    do i = 0, dimsizes(psurf)-1
+      do z = 0, 9 
+       ak_colm(i,z) = (xp_const/log10e)*(delta_p(i,:)*prof_dummy(i,:)) # (ak(i,z,:))
+       multiply_ak := (xp_const/log10e)*(delta_p(i,:)*prof_dummy(i,:)) * (ak(i,z,:))
+       ak_colm2(i,z) = sum(multiply_ak)
+;if (i.eq.ind_low_press(0))
+;print(multiply_ak)
+;print(ak_colm2(i,z))
+;print(prof_dummy(i,:))
+;print(delta_p(i,:))
+;print(ak(i,z,:))
+;exit
+;end if
+      end do
+    end do
+
+  ak_colm2  = where(ak_colm2.eq.0,ak_colm2@_FillValue,ak_colm2)
+
+  lowak_col = ak_colm(ind_low_press, :)
+  lowak_col2 = ak_colm2(ind_low_press, :)
+  highak_col2 = ak_colm2(ind_high_press, :)
+
+
+printVarSummary(psurf)
+printVarSummary(high_psurf_ak)
+printVarSummary(low_psurf_ak)
+print(low_psurf_ak(0:2,:))
+print(lowak_col2(0:2,:))
+
+print(high_psurf_ak(0:2,:))
+print(highak_col2(0:2,:))
+;exit
+
+  ;--------------------------------------------
+  ; difference retrieved versus calculated column AKs
+  ;--------------------------------------------
+  diff_ak = ak_col-ak_colm2
+    lowdiff_ak = diff_ak(ind_low_press, :)
+    highdiff_ak = diff_ak(ind_high_press, :)
 
 
 ;************************************************
@@ -181,57 +281,37 @@ printVarSummary(low_psurf_ak)
 ;************************************************
  if (PLOTPROFILE) then
   wks  = gsn_open_wks(plot2Type,plot2Name)            ; open a workstation
+  pvect2 = (/1000.,900.,800.,700.,600.,500.,400.,300.,200.,100./)
 
   ;-----------------------------------
   ; define resources to use for plotting
   ;-----------------------------------
   res2 = True
+     res2@gsnDraw                 = False
     res2@gsnFrame                 = False          ; don't advance frame
     ; Set axes limits
-    ;res2@trYMaxF                  = y2max
-    ;res2@trYMinF                  = y2min
-    ;res2@trXMaxF                  = x2max
-    ;res2@trXMinF                  = x2min
-    res2@xyMarkLineMode           = "Lines"       ; Markers *and* lines
+    res2@trYMaxF                  = 1016
+    res2@trYMinF                  = 0
+    res2@trXMinF                  = x2min
+    res2@trXMaxF                  = x2max
+    res2@tmXBTickStartF           = x2min
+    res2@tmXBTickEndF             = x2max
+    res2@xyMarkLineMode           = "MarkLines"       ; Markers *and* lines
     res2@xyMarkers                = 9             ; marker style
     res2@xyMarkerSizeF            = 0.015
     res2@xyLineThicknessF         = 3
-    ;res2@vpWidthF                 = 0.5
+    res2@vpWidthF                 = 0.5
     ;res2@vpHeightF                = 0.4 
 
     ;res2@trYLog                   = True           ; convert axes to logaritmic\
-    ;res2@trXLog                   = False           ; convert axes to logaritmic
     res2@trYReverse               = True 
     res2@tmXTOn                   = False          ; turn off tickmarks
     res2@tmYROn                   = False
-    ;res2@tmXTBorderOn             = False          ; turn off outline
-    ;res2@tmYRBorderOn             = False
-    res2@tmXBMode                 = "Manual"	
-    res2@tmXBTickStartF           = 0
-    res2@tmXBTickEndF             = x2max
-    ;res2@tmXBTickSpacingF         = 0.5
 
-    ;res2@tmYLMode                 = "Explicit"
-    ;res2@tmYLValues               = (/100,300,500,700,1000/)
-    ;res2@tmYLLabels               = "" + res2@tmYLValues
+    res2@tiMainString             =""
+    res2@tiYAxisString            =""
+    res2@tiXAxisString            =""
 
-    ;res2@pmLegendDisplayMode      = "Always"        ; turn on legend
-    ;res2@lgAutoManage             = False           ; turn off auto-manage
-    ;res2@pmLegendSide             = "top"           ; Change location of 
-    ;res2@lgPerimOn                = False           ; turn off box around
-    ;res2@pmLegendParallelPosF     = 0.9             ; move units right
-    ;res2@pmLegendOrthogonalPosF   = -0.4            ; move units down
-    ;res2@pmLegendWidthF           = 0.2             ; Change width and
-    ;res2@pmLegendHeightF          = 0.3             ; height of legend
-    ;res2@lgLabelFontHeightF       = 0.01
-    ;res2@lgLabelJust              = "Right"
-
-
-    res2@tiMainString             ="MOPITT "+version+" Averaging Kernels"
-    res2@tiYAxisString            ="Altitude (hPa)"
-    res2@tiXAxisString            ="AK value"
-
-    res2@tfPolyDrawOrder          = "Predraw"       ; line on top
   ;-----------------------------------
   ; end define resources
   ;-----------------------------------
@@ -239,42 +319,110 @@ printVarSummary(low_psurf_ak)
   ;-----------------------------------
   ; Draw different AKs
   ;-----------------------------------
-  ; 1
-  pvect2 = (/1000.,900.,800.,700.,600.,500.,400.,300.,200.,100./)
-    res2@xyExplicitLegendLabels = "MOPITT AK "+version+ " (norm)"   ; create explicit labels
-    res2@xyLineColors            = "red"
-    res2@xyMarkerColors          = "red"
-    res2@pmLegendOrthogonalPosF  = -0.5            ; move units down
-  plot = gsn_csm_xy(wks,  low_psurf_ak(0:10,:), pvect2, res2)
+  ; 1 Psurf < 900 hPa
+    res2@tiMainString            = "Values"
+    res2@tiYAxisString           = "Altitude (hPa)"
+    res2@tiXAxisString            ="AK value (~F34~4~F21~10~S2~19   ) "
+    low_cols                    := new(dimsizes(low_psurf_ak(:,0)), "string")
+    low_cols                    = "red"
+    res2@xyLineColors           := low_cols
+    res2@xyMarkerColors         := low_cols
+  plot1 = gsn_csm_xy(wks,  low_psurf_ak(0:9,:)/1e19, pvect2, res2)
 
-  ; 2
-    res2@xyLineColors            = "blue"
-    res2@xyMarkerColors          = "blue" 
-    res2@xyExplicitLegendLabels  = "FTS AK"      ; create explicit labels
-    res2@pmLegendOrthogonalPosF  = -0.95            ; move units down
-    res2@xyMarkers               = 7             ; marker style
+  ; 1a Psurf < 900 hPa, but calculated here
+    low_cols                    := new(dimsizes(lowak_col2(:,0)), "string")
+    low_cols                    = "orange"
+    res2@xyLineColors           := low_cols
+    res2@xyMarkerColors         := low_cols
+  plot1a = gsn_csm_xy(wks,  lowak_col2(0:9,:)/1e19, pvect2, res2)
+  overlay(plot1, plot1a)
 
-  plot = gsn_csm_xy(wks,  high_psurf_ak(0:10,:), pvect2, res2)
+  ; 1b Psurf > 900 hPa
+    high_cols                   := new(dimsizes(high_psurf_ak(:,0)), "string")
+    high_cols                    = "blue"
+    res2@xyLineColors           := high_cols
+    res2@xyMarkerColors         := high_cols
+  plot1b = gsn_csm_xy(wks,  high_psurf_ak(0:9,:)/1e19, pvect2, res2)
+  overlay(plot1, plot1b)
 
+  ; 1a Psurf > 900 hPa, but calculated here
 
+    high_cols                   := new(dimsizes(highak_col2(:,0)), "string")
+    high_cols                    = "darkgreen"
+    res2@xyLineColors           := high_cols
+    res2@xyMarkerColors         := high_cols
+  plot1c = gsn_csm_xy(wks,  highak_col2(0:9,:)/1e19, pvect2, res2)
+  overlay(plot1, plot1c)
+
+  ; 2 Difference
+    res2@tiMainString            ="Difference: retrieved -- calculated"
+    res2@tiYAxisString           =""
+    res2@tiXAxisString           ="Difference (~F34~4~F21~10~S2~19   ) "
+    diff_cols                   := new(dimsizes(ak_colm2(:,0)), "string")
+    diff_cols                    = "black"
+    res2@xyLineColors           := diff_cols
+    res2@xyMarkerColors         := diff_cols
+  plot2 = gsn_csm_xy(wks,  lowdiff_ak(0:9,:)/1e19, pvect2, res2)
+  plot2a = gsn_csm_xy(wks,  highdiff_ak(0:9,:)/1e19, pvect2, res2)
+  overlay(plot2, plot2a)
+
+  ;-----------------------------------
   ; Draw background vertical grid
-  ;mopittres = True
-  ;  mopittres@gsLineThicknessF        = 1
-  ;  mopittres@gsLineDashPattern       = 1
-  ;  mopittres@gsLineColor             = "grey"
+  ;-----------------------------------
+  mopittres = True
+    mopittres@gsLineThicknessF        = 0.8
+    mopittres@gsLineDashPattern       = 1
+    mopittres@gsLineColor             = "grey"
 
-  ;dummy_alt = new(10, graphic)
-  ;do i = 0, 9
-  ;  dummy_alt(i) = gsn_add_polyline(wks, plot, (/x2min,x2max/), (/mean_levs(i), \
-  ;                 mean_levs(i)/), mopittres)
-  ;end do
+  dummy_alt = new(10, graphic)
+  do i = 0, 9
+    dummy_alt(i) = gsn_add_polyline(wks, plot1, (/x2min,x2max/), (/pvect2(i), \
+                   pvect2(i)/), mopittres)
+  end do
 
+  ;-----------------------------------
+  ; Add in title and labels
+  ;-----------------------------------
+   ;drawNDCGrid(wks)
+   ; add station
+    txres                   = True                      ; polyline mods desired
+     txres@txFontHeightF    = 0.014                     ; font smaller. default big
+     txres@txJust           = "CenterLeft"              ; font smaller. default big
+     txres@txPerimOn        = False
+     txres@txFontColor      = "orange"
+   gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.11,0.71,txres)
+     txres@txFontColor      = "darkgreen"
+    gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.11,0.69,txres)
+     txres@txFontColor      = "red"
+    gsn_text_ndc(wks,"Psurf < 900 hPa",0.11,0.67,txres)
+     txres@txFontColor      = "blue"
+    gsn_text_ndc(wks,"Psurf > 900 hPa",0.11,0.65,txres)
+
+     txres@txFontColor      = "orange"
+    ;gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.45,0.77,txres)
+    ; txres@txFontColor      = "darkgreen"
+    ;gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.45,0.73,txres)
+     txres@txFontColor      = "red"
+    ;gsn_text_ndc(wks,"Psurf < 900 hPa",0.22,0.75,txres)
+     txres@txFontColor      = "blue"
+    ;gsn_text_ndc(wks,"Psurf > 900 hPa",0.22,0.71,txres)
 
   ;-----------------------------------
   ; Now draw plot
   ;-----------------------------------
-  draw(plot)
-  frame(wks)
+  ;draw(plot1)
+  ;frame(wks)
+
+  ;-------------------
+  ; do the plotting
+  ;-------------------
+  panel_res                       = True
+      panel_res@txString              = "MOPITT "+version+" Averaging Kernels, for the 10 first retrievals ~C~"+ \
+                                         "within"+ delta_deg+" deg around "+ "Lat: "+location_lat+", Lon: "+ location_lon +\
+                                         ", Date: "+YYYY +sprintf("%02.4g", MM)+sprintf("%02.4g", DD)
+
+    gsn_panel(wks,(/plot1,plot2/),(/1,2/),panel_res)
+
   end if    ; PLOTPROFILE
 exit
 
@@ -290,34 +438,6 @@ mopitt_in = addfile(mopitt_general, "r")
     AvKer        = mopitt_in->$sat_ak$
     error        = mopitt_in->$sat_err$
 
-;--------------------------------------------
-; Set up MOPITT pressure arrays
-;--------------------------------------------
-  parray = new((/dimsizes(psurf), 10/), float)
-  parray(:,0) = psurf
-  do i=0,dimsizes(psurf)-1
-    parray(i,1:9) = pvect
-  end do
-  ;--------------------------------------------------------------
-  ; Correct for where surface pressure <900 hPa
-  ;--------------------------------------------------------------
-  dp = new((/dimsizes(psurf), 10/), float) ; Pressure difference array
-    do z= 0, 8, 1
-      dp(:,z) = parray(:,0) - parray(:,z+1)
-    end do
-   dp(:,9) = 1000
-
-  ; Repeat surface values at all levels to replace if needed
-  psurfarray = new((/dimsizes(psurf), 10/), float) 
-   do z= 0, 9, 1
-    psurfarray(:,z) = psurf
-   end do
-
-   test = ind(dp(:,0).le.0)
-
-   parray = where(dp.le.0,parray@_FillValue,parray)
-   parray = where((dp.le.100 .and. dp.ge.0),psurfarray,parray)
-
   ; Repeat surface apriori values at all levels to replace if needed
   apsurfarray = new((/dimsizes(psurf), 10/), float) 
    do z= 0, 9, 1
@@ -326,84 +446,6 @@ mopitt_in = addfile(mopitt_general, "r")
    apriori = where(dp.le.0,apriori@_FillValue,apriori) ; re-order apriori array
    apriori = where((dp.le.100 .and. dp.ge.0),apsurfarray,apriori)
 
-  ; FTS values are averages for the whole box, 
-  ; centred at an altitude while MOPITT values are averages described for box above level.
-  pinterp = new((/dimsizes(psurf), 10/), double)
-  do z=0,8,1
-    pinterp(:,z) = parray(:,z) - (parray(:,z)-parray(:,z+1))/2
-  end do
-  pinterp(:,9) = 87.
-
-
-      ;--------------------------------------------
-      ; Apply AK to FTS
-      ; note AK applies to log(vmr) values
-      ;--------------------------------------------
-      logfts = log10(fts_interp)
-        ;logfts = where(ismissing(logfts),0,logfts)
-      logap = log10(apriori(mopitt_comp,:))
-        ;logap = where(ismissing(logap),0,logap)
-
-      logfts_ak = new((/10/), float)
-      print("Convolving with averaging kernel. . .") ; AK calculations
-         ak = (/AvKer(mopitt_comp,:,:)/)
-         ; missing values -> zero for array calculations
-         ak  = where(ismissing(ak),0,ak)  
-         logap  = where(ismissing(logap),0,logap)       
-         logfts  = where(ismissing(logfts),0,logfts)
-         ; calculate         
-         logfts_ak = logap + transpose(ak) # (logfts - logap)
-         ;logfts_ak_1 = transpose(ak) # (logfts - logap)
-       print(". . . Done!")
-       ; change zero back to missing values for plotting etc
-       logfts_ak = where(logfts_ak.eq.0,logfts_ak@_FillValue, logfts_ak)
-       ;logfts_ak = where(logfts_ak_1.eq.0,logfts_ak_1@_FillValue, logfts_ak_1)
-       ; change back to vmr
-       fts_ak = 10^logfts_ak
-       ;fts_ak = 10^logfts_ak
-
-      ;--------------------------------------------
-      ; Pressure difference array
-      ;--------------------------------------------
-      ; MOPITT pressures are level edges.
-      ; see V5 User Guide for more info
-      delta_p = new((/10/), float)
-      do z= 0, 8, 1
-         delta_p(z) = parray(mopitt_comp,z)-parray(mopitt_comp,z+1)
-      end do
-      delta_p(9) = 74   ; 26 top level
-      ;delta_p(9) = 67  ; 33 top level
-      ;delta_p(9) = 100  ; 0 top level
-
-
-      ;--------------------------------------------
-      ; Calculate tcol AK
-      ;--------------------------------------------
-      log10e = log10(exp(1.))
-      ap = apriori(mopitt_comp,:)
-      ap  = where(ismissing(ap),0,ap)  
-      prof = mopitt_profile(mopitt_comp,:)
-      prof  = where(ismissing(prof),0,prof)
-      prof2 = mopitt_profile_2(mopitt_comp,:) 
-      prof2  = where(ismissing(prof2),0,prof2)
-      prof3 = mopitt_profile_3(mopitt_comp,:) 
-      prof3  = where(ismissing(prof3),0,prof3)
-      ak_colm = (xp_const/log10e)*((prof # transpose(ak)))
-      ak2 = (/AvKer2(mopitt_comp,:,:)/)
-      ak_colm_2 = (xp_const/log10e)*((prof2 # transpose(ak2)))
-      ak3 = (/AvKer3(mopitt_comp,:,:)/)
-      ak_colm_3 = (xp_const/log10e)*((prof3 # transpose(ak3)))
-
-      ; apply to FTS column
-      ; produces partial columns
-      fts_ak_2 =ak_colm # transpose(logfts - logap)
-
-
-
-;--------------------------------------------
-; convert time
-;--------------------------------------------
-time_frac = cd_calendar(time_to_plot, 4)
 
 ;--------------------------------------------
 ; plot
