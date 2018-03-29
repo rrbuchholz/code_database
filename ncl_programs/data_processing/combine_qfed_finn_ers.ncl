@@ -413,7 +413,10 @@ begin
            emiss_regrid@vmin   := tofloat(min(emiss_regrid))
 
          emiss_overwrite = bb_template
-         emiss_overwrite(ind_overwrite,:,:) = emiss_regrid
+         ten_forward = ind_overwrite+10
+         xnew = rm_single_dims(emiss_regrid)
+         emiss_conform = conform(emiss_overwrite(ind_overwrite:ten_forward,:,:),xnew, (/1,2/))
+         emiss_overwrite(ind_overwrite:ten_forward,:,:) = (/emiss_conform/)
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
            emiss_overwrite@long_name := dummy_var2(tracer)+" QFED/FINN fire emissions"
@@ -625,7 +628,11 @@ begin
            voc_emiss_regrid@vmin   := tofloat(min(voc_emiss_regrid))
 
          emiss_overwrite = bb_template
-         emiss_overwrite(ind_overwrite,:,:) = voc_emiss_regrid
+         ten_forward = ind_overwrite+10
+         xnew = rm_single_dims(voc_emiss_regrid)
+         emiss_conform = conform(emiss_overwrite(ind_overwrite:ten_forward,:,:),xnew, (/1,2/))
+         emiss_overwrite(ind_overwrite:ten_forward,:,:) = (/emiss_conform/)
+
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
            emiss_overwrite@long_name := voc_spec(voctype)+" QFED/FINN fire emissions"
