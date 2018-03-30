@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2016
+  ystart = 2017
   yend = 2018
   reso = "0.9x1.25"
 
-  machine = "modeling2"
-  repository = "FINN"
+  machine = "cheyenne"
+  repository = "FINN_NRT"
     s_name = "CO"
 
   tracers = (/"CO"/)
@@ -104,7 +104,7 @@ do t = 0, dimsizes(tracers)-1
 
     if (repository.eq."FINN") then
      emis_dir = "/amadeus-data/emmons/web/finn_emis_nc/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*/emissions_"+tracer+"*.nc")
+     e_file_in = systemfunc ("ls "+emis_dir+"*/emissions_"+tracer+"_"+reso+"*.nc")
     end if
 
     outpath = top_dir+ "/CAM_chem/emissions/"
@@ -384,8 +384,11 @@ if (NETCDF) then
       ;-------------------
       if (repository.eq."QFED_native") then
         outfilename = "qfed.emis_"+tracer+"_Tg_regional_"+ystart+".nc"
+      else if (repository.eq."QFED/FINN") then
+        outfilename = "qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc"
       else
         outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional.nc"
+      end if
       end if
       fout = addfile(outpath+outfilename, "c")
 
