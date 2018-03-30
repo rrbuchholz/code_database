@@ -24,11 +24,11 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2002
-  yend = 2017
+  ystart = 2016
+  yend = 2018
   reso = "0.9x1.25"
 
-  machine = "modeling1"
+  machine = "modeling2"
   repository = "FINN"
     s_name = "CO"
 
@@ -99,6 +99,17 @@ do t = 0, dimsizes(tracers)-1
 
     outpath = top_dir+ "data_processing/CAM-chem/emissions/"
 
+  else if (machine.eq."modeling2") then 
+    top_dir = "/net/mopfl2015.acom.ucar.edu/home/buchholz/"
+
+    if (repository.eq."FINN") then
+     emis_dir = "/amadeus-data/emmons/web/finn_emis_nc/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*/emissions_"+tracer+"*.nc")
+    end if
+
+    outpath = top_dir+ "/CAM_chem/emissions/"
+
+  end if
   end if
   end if
 
@@ -167,6 +178,14 @@ do t = 0, dimsizes(tracers)-1
       time := emiss_in&time
       lat = tofloat(emiss_in&lat)
       lon = tofloat(emiss_in&lon)
+  else if (machine.eq."modeling2".and.\
+           repository.eq."FINN") then
+    fin = addfiles(e_file_in, "r")
+    ListSetType (fin, "cat") 
+      emiss_in          = fin[:]->$emiss$
+      time := emiss_in&time
+      lat = tofloat(emiss_in&lat)
+      lon = tofloat(emiss_in&lon)
   else if (machine.eq."cheyenne") then
     fin = addfiles(e_file_in, "r")
       emiss_in          = fin[:]->$emiss$
@@ -180,6 +199,7 @@ do t = 0, dimsizes(tracers)-1
       lat = emiss_in&lat
       lon = emiss_in&lon
 
+  end if
   end if
   end if
 
@@ -353,7 +373,6 @@ do t = 0, dimsizes(tracers)-1
        regsum&time = time
 
        ;printVarSummary(regsum)
-exit
 
 ;********************************************
 ; Write out to new file

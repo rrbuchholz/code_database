@@ -34,9 +34,6 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT            = False
-    plotType      = "x11"
-
   PLOTPROFILE       = True
     plot2Type       = "x11"
 
@@ -50,14 +47,6 @@ begin
    ; -------------------------------
    ; Plotting set up
    ; -------------------------------
-     ; PLOT
-     plotName      = version+"diffAKs"
-     titlestring          = "FTS with matrix and vector AK at Lauder, 2000-2012"
-     ymax                 = 1e17
-     ymin                 = -1e17
-     xmin                 = 1999
-     xmax                 = 2014
-
      ; PLOTPROFILE
      plot2Name      = version+"averaging_kernels"
      titlestring2          = "MOPITT and FTS Averaging kernels,  for Lauder, 2000-2012"
@@ -76,6 +65,7 @@ begin
   longitude     = "Longitude"+suff
   latitude      = "Latitude"+suff
   solarza       = "SolarZenithAngle"+suff
+  clouds        = "CloudDescription"+suff
 
   sat_profile   = "RetrievedCOMixingRatioProfile_MOP02"
   sat_surf      = "RetrievedCOSurfaceMixingRatio_MOP02"
@@ -120,11 +110,14 @@ begin
 print("***Plotting MOPITT AKs for file "+mopitt_general+", date: "+YYYY+\
           sprintf("%02.4g", MM)+sprintf("%02.4g", DD))
 
+
 fin = addfile(mopitt_general, "r")            ;--- read in
       sza          := fin->$solarza$
       lon          := fin->$longitude$
       lat          := fin->$latitude$
       anom_diag    := fin->$diag_1$
+      cloud_diag   := fin->$clouds$
+
 
   ;--------------------------------------------
   ; select daytime retrievals
@@ -140,7 +133,9 @@ fin = addfile(mopitt_general, "r")            ;--- read in
                  anom_diag(:,1).eq.0.and.\
                  anom_diag(:,2).eq.0.and.\
                  anom_diag(:,3).eq.0.and.\
-                 anom_diag(:,4).eq.0)
+                 anom_diag(:,4).eq.0);.and.\
+                 ;cloud_diag.eq.2)
+
 
   time           := fin->$date$(day_retrievals)  ;--- time in seconds since 1993-1-1 00:00:00 (TAI93)
   lat            := lat(day_retrievals)
@@ -234,46 +229,89 @@ fin = addfile(mopitt_general, "r")            ;--- read in
       delta_p_dummy = delta_p
       delta_p_dummy  = where(ismissing(delta_p_dummy),0,delta_p_dummy)
     ak_colm = new((/dimsizes(psurf),10/),float)
-    ak_colm2 = new((/dimsizes(psurf),10/),float)
     do i = 0, dimsizes(psurf)-1
       do z = 0, 9 
-       ak_colm(i,z) = (xp_const/log10e)*(delta_p(i,:)*prof_dummy(i,:)) # (ak(i,z,:))
        multiply_ak := (xp_const/log10e)*(delta_p(i,:)*prof_dummy(i,:)) * (ak(i,z,:))
-       ak_colm2(i,z) = sum(multiply_ak)
-;if (i.eq.ind_low_press(0))
-;print(multiply_ak)
-;print(ak_colm2(i,z))
-;print(prof_dummy(i,:))
-;print(delta_p(i,:))
-;print(ak(i,z,:))
-;exit
-;end if
+       ak_colm(i,z) = sum(multiply_ak)
       end do
     end do
 
-  ak_colm2  = where(ak_colm2.eq.0,ak_colm2@_FillValue,ak_colm2)
+  ak_colm  = where(ak_colm.eq.0,ak_colm@_FillValue,ak_colm)
 
   lowak_col = ak_colm(ind_low_press, :)
-  lowak_col2 = ak_colm2(ind_low_press, :)
-  highak_col2 = ak_colm2(ind_high_press, :)
-
-
-printVarSummary(psurf)
-printVarSummary(high_psurf_ak)
-printVarSummary(low_psurf_ak)
-print(low_psurf_ak(0:2,:))
-print(lowak_col2(0:2,:))
-
-print(high_psurf_ak(0:2,:))
-print(highak_col2(0:2,:))
-;exit
+  highak_col = ak_colm(ind_high_press, :)
 
   ;--------------------------------------------
   ; difference retrieved versus calculated column AKs
   ;--------------------------------------------
-  diff_ak = ak_col-ak_colm2
+  diff_ak = ak_col-ak_colm
     lowdiff_ak = diff_ak(ind_low_press, :)
     highdiff_ak = diff_ak(ind_high_press, :)
+
+
+  ;--------------------------------------------
+  ; print for analysis
+  ;--------------------------------------------
+printVarSummary(ak_col)
+printVarSummary(low_psurf_ak)
+printVarSummary(high_psurf_ak)
+  low_psurf_ak  = where(ismissing(low_psurf_ak),0,low_psurf_ak)
+  high_psurf_ak  = where(ismissing(high_psurf_ak),0,high_psurf_ak)
+  lowak_col  = where(ismissing(lowak_col),0,lowak_col)
+  highak_col  = where(ismissing(highak_col),0,highak_col)
+
+  ind_low_reported = ind(low_psurf_ak(:,0).lt.0.or.low_psurf_ak(:,1).lt.0.or.\
+                         low_psurf_ak(:,2).lt.0.or.low_psurf_ak(:,3).lt.0.or.\
+                         low_psurf_ak(:,4).lt.0.or.low_psurf_ak(:,5).lt.0.or.\
+                         low_psurf_ak(:,6).lt.0.or.low_psurf_ak(:,7).lt.0.or.\
+                         low_psurf_ak(:,8).lt.0.or.low_psurf_ak(:,9).lt.0)
+
+  ind_low_reported_b = ind(low_psurf_ak(:,0).ge.0.and.low_psurf_ak(:,1).ge.0.and.\
+                         low_psurf_ak(:,2).ge.0.and.low_psurf_ak(:,3).ge.0.and.\
+                         low_psurf_ak(:,4).ge.0.and.low_psurf_ak(:,5).ge.0.and.\
+                         low_psurf_ak(:,6).ge.0.and.low_psurf_ak(:,7).ge.0.and.\
+                         low_psurf_ak(:,8).ge.0.and.low_psurf_ak(:,9).ge.0)
+
+  ind_high_reported = ind(high_psurf_ak(:,0).lt.0.or.high_psurf_ak(:,1).lt.0.or.\
+                         high_psurf_ak(:,2).lt.0.or.high_psurf_ak(:,3).lt.0.or.\
+                         high_psurf_ak(:,4).lt.0.or.high_psurf_ak(:,5).lt.0.or.\
+                         high_psurf_ak(:,6).lt.0.or.high_psurf_ak(:,7).lt.0.or.\
+                         high_psurf_ak(:,8).lt.0.or.high_psurf_ak(:,9).lt.0)
+
+  ind_high_reported_b = ind(high_psurf_ak(:,0).ge.0.and.high_psurf_ak(:,1).ge.0.and.\
+                         high_psurf_ak(:,2).ge.0.and.high_psurf_ak(:,3).ge.0.and.\
+                         high_psurf_ak(:,4).ge.0.and.high_psurf_ak(:,5).ge.0.and.\
+                         high_psurf_ak(:,6).ge.0.and.high_psurf_ak(:,7).ge.0.and.\
+                         high_psurf_ak(:,8).ge.0.and.high_psurf_ak(:,9).ge.0)
+
+  ind_low_retrieved= ind(lowak_col(:,0).lt.0.or.lowak_col(:,1).lt.0.or.\
+                         lowak_col(:,2).lt.0.or.lowak_col(:,3).lt.0.or.\
+                         lowak_col(:,4).lt.0.or.lowak_col(:,5).lt.0.or.\
+                         lowak_col(:,6).lt.0.or.lowak_col(:,7).lt.0.or.\
+                         lowak_col(:,8).lt.0.or.lowak_col(:,9).lt.0)
+
+  ind_high_retrieved = ind(highak_col(:,0).lt.0.or.highak_col(:,1).lt.0.or.\
+                         highak_col(:,2).lt.0.or.highak_col(:,3).lt.0.or.\
+                         highak_col(:,4).lt.0.or.highak_col(:,5).lt.0.or.\
+                         highak_col(:,6).lt.0.or.highak_col(:,7).lt.0.or.\
+                         highak_col(:,8).lt.0.or.highak_col(:,9).lt.0)
+
+printVarSummary(ind_low_reported)
+printVarSummary(ind_high_reported)
+printVarSummary(ind_low_reported_b)
+printVarSummary(ind_high_reported_b)
+;print(low_psurf_ak(ind_low_reported_b,:))
+printVarSummary(ind_low_retrieved)
+print(ind_low_retrieved)
+;print(lowak_col(ind_low_reported_b,:))
+printVarSummary(ind_high_retrieved)
+
+  low_psurf_ak  = where(low_psurf_ak.eq.0,low_psurf_ak@_FillValue,low_psurf_ak)
+  high_psurf_ak  = where(high_psurf_ak.eq.0,high_psurf_ak@_FillValue,high_psurf_ak)
+  lowak_col  = where(lowak_col.eq.0,lowak_col@_FillValue,lowak_col)
+  highak_col  = where(highak_col.eq.0,highak_col@_FillValue,highak_col)
+
+;exit
 
 
 ;************************************************
@@ -322,7 +360,7 @@ print(highak_col2(0:2,:))
   ; 1 Psurf < 900 hPa
     res2@tiMainString            = "Values"
     res2@tiYAxisString           = "Altitude (hPa)"
-    res2@tiXAxisString            ="AK value (~F34~4~F21~10~S2~19   ) "
+    res2@tiXAxisString            ="AK value (~F34~4~F21~10~S2~19   mol/(cm~S2~2   log(VMR))) "
     low_cols                    := new(dimsizes(low_psurf_ak(:,0)), "string")
     low_cols                    = "red"
     res2@xyLineColors           := low_cols
@@ -330,11 +368,11 @@ print(highak_col2(0:2,:))
   plot1 = gsn_csm_xy(wks,  low_psurf_ak(0:9,:)/1e19, pvect2, res2)
 
   ; 1a Psurf < 900 hPa, but calculated here
-    low_cols                    := new(dimsizes(lowak_col2(:,0)), "string")
+    low_cols                    := new(dimsizes(lowak_col(:,0)), "string")
     low_cols                    = "orange"
     res2@xyLineColors           := low_cols
     res2@xyMarkerColors         := low_cols
-  plot1a = gsn_csm_xy(wks,  lowak_col2(0:9,:)/1e19, pvect2, res2)
+  plot1a = gsn_csm_xy(wks,  lowak_col(0:9,:)/1e19, pvect2, res2)
   overlay(plot1, plot1a)
 
   ; 1b Psurf > 900 hPa
@@ -347,22 +385,25 @@ print(highak_col2(0:2,:))
 
   ; 1a Psurf > 900 hPa, but calculated here
 
-    high_cols                   := new(dimsizes(highak_col2(:,0)), "string")
+    high_cols                   := new(dimsizes(highak_col(:,0)), "string")
     high_cols                    = "darkgreen"
     res2@xyLineColors           := high_cols
     res2@xyMarkerColors         := high_cols
-  plot1c = gsn_csm_xy(wks,  highak_col2(0:9,:)/1e19, pvect2, res2)
+  plot1c = gsn_csm_xy(wks,  highak_col(0:9,:)/1e19, pvect2, res2)
   overlay(plot1, plot1c)
 
   ; 2 Difference
     res2@tiMainString            ="Difference: retrieved -- calculated"
     res2@tiYAxisString           =""
-    res2@tiXAxisString           ="Difference (~F34~4~F21~10~S2~19   ) "
-    diff_cols                   := new(dimsizes(ak_colm2(:,0)), "string")
+    res2@tiXAxisString           ="Difference (~F34~4~F21~10~S2~19   mol/(cm~S2~2   log(VMR))) "
+    diff_cols                   := new(dimsizes(ak_colm(:,0)), "string")
     diff_cols                    = "black"
     res2@xyLineColors           := diff_cols
     res2@xyMarkerColors         := diff_cols
   plot2 = gsn_csm_xy(wks,  lowdiff_ak(0:9,:)/1e19, pvect2, res2)
+    diff_cols                    = "purple"
+    res2@xyLineColors           := diff_cols
+    res2@xyMarkerColors         := diff_cols
   plot2a = gsn_csm_xy(wks,  highdiff_ak(0:9,:)/1e19, pvect2, res2)
   overlay(plot2, plot2a)
 
@@ -375,8 +416,11 @@ print(highak_col2(0:2,:))
     mopittres@gsLineColor             = "grey"
 
   dummy_alt = new(10, graphic)
+  dummy_alt2 = new(10, graphic)
   do i = 0, 9
     dummy_alt(i) = gsn_add_polyline(wks, plot1, (/x2min,x2max/), (/pvect2(i), \
+                   pvect2(i)/), mopittres)
+    dummy_alt2(i) = gsn_add_polyline(wks, plot2, (/x2min,x2max/), (/pvect2(i), \
                    pvect2(i)/), mopittres)
   end do
 
@@ -390,22 +434,28 @@ print(highak_col2(0:2,:))
      txres@txJust           = "CenterLeft"              ; font smaller. default big
      txres@txPerimOn        = False
      txres@txFontColor      = "orange"
-   gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.11,0.71,txres)
+   gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.12,0.71,txres)
      txres@txFontColor      = "darkgreen"
-    gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.11,0.69,txres)
+    gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.12,0.69,txres)
      txres@txFontColor      = "red"
-    gsn_text_ndc(wks,"Psurf < 900 hPa",0.11,0.67,txres)
+    gsn_text_ndc(wks,"Psurf < 900 hPa",0.12,0.67,txres)
      txres@txFontColor      = "blue"
-    gsn_text_ndc(wks,"Psurf > 900 hPa",0.11,0.65,txres)
+    gsn_text_ndc(wks,"Psurf > 900 hPa",0.12,0.65,txres)
 
      txres@txFontColor      = "orange"
     ;gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.45,0.77,txres)
     ; txres@txFontColor      = "darkgreen"
     ;gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.45,0.73,txres)
-     txres@txFontColor      = "red"
+    ; txres@txFontColor      = "red"
     ;gsn_text_ndc(wks,"Psurf < 900 hPa",0.22,0.75,txres)
-     txres@txFontColor      = "blue"
+    ; txres@txFontColor      = "blue"
     ;gsn_text_ndc(wks,"Psurf > 900 hPa",0.22,0.71,txres)
+
+   ; difference plot labels
+     txres@txFontColor      = "black"
+   gsn_text_ndc(wks,"Psurf < 900 hPa",0.62,0.71,txres)
+     txres@txFontColor      = "purple"
+    gsn_text_ndc(wks,"Psurf > 900 hPa",0.62,0.69,txres)
 
   ;-----------------------------------
   ; Now draw plot
@@ -417,78 +467,13 @@ print(highak_col2(0:2,:))
   ; do the plotting
   ;-------------------
   panel_res                       = True
-      panel_res@txString              = "MOPITT "+version+" Averaging Kernels, for the 10 first retrievals ~C~"+ \
-                                         "within"+ delta_deg+" deg around "+ "Lat: "+location_lat+", Lon: "+ location_lon +\
+      panel_res@txString              = "MOPITT "+version+" Averaging Kernels, for the first 10 retrievals in each set ~C~"+ \
+                                         "within "+ delta_deg+" deg around "+ "Lat: "+location_lat+", Lon: "+ location_lon +\
                                          ", Date: "+YYYY +sprintf("%02.4g", MM)+sprintf("%02.4g", DD)
 
     gsn_panel(wks,(/plot1,plot2/),(/1,2/),panel_res)
 
   end if    ; PLOTPROFILE
-exit
-
-;=================================================================
-mopitt_in = addfile(mopitt_general, "r")
-    mopitt_tcol  = mopitt_in->$sat_tcol$
-    mopitt_profile = mopitt_in->$sat_profile$
-    time         = mopitt_in->$timearray$
-   ; Date is in seconds since 1993-1-1 00:00:00
-    mopitt_date  = cd_calendar(time, 0)
-    psurf        = mopitt_in->$sat_psurf$
-    apriori      = mopitt_in->$sat_ap$
-    AvKer        = mopitt_in->$sat_ak$
-    error        = mopitt_in->$sat_err$
-
-  ; Repeat surface apriori values at all levels to replace if needed
-  apsurfarray = new((/dimsizes(psurf), 10/), float) 
-   do z= 0, 9, 1
-    apsurfarray(:,z) = (apriori(:,0))
-   end do
-   apriori = where(dp.le.0,apriori@_FillValue,apriori) ; re-order apriori array
-   apriori = where((dp.le.100 .and. dp.ge.0),apsurfarray,apriori)
-
-
-;--------------------------------------------
-; plot
-;--------------------------------------------
-if (PLOT) then
-
-;************************************************
-; Setting up correlation plot
-;************************************************
- wks  = gsn_open_wks(plotType,plotName) ; specifies a ps plot
- 
- res                     = True                         ; plot mods desired
-  res@gsnFrame                 = False                  ; don't advance frame yet
-  res@gsnDraw                  = False                  ; don't draw plot
-  res@xyMarkLineModes          = (/"Markers","Lines"/)  ; choose which have markers
-  res@xyMarkers                = 9                     ; choose type of marker 
-  res@xyMarkerColor            = "dodgerblue"                  ; Marker color
-  res@xyMarkerSizeF            = 0.008                  ; Marker size (default 0.01)
-  res@xyDashPatterns           = 2                      ; dashed line 
-  res@xyLineThicknesses        = 5                ; thickness
-
-  ; Set axes limits
-  res@trYMaxF                  = ymax
-  res@trYMinF                  = ymin
-  res@trXMaxF                  = xmax
-  res@trXMinF                  = xmin
-
-  res@tmEqualizeXYSizes        = True
-  res@tmLabelAutoStride        = True
-
-  res@tiMainString        = titlestring  ; title
-  res@tiYAxisString            ="MOPITT total column"
-  res@tiXAxisString            ="FTS total column"
-
- plot1  = gsn_csm_xy (wks, time_frac, diff,res)      ; create plot
-
-
- draw(plot1)
-; draw(plot2)
- frame(wks)
-
-end if ; PLOT
-
 
 
 
