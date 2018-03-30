@@ -24,11 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2014
-  yend = 2016
+  ystart = 2000
+  yend = 2017
   reso = "0.9x1.25"
 
-  repository = "FINN"
+  machine = "cheyenne"
+  repository = "QFED/FINN"
     s_name = "CO"
 
   tracers = (/"CO"/)
@@ -48,36 +49,59 @@ do t = 0, dimsizes(tracers)-1
 
   tracer = tracers(t)
   sm_tracer = sm_tracers(t)
-  ; -------------------------------
-  ; emission files
-  ; -------------------------------
-   top_dir = "/data14b/buchholz/"
 
-  if (repository.eq."FINN") then
-   emis_dir = top_dir+ "finn/cam_0.9x1.25"
-   e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
-  else if (repository.eq."QFED/FINN") then
-   emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
-   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
-  else if (repository.eq."QFED") then
-   emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
-   e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
-  else if (repository.eq."QFED_native") then
-   emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
-  end if
-  end if
-  end if
-  end if
+  ; -------------------------------
+  ; emission files and path setup
+  ; -------------------------------
+  if (machine.eq."modeling1") then 
+    top_dir = "/data14b/buchholz/"
+    if (repository.eq."FINN") then
+     emis_dir = top_dir+ "finn/cam_0.9x1.25"
+     e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
+    else if (repository.eq."QFED/FINN") then
+     emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
+     e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+    else if (repository.eq."QFED") then
+     emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
+     e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+    else if (repository.eq."QFED_native") then
+     emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
+    end if
+    end if
+    end if
+    end if
 
-  if (repository.eq."QFED".or.repository.eq."QFED/FINN".or.\
+    if (repository.eq."QFED".or.repository.eq."QFED/FINN".or.\
       repository.eq."FINN") then
-   indir = emis_dir+"/allyears/"
-   outpath = emis_dir+"/region_sums/"
-  else if (repository.eq."QFED_native") then
-   outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
-   e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
+     indir = emis_dir+"/allyears/"
+     outpath = emis_dir+"/region_sums/"
+    else if (repository.eq."QFED_native") then
+     outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
+    end if
+    end if
+
+  else if (machine.eq."cheyenne") then 
+    top_dir = "/glade/p/work/buchholz/"
+
+    if (repository.eq."FINN_NRT") then
+     emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
+     e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
+    else if (repository.eq."QFED_NRT") then
+     emis_dir = top_dir+ "emis/qfed_finn_nrt_1x1/"
+     e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
+    else if (repository.eq."QFED/FINN") then
+     emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2017_1x1/"
+     e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc")
+    end if
+    end if
+    end if
+
+    outpath = top_dir+ "data_processing/CAM-chem/emissions/"
+
   end if
   end if
+
 
    ; if (.not.isfilepresent(indir+e_file_in)) then
    ;   print("No file for tracer:" + tracer)
@@ -143,13 +167,22 @@ do t = 0, dimsizes(tracers)-1
       time := emiss_in&time
       lat = tofloat(emiss_in&lat)
       lon = tofloat(emiss_in&lon)
+  else if (machine.eq."cheyenne") then
+    fin = addfiles(e_file_in, "r")
+      emiss_in          = fin[:]->$emiss$
+      time := emiss_in&time
+      lat = tofloat(emiss_in&lat)
+      lon = tofloat(emiss_in&lon)
   else
     fin = addfile(indir+e_file_in, "r")
       emiss_in         := fin->$emiss$
       time := emiss_in&time
       lat = emiss_in&lat
       lon = emiss_in&lon
+
   end if
+  end if
+
       yyyymmdd := cd_calendar(time,-2)
        yyyymmdd!0 = "time"
        yyyymmdd&time = time
@@ -261,10 +294,29 @@ do t = 0, dimsizes(tracers)-1
      print(year_array+" "+year_sum_array)
 
     ;------------------
+    ; Month averages
+    ;------------------
+    month_array = new(dimsizes(year_array)*12, integer)
+    month_sum_array = new(dimsizes(month_array), float)
+    do i = 0, dimsizes(year_array)-1
+      do j = 0, 11
+        month_ind := ind(mm.eq.j+1.and.yyyy.eq.year_array(i))
+        month_array(i*12+j) = year_array(i)*100 + j+1
+        if (.not.(ismissing(month_ind(0)))) then
+          month_sum_array(i*12+j) = sum(globsum(month_ind))
+        end if
+      end do
+    end do
+
+     print("Month, emissions of "+tracer+" (Tg)")
+     print(month_array+" "+month_sum_array)
+
+    ;------------------
     ; Total average
     ;------------------
      total_avg = avg(year_sum_array)
      print(ystart+" to "+yend+", average yearly emissions of "+tracer+" (Tg): " + total_avg)
+
 
 
   ;********************************************
@@ -301,6 +353,7 @@ do t = 0, dimsizes(tracers)-1
        regsum&time = time
 
        ;printVarSummary(regsum)
+exit
 
 ;********************************************
 ; Write out to new file
@@ -313,7 +366,7 @@ if (NETCDF) then
       if (repository.eq."QFED_native") then
         outfilename = "qfed.emis_"+tracer+"_Tg_regional_"+ystart+".nc"
       else
-        outfilename = "qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"
+        outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional.nc"
       end if
       fout = addfile(outpath+outfilename, "c")
 
