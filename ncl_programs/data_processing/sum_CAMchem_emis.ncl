@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2000
+  ystart = 2002
   yend = 2017
   reso = "0.9x1.25"
 
-  machine = "cheyenne"
-  repository = "QFED/FINN"
+  machine = "modeling1"
+  repository = "FINN"
     s_name = "CO"
 
   tracers = (/"CO"/)
