@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2017
+  ystart = 2002
   yend = 2017
   reso = "0.9x1.25"
 
-  machine = "modeling1"
-  repository = "QFED_native"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT
+  machine = "cheyenne"         ; modeling1, modeling2, cheyenne
+  repository = "FINN1.6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT
     s_name = "CO"
 
   tracers = (/"CO"/)
@@ -90,10 +90,10 @@ do t = 0, dimsizes(tracers)-1
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
     else if (repository.eq."FINN1.5") then
      emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+".nc")
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
      emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+".nc")
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
     else if (repository.eq."QFED_NRT") then
      emis_dir = top_dir+ "emis/qfed_finn_nrt_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
@@ -149,7 +149,8 @@ do t = 0, dimsizes(tracers)-1
   ; names of data structures
   ; "anthro", "bb", "ocean"
   ; -------------------------------
-  if (repository.eq."FINN") then
+  if (repository.eq."FINN".or.repository.eq."FINN1.5"\
+      .or.repository.eq."FINN1.6") then
     emiss           = "fire"
   else if (repository.eq."QFED_native") then
     emiss           = "biomass"
@@ -400,6 +401,7 @@ if (NETCDF) then
       end if
       end if
       fout = addfile(outpath+outfilename, "c")
+      print(outpath+outfilename)
 
       ;------------
       ; File 
