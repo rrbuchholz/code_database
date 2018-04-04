@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2016
-  yend = 2018
+  ystart = 2017
+  yend = 2017
   reso = "0.9x1.25"
 
-  machine = "modeling2"
-  repository = "FINN"
+  machine = "modeling1"
+  repository = "QFED_native"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT
     s_name = "CO"
 
   tracers = (/"CO"/)
@@ -58,6 +58,7 @@ do t = 0, dimsizes(tracers)-1
     if (repository.eq."FINN") then
      emis_dir = top_dir+ "finn/cam_0.9x1.25"
      e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
+
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
      e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
@@ -87,12 +88,20 @@ do t = 0, dimsizes(tracers)-1
     if (repository.eq."FINN_NRT") then
      emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
+    else if (repository.eq."FINN1.5") then
+     emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+".nc")
+    else if (repository.eq."FINN1.6") then
+     emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+".nc")
     else if (repository.eq."QFED_NRT") then
      emis_dir = top_dir+ "emis/qfed_finn_nrt_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2017_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc")
+    end if
+    end if
     end if
     end if
     end if
@@ -409,13 +418,14 @@ if (NETCDF) then
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group; FINN: C. Wiedinmyer 2015"
           fAtt@title              = "Emissions of "+ tracer+\
                                   " from FINN emission ratios applied to QFED "+s_name+", daily"
-        else if (repository.eq."QFED") then
+        else if (repository.eq."QFED".or.repository.eq."QFED_native") then
           fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates"
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group"
           fAtt@title              = "Emissions of "+ tracer+" from QFED, daily"
-        else if (repository.eq."FINN") then
-          fAtt@history            = s_name+" is from FINN, v1.5"
+        else if (repository.eq."FINN".or.repository.eq."FINN1.5"\
+                 .or.repository.eq."FINN1.6") then
+          fAtt@history            = s_name+" is from "+repository+", v1.5"
           fAtt@title              = "Emissions of "+ tracer+" from FINN, daily"
         end if
         end if
