@@ -23,19 +23,31 @@ begin
 ; user input
 ;--------------------------------------------
   ; MOPITT version
-  version = "V7J"
-  ret = "J"
-  YYYY = 2016
-  MM = 01
-  DD = 11
+  version = "V7T"
+  ret = "T"
+  YYYY = 2014
+  MM = 09
+  DD = 25
   mopitt_general = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+YYYY+sprintf("%02.4g", MM)+\
                                 "/"+sprintf("%02.4g", MM)+sprintf("%02.4g", DD)+"/MOP02"+ret+"-*.he5")
+
+  ;mopitt_general =  systemfunc ("ls /MOPITT/VALIDATION/ArchiveTW/L2-HIPPO10_MT_CKD_3.2/"+\
+  ;                              YYYY+sprintf("%02.4g", MM)+"/"+sprintf("%02.4g", MM)+\
+  ;                              sprintf("%02.4g", DD)+"/MOP02"+ret+"-*.he5")
+
 
   ;------------
   ; toggles
   ;------------
   PLOTPROFILE       = True
     plot2Type       = "x11"
+
+  REPROCESSED       = True
+   if (REPROCESSED) then
+     mopitt_new = systemfunc ("ls /MOPITT/VALIDATION/ArchiveTW/L2-HIPPO10_MT_CKD_3.2/"+\
+                                YYYY+sprintf("%02.4g", MM)+"/"+sprintf("%02.4g", MM)+\
+                                sprintf("%02.4g", DD)+"/MOP02"+ret+"-*.he5")
+   end if 
 
 ;--------------------------------------------
 ; end user input
@@ -207,6 +219,39 @@ fin = addfile(mopitt_general, "r")            ;--- read in
    ret_prof = where(dp.le.0,ret_prof@_FillValue,ret_prof)
    ret_prof = where((dp.le.100 .and. dp.ge.0),vmrsurfarray,ret_prof)
 
+   if (REPROCESSED) then
+     fin_2 = addfile(mopitt_new, "r")            ;--- read in
+      sza_2         := fin_2->$solarza$
+      lon_2         := fin_2->$longitude$
+      lat_2         := fin_2->$latitude$
+      anom_diag_2   := fin_2->$diag_1$
+      cloud_diag_2   := fin_2->$clouds$
+
+
+    ;--------------------------------------------
+    ; select daytime retrievals
+    ; within a boundary
+    ; and quality controlled
+    ;--------------------------------------------
+    day_retrievals_2 := ind(sza_2.le.dayflag.and.\
+                 lat_2.le.topboundary.and.\
+                 lat_2.ge.bottomboundary.and.\
+                 lon_2.ge.leftboundary.and.\
+                 lon_2.le.rightboundary.and.\
+                 anom_diag_2(:,0).eq.0.and.\
+                 anom_diag_2(:,1).eq.0.and.\
+                 anom_diag_2(:,2).eq.0.and.\
+                 anom_diag_2(:,3).eq.0.and.\
+                 anom_diag_2(:,4).eq.0);.and.\
+                 ;cloud_diag_2.eq.2)
+
+    time_2         := fin_2->$date$(day_retrievals_2)  ;--- time in seconds since 1993-1-1 00:00:00 (TAI93)
+    lat_2          := lat_2(day_retrievals_2)
+    lon_2          := lon_2(day_retrievals_2)
+    ak_colm := fin_2->$col_avker$(day_retrievals_2,:)
+    psurf_2 := fin_2->$sat_psurf$(day_retrievals_2)
+
+   else
    ;--------------------------------------------
    ; Pressure difference array
    ;--------------------------------------------
@@ -241,12 +286,12 @@ fin = addfile(mopitt_general, "r")            ;--- read in
   lowak_col = ak_colm(ind_low_press, :)
   highak_col = ak_colm(ind_high_press, :)
 
-  ;--------------------------------------------
-  ; difference retrieved versus calculated column AKs
-  ;--------------------------------------------
-  diff_ak = ak_col-ak_colm
-    lowdiff_ak = diff_ak(ind_low_press, :)
-    highdiff_ak = diff_ak(ind_high_press, :)
+  end if
+
+    ak_colm  = where(ak_colm.eq.0,ak_colm@_FillValue,ak_colm)
+
+    lowak_col = ak_colm(ind_low_press, :)
+    highak_col = ak_colm(ind_high_press, :)
 
 
   ;--------------------------------------------
@@ -312,6 +357,62 @@ printVarSummary(ind_high_retrieved)
   highak_col  = where(highak_col.eq.0,highak_col@_FillValue,highak_col)
 
 ;exit
+
+  ;--------------------------------------------
+  ; difference retrieved versus calculated column AKs
+  ;--------------------------------------------
+printVarSummary(ak_colm)
+printVarSummary(ak_col)
+
+  if (REPROCESSED) then
+      lowdiff_collect = new((/3, 20, dimsizes(ak_col(0, :))/), float)
+      time_compare_low = time(ind_low_press)
+      lat_compare_low = lat(ind_low_press)
+      lon_compare_low = lon(ind_low_press)
+
+      highdiff_collect  = new((/3, 20, dimsizes(ak_col(0, :))/), float)
+      time_compare_high = time(ind_high_press)
+      lat_compare_high = lat(ind_high_press)
+      lon_compare_high = lon(ind_high_press)
+
+
+      do j = 0,19
+          ind_compare_low = ind(time_2.eq.time_compare_low(j).and.\
+                                lat_2.eq.lat_compare_low(j).and.\
+                                lon_2.eq.lon_compare_low(j))
+print(ind_compare_low)
+          lowdiff_collect(0,j,:) = low_psurf_ak(j,:)
+          lowdiff_collect(1,j,:) = ak_colm(ind_compare_low,:)
+          lowdiff_collect(2,j,:) = low_psurf_ak(j,:)-ak_colm(ind_compare_low,:)
+
+          ind_compare_high = ind(time_2.eq.time_compare_high(j).and.\
+                                lat_2.eq.lat_compare_high(j).and.\
+                                lon_2.eq.lon_compare_high(j))
+          highdiff_collect(0,j,:) = high_psurf_ak(j,:)
+          highdiff_collect(1,j,:) = ak_colm(ind_compare_high,:)
+          highdiff_collect(2,j,:) = high_psurf_ak(j,:)-ak_colm(ind_compare_high,:)
+      end do
+
+  print(lowdiff_collect(:,0,:))
+  print(highdiff_collect(:,0,:))
+
+      low_psurf_ak := lowdiff_collect(0,:,:)
+      lowak_col := lowdiff_collect(1,:,:)
+      lowdiff_ak = lowdiff_collect(2,:,:)
+
+      high_psurf_ak := highdiff_collect(0,:,:)
+      highak_col := highdiff_collect(1,:,:)
+      highdiff_ak = highdiff_collect(2,:,:)
+
+printVarSummary(lowdiff_ak)
+
+
+  else
+    diff_ak = ak_col-ak_colm
+      lowdiff_ak = diff_ak(ind_low_press, :)
+      highdiff_ak = diff_ak(ind_high_press, :)
+   end if
+
 
 
 ;************************************************
@@ -434,28 +535,32 @@ printVarSummary(ind_high_retrieved)
      txres@txJust           = "CenterLeft"              ; font smaller. default big
      txres@txPerimOn        = False
      txres@txFontColor      = "orange"
-   gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.12,0.71,txres)
+     ;Recalculated
+    ;gsn_text_ndc(wks,"V7 Psurf < 900 hPa, recalculated",0.12,0.71,txres)
      txres@txFontColor      = "darkgreen"
-    gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.12,0.69,txres)
+    ;gsn_text_ndc(wks,"V7 Psurf > 900 hPa, recalculated",0.12,0.69,txres)
      txres@txFontColor      = "red"
-    gsn_text_ndc(wks,"Psurf < 900 hPa",0.12,0.67,txres)
+    gsn_text_ndc(wks,"V7 Psurf < 900 hPa",0.12,0.67,txres)
      txres@txFontColor      = "blue"
-    gsn_text_ndc(wks,"Psurf > 900 hPa",0.12,0.65,txres)
+    gsn_text_ndc(wks,"V7 Psurf > 900 hPa",0.12,0.65,txres)
 
+    ;Orig
+     txres@txFontColor      = "red"
+    ;gsn_text_ndc(wks,"V7 Psurf < 900 hPa",0.22,0.75,txres)
+     txres@txFontColor      = "blue"
+    ;gsn_text_ndc(wks,"V7 Psurf > 900 hPa",0.22,0.73,txres)
+
+    ; Test V8
      txres@txFontColor      = "orange"
-    ;gsn_text_ndc(wks,"Psurf < 900 hPa, recalculated",0.45,0.77,txres)
-    ; txres@txFontColor      = "darkgreen"
-    ;gsn_text_ndc(wks,"Psurf > 900 hPa, recalculated",0.45,0.73,txres)
-    ; txres@txFontColor      = "red"
-    ;gsn_text_ndc(wks,"Psurf < 900 hPa",0.22,0.75,txres)
-    ; txres@txFontColor      = "blue"
-    ;gsn_text_ndc(wks,"Psurf > 900 hPa",0.22,0.71,txres)
+    gsn_text_ndc(wks,"V8 Psurf < 900 hPa, recalculated",0.12,0.71,txres)
+     txres@txFontColor      = "darkgreen"
+    gsn_text_ndc(wks,"V8 Psurf > 900 hPa, recalculated",0.12,0.69,txres)
 
    ; difference plot labels
      txres@txFontColor      = "black"
-   gsn_text_ndc(wks,"Psurf < 900 hPa",0.62,0.71,txres)
+     gsn_text_ndc(wks,"Psurf < 900 hPa",0.62,0.71,txres)
      txres@txFontColor      = "purple"
-    gsn_text_ndc(wks,"Psurf > 900 hPa",0.62,0.69,txres)
+     gsn_text_ndc(wks,"Psurf > 900 hPa",0.62,0.69,txres)
 
   ;-----------------------------------
   ; Now draw plot
@@ -471,7 +576,10 @@ printVarSummary(ind_high_retrieved)
                                          "within "+ delta_deg+" deg around "+ "Lat: "+location_lat+", Lon: "+ location_lon +\
                                          ", Date: "+YYYY +sprintf("%02.4g", MM)+sprintf("%02.4g", DD)
 
-    gsn_panel(wks,(/plot1,plot2/),(/1,2/),panel_res)
+   gsn_panel(wks,(/plot1,plot2/),(/1,2/),panel_res)
+
+  ;draw(plot1)
+  ;frame(wks)
 
   end if    ; PLOTPROFILE
 
