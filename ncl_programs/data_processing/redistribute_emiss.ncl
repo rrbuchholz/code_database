@@ -65,8 +65,11 @@ begin
   top_dir = "/net/modeling1/data14b/buchholz/"
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
+  else if (emiss_type.eq."regridded") then
+    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
   else
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
+  end if
   end if
   
   ; OC/BC
@@ -307,8 +310,13 @@ begin
      ; should have same file attributes as original emission file
      ; overwrite the title and date
         fout@creation_date      = systemfunc ("date")
-        fout@title              = "Emissions of "+ new_names(i)+\
+        if (emiss_type.eq."regridded") then
+          fout@title              = "Emissions of "+ new_names(i)+\
+                                  "QFED CO2, daily"
+        else 
+          fout@title              = "Emissions of "+ new_names(i)+\
                                   " from FINN v1.6 emission x QFED CO2, daily"
+        end if
         if (new_names(i).eq."num_pom_a4".or.new_names(i).eq."num_bc_a4".or.\
             new_names(i).eq."num_so4_a1") then
           fout@data_summary     = "Number of particles of "+tracer+" aerosol emissions for MAM4. Will be scaled by ((1E-3kg/g)*(1E4cm2/m2)/Avog) when read into in CESM2 because model was originally set up to convert molec/cm2/s to kg/m2/s."

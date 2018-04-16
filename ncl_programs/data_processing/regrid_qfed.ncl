@@ -29,10 +29,10 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2017
+  year = 2016
   outres = "0.9x1.25"
-  input_species = "co"
-  species = "CO"
+  input_species = "oc"
+  species = "OC"
   outpath = "/data14b/buchholz/qfed/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------

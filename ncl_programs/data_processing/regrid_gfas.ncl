@@ -33,8 +33,8 @@ begin
        year = 2014
   end if
   outres = "0.94x1.2"
-  input_species = "co"
-  output_species = "CO"
+  input_species = "acet"
+  output_species = "CH3COCH3"
   outpath = "/data14b/buchholz/gfas/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------
