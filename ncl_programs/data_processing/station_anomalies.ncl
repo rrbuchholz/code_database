@@ -319,6 +319,7 @@ begin
   ; -------------------------------
   ; FTS
   ; -------------------------------
+    fts_ymid = (tofloat(fts_years(dimsizes(fts_years)-1)-fts_years(0)))/2
   ; -------------------------------
   ; DAY AVERAGE VALUES
   ; ------------------------------- 
@@ -336,7 +337,7 @@ begin
     ind_nomissing = ind(.not.ismissing(fts_dayavg))
     smooth_fts            = runave(fts_dayavg(ind_nomissing),300,0)
     detrend_fts_smooth    = dtrend_msg_n (climate_yfrac(ind_nomissing),smooth_fts,False,True,0)
-    detrend_fts_tcol      = fts_dayavg(ind_nomissing) - detrend_fts_smooth@slope*(climate_yfrac(ind_nomissing)-startyear-ymid-0.5)
+    detrend_fts_tcol      = fts_dayavg(ind_nomissing) - detrend_fts_smooth@slope*(climate_yfrac(ind_nomissing)-fts_years(0)-fts_ymid-0.5)
     YYYYMMDD_fts_new = str_split_by_length(tostring(climate_time(ind_nomissing)),2)
     fts_months_new = toint(YYYYMMDD_fts_new(:,2))
 
@@ -345,9 +346,13 @@ printVarSummary(detrend_fts_smooth)
   ; -------------------------------
   ; CLIMATOLOGICAL DAY AVERAGES 
   ; ------------------------------- 
-    fts_array = new((/dimsizes(climate_time),1,1/),double)   ;needs to be 3D for climate calculations
+    fts_climate_time = yyyymmdd_time(toint(fts_years(0)), toint(fts_years(dimsizes(fts_years)-1)), "integer")
+    fts_climate_doy = yyyymmdd_to_yyyyddd(fts_climate_time)
+    fts_climate_yfrac = yyyymmdd_to_yyyyfrac(fts_climate_time, 0.5)
+
+    fts_array = new((/dimsizes(fts_climate_time),1,1/),double)   ;needs to be 3D for climate calculations
     fts_array(ind_nomissing,0,0) = detrend_fts_tcol
-    fts_ClmDay = clmDayTLL(fts_array, climate_doy)         ; daily climatology at each grid point
+    fts_ClmDay = clmDayTLL(fts_array, fts_climate_doy)         ; daily climatology at each grid point
 
   ; -------------------------------
   ; SPLINE FIT TO FILL MISSING VALUES
@@ -383,12 +388,12 @@ printVarSummary(detrend_fts_smooth)
   ; -------------------------------
   ; EXPAND TO WHOLE TIME PERIOD
   ; -------------------------------
-    split_doy = str_split_by_length(tostring(climate_doy),4)
-    fts_day_climate    = new(dimsizes(climate_time),double)
-    fts_day_climate_sm = new(dimsizes(climate_time),double)
-    fts_day_climate_sd = new(dimsizes(climate_time),double)
-    do d=0,dimsizes(climate_doy)-1
-      clm_index = toint(split_doy(d,1))
+    fts_split_doy = str_split_by_length(tostring(fts_climate_doy),4)
+    fts_day_climate    = new(dimsizes(fts_climate_time),double)
+    fts_day_climate_sm = new(dimsizes(fts_climate_time),double)
+    fts_day_climate_sd = new(dimsizes(fts_climate_time),double)
+    do d=0,dimsizes(fts_climate_doy)-1
+      clm_index = toint(fts_split_doy(d,1))
       fts_day_climate(d)=fts_ClmDay(clm_index-1,0,0)
       fts_day_climate_sm(d)=fts_ClmDay_sm(clm_index-1,0,0)
       fts_day_climate_sd(d)=fts_ClmDaysd_sm(clm_index-1,0,0)
@@ -405,7 +410,7 @@ printVarSummary(detrend_fts_smooth)
     select_fts_events = where(fts_day_anom.gt.(event_scale*fts_day_climate_sd).or.\
                               fts_day_anom.lt.(neg_event*fts_day_climate_sd),fts_day_anom,fts_day_anom@_FillValue)
     ind_f_events = ind(.not.ismissing(select_fts_events))
-    f_events = climate_time(ind_f_events)
+    f_events = fts_climate_time(ind_f_events)
 
   end if ;(PLOTFTS)
 
@@ -609,7 +614,7 @@ if (PLOT) then
     res@xyMarkLineMode      = "Lines"
     res@xyLineThicknessF    = 5.5
     res@xyLineColor         = "blue3"
-  plot2b = gsn_csm_xy(wks,climate_yfrac,fts_day_climate_sm,res)
+  plot2b = gsn_csm_xy(wks,fts_climate_yfrac,fts_day_climate_sm,res)
   overlay(plot1, plot2b)
 
   end if ;(PLOTFTS)
@@ -648,19 +653,19 @@ if (PLOT) then
   if (PLOTFTS) then
    res@gsnYRefLine           = 0.              ; reference line   
    res@gsnXYBarChart         = True            ; create bar chart 
-   plot4 = gsn_csm_xy(wks,climate_yfrac, fts_day_anom,res)
+   plot4 = gsn_csm_xy(wks,fts_climate_yfrac, fts_day_anom,res)
 
   ; -------------------------------
   ; Add standard deviation
   ; -------------------------------
    res@gsnXYBarChart         = False            ; create bar chart 
-    ya    = new( (/2*dimsizes(climate_yfrac)/), float )
-    yb    = new( (/2*dimsizes(climate_yfrac)/), float )
-    do k=0,dimsizes(climate_yfrac)-1
-      ya(k) = climate_yfrac(k)
+    ya    = new( (/2*dimsizes(fts_climate_yfrac)/), float )
+    yb    = new( (/2*dimsizes(fts_climate_yfrac)/), float )
+    do k=0,dimsizes(fts_climate_yfrac)-1
+      ya(k) = fts_climate_yfrac(k)
       yb(k) = tofloat(fts_day_climate_sd(k))
-      yb(2*dimsizes(climate_yfrac)-1-k) = 0-tofloat(fts_day_climate_sd(k))
-      ya(2*dimsizes(climate_yfrac)-1-k) = climate_yfrac(k)
+      yb(2*dimsizes(fts_climate_yfrac)-1-k) = 0-tofloat(fts_day_climate_sd(k))
+      ya(2*dimsizes(fts_climate_yfrac)-1-k) = fts_climate_yfrac(k)
     end do
     gsres                          = True                ; poly res
       gsres@gsFillColor            = "blue"         ; color chosen
@@ -803,7 +808,7 @@ if (PLOT) then
     qsort(event_times_dummy)
     ind_event= new(dimsizes(event_times_dummy), integer)
     do i=0, dimsizes(event_times_dummy)-1
-       ind_event(i) = ind(climate_time.eq.event_times_dummy(i))
+       ind_event(i) = ind(fts_climate_time.eq.event_times_dummy(i))
     end do
     do k=1, dimsizes(event_times_dummy)-1
       if (ind_event(k).gt.(ind_event(k-1))) then
