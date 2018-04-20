@@ -31,7 +31,7 @@ function calc_seasonal_cycle(valIN[*]:numeric, timeIN[*]:numeric, ystartIN:numer
 ;    valOUT: Seasonal cycle averaged over the whole dataset
 ;
 ;============================================
-local date, years, months, days, yyyymmdd, day_yfrac, ymid, smooth_val, detrend_val_smooth, detrend_val, climate_time, climate_doy
+local date, years, months, days, yyyymmdd, day_yfrac, ymid, smooth_val, detrend_val_smooth, detrend_val, climate_time, climate_doy, val_array, val_ClmDay, ind_data, Clm_doy, new_val_ClmDay
 
 begin
 
@@ -62,7 +62,7 @@ begin
 
     smooth_val         = runave(valIN,smoothIN,0)
     detrend_val_smooth = dtrend_msg_n (day_yfrac,smooth_val,False,True,0)
-    detrend_val  = valIN - detrend_val_smooth@slope*(day_yfrac-ystartIN-ymid-0.5)
+    detrend_val = valIN - detrend_val_smooth@slope*(day_yfrac-ystartIN-ymid-0.5)
 
  ; -------------------------------
   ; CLIMATOLOGICAL DAY AVERAGES 

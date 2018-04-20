@@ -69,10 +69,10 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Wollongong"
+  location = "Darwin"
   surface = "land"
   year_s = 2001
-  network = "NDACC"
+  network = "TCCON"
 
   ; -------------------------------
   ; CAM-chem files
@@ -81,12 +81,6 @@ begin
   model_files_dummy = systemfunc ("ls "+folder+"CAM_Chem_DWL*.nc")
   model_filenames = model_files_dummy
 
-  ;------------
-  ; scale of outside sd
-  ; to denote event
-  ;------------
-    event_scale = 3.0
-    neg_event = -3.0
 
   ;------------
   ; toggles
@@ -317,7 +311,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  mopitt_seas_avg = calc_seasonal_cycle(mopitt_tcol,mopitt_time,years(0),years(dimsizes(years)-1), 230)
+  mopitt_seas_avg = calc_seasonal_cycle(mopitt_tcol,mopitt_time,year_s,years(dimsizes(years)-1), 230)
     Clm_doy = mopitt_seas_avg&year_day                    ;366 days in climate year
     climate_year = yyyyddd_to_yyyymmdd(2004000+mopitt_seas_avg&year_day)
     avg_clim_yfrac = yyyymmdd_to_yyyyfrac(climate_year, 0.5)
@@ -345,8 +339,13 @@ begin
   ; -------------------------------
   ; CALC SEAS CYCLE
   ; ------------------------------- 
+  if (location.eq."Darwin") then
     fts_seas_avg = calc_seasonal_cycle(fts_dayavg(ind_nomissing),climate_inv_time(ind_nomissing),\
                                        fts_years(0), fts_years(dimsizes(fts_years)-1), 300)
+  else
+    fts_seas_avg = calc_seasonal_cycle(fts_dayavg(ind_nomissing),climate_inv_time(ind_nomissing),\
+                                       year_s, fts_years(dimsizes(fts_years)-1), 300)
+  end if
 
 
   end if ;(PLOTFTS)
@@ -354,9 +353,24 @@ begin
   ; -------------------------------
   ; CAM-chem
   ; -------------------------------
-    model_seas_avg = calc_seasonal_cycle(tcol_arr(:,0), model_time,model_years(0),\
-                                         model_years(dimsizes(model_years)-1), 300)
 
+    methox_co = tcol_arr(:,1)
+    biog_co = tcol_arr(:,2)
+    anth_co = dim_sum_n(tcol_arr(:,29:30),1)
+    bb_co = dim_sum_n(tcol_arr(:,15:16),1)
+    residual_co = tcol_arr(:,0)-bb_co-anth_co-biog_co-methox_co
+    data_collect = (/todouble(tcol_arr(:,0)), todouble(methox_co), todouble(biog_co), todouble(anth_co), \
+                     todouble(bb_co), todouble(residual_co)/)
+
+    model_seas_avg = new((/dimsizes(data_collect(:,0)), 366/), double)
+    model_seas_sd = new((/dimsizes(data_collect(:,0)), 366/), double)
+
+    do j=0,dimsizes(model_seas_avg(:,0))-1
+      model_seas_return := calc_seasonal_cycle(data_collect(j,:), model_time,model_years(0),\
+                                         model_years(dimsizes(model_years)-1), 300)
+      model_seas_avg(j,:)=model_seas_return(:,0)
+      model_seas_sd(j,:)=model_seas_return(:,1)
+    end do 
 
 
 ;********************************************
@@ -382,17 +396,15 @@ if (PLOT) then
        res@trYMaxF             = 2.0
        res@trYMinF             = 0.0
     else if (location.eq."Wollongong") then
-       res@trYMaxF             = 2.5
+       res@trYMaxF             = 2.0
        res@trYMinF             = 0.0
     else
        res@trYMaxF             = 3.5
     end if
     end if
     end if
-    ;res@trXMinF             = tofloat(year_s)-0.5
-    ;res@trXMaxF             = tofloat(year_e)+0.5
-    res@trXMinF             = 2003.9
-    res@trXMaxF             = 2005.1
+    res@trXMinF             = 0
+    res@trXMaxF             = 367
 
     res@tmYLMode        = "Manual"	
       res@tmYLTickStartF  = 0.0
@@ -401,16 +413,14 @@ if (PLOT) then
       res@tmYLLabelFontHeightF = 0.028
       res@tiYAxisFontHeightF  = 0.028
 
-    res@tmXBMode        = "Manual"
-      res@tmXBTickStartF  = year_s
-      res@tmXBTickEndF    = year_e
-      res@tmXBTickSpacingF= 2
-      ;res@tmLabelAutoStride=True
-      res@tmXBMinorPerMajor  = 1	
+    res@tmXBMode              = "Explicit"
+      res@tmXBValues           = (ispan(15,365,30))
+      res@tmXBLabels           = (/"Jan", "Feb", "Mar", "Apr", "May", "Jun",\
+                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"/)
+      res@tiXAxisString          = "Year"
       ;res@tmXBLabelsOn = False
       res@tmXBLabelFontHeightF = 0.028
       res@tiXAxisFontHeightF  = 0.028
-
 
     res@tmYLMajorOutwardLengthF = 0.0               ; draw tickmarks inward
     res@tmYLMinorOutwardLengthF = 0.0               ; draw minor ticks inward
@@ -418,10 +428,10 @@ if (PLOT) then
     res@tmXBMinorOutwardLengthF = 0.0              
 
     res@vpWidthF             = 1.0
-    res@vpHeightF            = 0.6          ; set height of plot
+    res@vpHeightF            = 0.5          ; set height of plot
 
     res@tiMainString        = ""
-    res@tiXAxisString       = "Year"
+    res@tiXAxisString       = "Month"
     res@tiYAxisString       = "CO column"
 
   ; -------------------------------
@@ -432,7 +442,7 @@ if (PLOT) then
     res@xyLineColor         = "black"
     res@xyLineThicknessF    = 10.5
     res@xyDashPatterns      =1
-  plot1 = gsn_csm_xy(wks,avg_clim_yfrac,mopitt_seas_avg(:,0)/1e18,res)
+  plot1 = gsn_csm_xy(wks,mopitt_seas_avg&year_day,mopitt_seas_avg(:,0)/1e18,res)
 
     res@tiYAxisString       = ""
     res@tiXAxisString       = ""
@@ -440,7 +450,7 @@ if (PLOT) then
   if (PLOTFTS) then
   ; FTS
     res@xyLineColor         = "gray50"
-  plot1b = gsn_csm_xy(wks,avg_clim_yfrac,fts_seas_avg(:,0)/1e18,res)
+  plot1b = gsn_csm_xy(wks,fts_seas_avg&year_day,fts_seas_avg(:,0)/1e18,res)
   overlay(plot1, plot1b)
   end if ;(PLOTFTS)
 
@@ -450,8 +460,47 @@ if (PLOT) then
   ; CAM-chem
     res@xyLineColor         = "black"
     res@xyDashPatterns      =0
-  plot1c = gsn_csm_xy(wks,avg_clim_yfrac,model_seas_avg(:,0)/1e18,res)
+  plot1c = gsn_csm_xy(wks,model_seas_avg&year_day,model_seas_avg(0,:)/1e18,res)
   overlay(plot1, plot1c)
+
+  ; -------------------------------
+  ; add in model sums
+  ; -------------------------------
+printVarSummary(model_seas_avg)
+  data      = new((/6,dimsizes(model_seas_avg&year_day)/),double)
+printVarSummary(data)
+   data(0,:) = model_seas_avg&year_day*0
+   ;methox
+   data(1,:) = model_seas_avg(1,:)
+   ;anth
+   data(2,:) = model_seas_avg(1,:)+model_seas_avg(3,:)
+   ;res
+   data(3,:) = model_seas_avg(1,:)+model_seas_avg(3,:)+model_seas_avg(5,:)
+   ; biog
+   data(4,:) = model_seas_avg(5,:)+model_seas_avg(1,:)+model_seas_avg(3,:)+model_seas_avg(2,:)
+   ; bb
+   data(5,:) = model_seas_avg(5,:)+model_seas_avg(1,:)+model_seas_avg(3,:)+model_seas_avg(2,:)\
+                +model_seas_avg(4,:)
+
+    above_colors = (/"steelblue3","lemonchiffon4","lightgoldenrod1","springgreen3","firebrick2"/)
+    below_colors = (/"steelblue3","lemonchiffon4","lightgoldenrod1","springgreen3","firebrick2"/)
+    res@xyLineColors         = (/"steelblue3","lemonchiffon4","lightgoldenrod1","springgreen3","firebrick2"/)
+    res@gsnXYAboveFillColors = above_colors
+    res@gsnXYBelowFillColors = below_colors
+
+    res@xyLineThicknessF         = 14.5
+    ;res@pmLegendDisplayMode      = "Always"        ; turn on legend
+    res@xyExplicitLegendLabels   = (/"methane ox", "anthropogenic", "VOC oxidation",  "biogenic",\
+                                     "biomass burning","total"/)
+    res@lgPerimOn                = False           ; Turn off perimeter
+    res@pmLegendWidthF           = 0.15            ; Change width and
+    res@pmLegendHeightF          = 0.20             ; height of legend
+    res@lgLabelFontHeightF       = 0.024
+    ;res@lbJustification          = "TopLeft"
+
+
+  plot1d = gsn_csm_xy(wks,model_seas_avg&year_day,data/1e18,res)
+  overlay(plot1, plot1d)
 
   ; -------------------------------
   ; ADD CUSTOM TEXT
@@ -462,11 +511,12 @@ if (PLOT) then
   txres@txFontHeightF = 0.022                   ; font smaller. default big
   txres@txJust = "CenterLeft"                   ; font smaller. default big
   txres@txFontColor = "black"
-  gsn_text_ndc(wks,"MOPITT "+version+suff,0.78,0.80,txres)
+  gsn_text_ndc(wks,"MOPITT "+version+suff,0.78,0.78,txres)
   txres@txFontColor = "gray50"
-  gsn_text_ndc(wks,"FTS ("+network+")",0.78,0.83,txres)
+  gsn_text_ndc(wks,"FTS ("+network+")",0.78,0.75,txres)
+  txres@txFontHeightF = 0.024                   ; font smaller. default big
   txres@txFontColor = "black"
-  gsn_text_ndc(wks,location,0.78,0.86,txres)
+  gsn_text_ndc(wks,location,0.15,0.69,txres)
 
   ; -------------------------------
   ; DRAW IT OUT

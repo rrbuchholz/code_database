@@ -230,7 +230,7 @@ begin
   ; -------------------------------
   ; DETREND
   ; ------------------------------- 
-    startyear = years(0)
+    startyear = year_s
     endyear = years(dimsizes(years)-1)
     ymid = (tofloat(endyear-startyear))/2
 
@@ -346,7 +346,11 @@ printVarSummary(detrend_fts_smooth)
   ; -------------------------------
   ; CLIMATOLOGICAL DAY AVERAGES 
   ; ------------------------------- 
+  if (location.eq."Darwin") then
     fts_climate_time = yyyymmdd_time(toint(fts_years(0)), toint(fts_years(dimsizes(fts_years)-1)), "integer")
+  else
+    fts_climate_time = yyyymmdd_time(year_s, toint(fts_years(dimsizes(fts_years)-1)), "integer")
+  end if
     fts_climate_doy = yyyymmdd_to_yyyyddd(fts_climate_time)
     fts_climate_yfrac = yyyymmdd_to_yyyyfrac(fts_climate_time, 0.5)
 
