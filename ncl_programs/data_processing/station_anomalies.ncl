@@ -33,10 +33,10 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Wollongong"
+  location = "Darwin"
   surface = "land"
   year_s = 2001
-  network = "NDACC"
+  network = "TCCON"
 
   ;------------
   ; scale of outside sd
@@ -134,7 +134,8 @@ begin
   end if
 
   if (ASCII) then
-     outname      = location+"_"+delta_deg+"deg_"+version+"MOPITTavg_"+f1suffix+".txt"
+     outname      = "/IASI/home/buchholz/MOPITT_subset/"+version+"/"+\
+                    location+"_significant_events"+event_scale+"sigma.txt"
   end if
 
   time_diff_sec = time_diff*60*60
@@ -347,7 +348,7 @@ printVarSummary(detrend_fts_smooth)
   ; CLIMATOLOGICAL DAY AVERAGES 
   ; ------------------------------- 
   if (location.eq."Darwin") then
-    fts_climate_time = yyyymmdd_time(toint(fts_years(0)), toint(fts_years(dimsizes(fts_years)-1)), "integer")
+    fts_climate_time = yyyymmdd_time(year_s, toint(fts_years(dimsizes(fts_years)-1)), "integer")
   else
     fts_climate_time = yyyymmdd_time(year_s, toint(fts_years(dimsizes(fts_years)-1)), "integer")
   end if
@@ -906,6 +907,17 @@ end if
 if (ASCII) then
   ; saves MOPITT events
 
+
+ alist = [/event_label(0:dimsizes(event_times)-1), event_time_plot(0:dimsizes(event_times)-1),\
+          event_times(0:dimsizes(event_times)-1)/]
+
+ header = (/"--------------------------------", \
+            "Event, yfraction, YYYYMMDD"     ,\
+            "--------------------------------"/)
+ hlist = [/header/]
+
+ write_table(outname, "w", hlist, "%s")
+ write_table(outname, "a", alist, "%s,%10.4f,%9d")
 
 end if ;ASCII
 

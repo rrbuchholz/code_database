@@ -1,5 +1,5 @@
 ;=======================================================;
-;  station_seasonal_cycles.ncl 
+;  model_anomaly_analysis.ncl 
 ;=======================================================;
 ;
 ; Concepts illustrated:
@@ -48,12 +48,12 @@
 ;   CO30           Anthropogenic CO in Northern Hemisphere
 ;
 ;   Files needed:
-;         -MOPITT subset of level 2, daily hdf files
-;         -FTS files
+;         -Text file with anomaly dates
+;
 ;
 ;   To run type:
-;         avg-plus-event-identify.ncl
-;                                  RRB April 19, 2018
+;         model_anomaly_analysis.ncl
+;                                  RRB April 23, 2018
 ;=======================================================;
 ; load the libraries
 load "~/code_database/ncl_programs/buchholz_global_util/calc_seasonal_cycle.ncl"
@@ -69,10 +69,16 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Lauder"
+  location = "Wollongong"
   surface = "land"
   year_s = 2001
   network = "NDACC"
+
+  ; -------------------------------
+  ; CAM-chem files
+  ; -------------------------------
+  anomaly_folder = "~/MOPITT_subset/V7/"
+  anomaly_filename = systemfunc ("ls "+anomaly_folder+location+"*.txt")
 
   ; -------------------------------
   ; CAM-chem files
@@ -101,21 +107,6 @@ begin
 ;--------------------------------------------
 ; set up
 ;--------------------------------------------
-  ; -------------------------------
-  ; MOPITT
-  ; -------------------------------
-  ; names of data structures
-  ; determined from an ncl_filedump
-  sat_tcol      = "RetrievedCOTotalColumn_WGT"
-  timearray     = "Time_AVG"
-
-  ; -------------------------------
-  ; FTS
-  ; -------------------------------
-  ; names of data structures
-  ; determined from an ncl_filedump
-  fts_tracer         = "CO_COLUMN_ABSORPTION_SOLAR"
-  fts_datetime       = "DATETIME"
 
   ; -------------------------------
   ; STATION PARAMETERS
@@ -143,29 +134,14 @@ begin
   end if
 
   ; -------------------------------
-  ; Input file set-up
-  ; -------------------------------
-  ; MOPITT
-  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/"
-  mopitt_file = systemfunc ("ls "+mopitt_general+location+"_1deg_"+version+suff+"*all_"+surface+".nc")
-
-  ; FTS
-  if (network.eq."TCCON") then
-      fts_files =  systemfunc ("ls /IASI/home/buchholz/FTS_data/TCCON/co/"+sm_location+"/*.public.nc")
-  else
-      fts_files =  systemfunc ("ls /IASI/home/buchholz/FTS_data/NDACC/co/"+sm_location+"/groundbased_ftir.co_*.hdf")
-  end if
-
-  ; -------------------------------
   ; OUTPUT RELATED SETUP
   ; -------------------------------
   if (PLOT) then
     pltdir       = "./"
-    pltname      = version+"mopitt_l2_vs_fts_" + location
+    pltname      = "Anomaly_analysis_" + location
   end if
 
   time_diff_sec = time_diff*60*60
-
 
   ; -------------------------------
   ; CONSTANTS
@@ -181,67 +157,25 @@ begin
 ; load file and extract
 ;--------------------------------------------
   ; -------------------------------
-  ; MOPITT
+  ; ANOMALIES
   ; -------------------------------
-  ; read data from region
-  fin = addfile(mopitt_file, "r")            ; read in
+  ;---Read the values in as 1D, since we don't know rows and columns yet.
+  lines  := asciiread(anomaly_filename,-1,"string")
+  delim  = ", "
 
-    ; select over a time slice
-    mopitt_time_dummy    = fin->$timearray$  
-    mopitt_date_dummy    = cd_calendar(mopitt_time_dummy, 0)
-      years_dummy = floattointeger(mopitt_date_dummy(:,0))
-      year_select_ind = ind(years_dummy.ge.year_s)
+    ncols  := dimsizes(str_split(lines(3),delim))
+    nlines := dimsizes(lines)-3
+    print("File , Columns:"+ncols+", Lines:"+nlines)
 
-    ; read in MOPITT data
-    print("***Reading MOPITT data at " + location)
-    mopitt_tcol    = fin->$sat_tcol$(year_select_ind)
-    mopitt_time    = mopitt_time_dummy(year_select_ind)     
-     ; local time in seconds since 1993-1-1 00:00:00 (TAI93)
-    mopitt_date    = cd_calendar(mopitt_time, 0)
-      years  = floattointeger(mopitt_date(:,0))
-    yyyymmdd       = cd_calendar(mopitt_time, 2)
-    day_yfrac      = cd_calendar(mopitt_time, 4)
+  fields  := readAsciiTable(anomaly_filename,ncols-1,"integer",3)
 
-  if (PLOTFTS) then
-  ; -------------------------------
-  ; FTS
-  ; -------------------------------
-    fts_in = addfiles (fts_files, "r")
-    ListSetType (fts_in, "cat")             ; concatenate or "merge" (default)
+  ;---Reshape as 2D array, and convert to float for ppm/ppb/ppt.
+  event_names := new(nlines,"string")
+    ;Remember that fields start at 1, not 0.
+    event_names = str_get_field(lines(3:),1,delim)
 
-   if (network.eq."TCCON") then
-    print("***Reading FTS data at " + location)
-    fts_xco            = fts_in[:]->$"xco_ppb"$
-    fts_psurf          = fts_in[:]->$"pout_hPa"$
-    ; convert xCO to tcol
-    fts_tcol = (xp_const * fts_xco) * fts_psurf
-    ; Date in MJD2000, fraction of days since 
-    ; 1970/1/1 00:00:00
-    fts_mjd2000         = fts_in[:]->$"time"$
-    fts_local           = fts_mjd2000+(time_diff/24.)
-    fts_local@units     = "days since 1970-01-01 00:00:0.0"
+   event_dates = toint(fields(:,1))
 
-   else
-    print("***Reading FTS data at " + location)
-    ; SELECT FTS DATA AFTER STARTDATE
-    fts_mjd2000_dummy    = fts_in[:]->$fts_datetime$
-    fts_local_dummy      = fts_mjd2000_dummy +(time_diff/24.)
-      fts_local_dummy@units = "days since 2000-01-01 00:00:0.0"
-    fts_date_dummy       = cd_calendar(fts_local_dummy , 0)
-      fts_years_dummy    = floattointeger(fts_date_dummy(:,0))
-      year_select_fts    = ind(fts_years_dummy.ge.year_s)
-
-    fts_tcol_dummy       = fts_in[:]->$fts_tracer$
-      fts_tcol           = fts_tcol_dummy(year_select_fts)
-      copy_VarMeta(fts_tcol_dummy, fts_tcol)
-    fts_local            = fts_local_dummy(year_select_fts)
-  end if
-
-    fts_date             = cd_calendar(fts_local, 0)
-      fts_years          = floattointeger(fts_date(:,0))
-    fts_yyyymmdd         = cd_calendar(fts_local, 2)
-
-  end if ;(PLOTFTS)
 
   ; -------------------------------
   ; CAM-chem
@@ -254,6 +188,7 @@ begin
     model_time           = model_in[:]->time
     model_date           = cd_calendar(model_time, 0)
       model_years        = floattointeger(model_date(:,0))
+    model_yyyymmdd       = cd_calendar(model_time, 2)
 
   ; -------------------------------
   ; loop over extracting tracers
@@ -263,17 +198,17 @@ begin
             "CO21", "CO22", "CO23", "CO24", "CO25", "CO26", "CO27", "CO28", "CO29", "CO30"/)
 
   ; set-up tcol collection array
-    tcol_arr   = new((/dimsizes(model_time),dimsizes(tracer)/), float)
+    tcol_arr   = new((/dimsizes(tracer), dimsizes(model_time)/), float)
 
   do i = 0, dimsizes(tracer)-1
      varname = tracer(i)+"_TotalColumn"
      tcol     := model_in[:]->$varname$
      if (location.eq."Darwin") then
-       tcol_arr(:,i) = tcol(:,0)
+       tcol_arr(i,:) = tcol(:,0)
      else if (location.eq."Wollongong") then
-       tcol_arr(:,i) = tcol(:,1)
+       tcol_arr(i,:) = tcol(:,1)
      else if (location.eq."Lauder") then
-       tcol_arr(:,i) = tcol(:,2)
+       tcol_arr(i,:) = tcol(:,2)
      end if
      end if
      end if
@@ -287,86 +222,22 @@ begin
 ; perform calculations
 ;--------------------------------------------
   ; -------------------------------
-  ; Time definitions
-  ; ------------------------------- 
-    climate_time = yyyymmdd_time(toint(years(0)), toint(years(dimsizes(years)-1)), "integer")
-      climate_yyyy  = climate_time/10000 
-      climate_mmdd  = climate_time-climate_yyyy*10000
-      climate_mm    = climate_mmdd/100
-      climate_dd    = climate_mmdd-climate_mm*100
-      ; create arrays [*] of required size
-      climate_hh    = climate_dd                                 
-      climate_mn    = climate_dd
-      climate_sc    = climate_dd
-      ; replace entries with 0 using array syntax
-      climate_hh    = 0                                  
-      climate_mn    = 0
-      climate_sc    = 0
-      climate_units  = "days since 1970-01-01 00:00:0.0" 
-
-      climate_inv_time = cd_inv_calendar(climate_yyyy,climate_mm,climate_dd,climate_hh,climate_mn,\
-                                climate_sc,climate_units, 0)
-      climate_inv_time!0 = "time"
-
-  ; -------------------------------
-  ; MOPITT
-  ; -------------------------------
-  mopitt_seas_avg = calc_seasonal_cycle(mopitt_tcol,mopitt_time,year_s,years(dimsizes(years)-1), 230)
-    Clm_doy = mopitt_seas_avg&year_day                    ;366 days in climate year
-    climate_year = yyyyddd_to_yyyymmdd(2004000+mopitt_seas_avg&year_day)
-    avg_clim_yfrac = yyyymmdd_to_yyyyfrac(climate_year, 0.5)
-    split_mm =str_split_by_length(tostring(climate_year),2)
-
-
-  ;********************************************
-  if (PLOTFTS) then
-  ; -------------------------------
-  ; FTS
-  ; -------------------------------
-  ; -------------------------------
-  ; DAY AVERAGE VALUES
-  ; ------------------------------- 
-    fts_dayavg = new(dimsizes(climate_time),double)   ;needs to be 3D for climate calculations
-    do i = 0, dimsizes(climate_time)-1
-      fts_dayavg_ind := ind(toint(fts_yyyymmdd).eq.climate_time(i))
-      if (.not.ismissing(fts_dayavg_ind(0)))then
-        fts_dayavg(i) = avg(fts_tcol(fts_dayavg_ind))
-      end if
-    end do
-
-    ind_nomissing = ind(.not.ismissing(fts_dayavg))
-
-  ; -------------------------------
-  ; CALC SEAS CYCLE
-  ; ------------------------------- 
-  if (location.eq."Darwin") then
-    fts_seas_avg = calc_seasonal_cycle(fts_dayavg(ind_nomissing),climate_inv_time(ind_nomissing),\
-                                       fts_years(0), fts_years(dimsizes(fts_years)-1), 300)
-  else
-    fts_seas_avg = calc_seasonal_cycle(fts_dayavg(ind_nomissing),climate_inv_time(ind_nomissing),\
-                                       year_s, fts_years(dimsizes(fts_years)-1), 300)
-  end if
-
-
-  end if ;(PLOTFTS)
-
-  ; -------------------------------
-  ; CAM-chem
+  ; CAM-chem seaonality
   ; -------------------------------
 
-    methox_co = tcol_arr(:,1)
-    biog_co = tcol_arr(:,2)
-    anth_co = dim_sum_n(tcol_arr(:,29:30),1)
-      nh_anth_co = tcol_arr(:,30)
-      sh_anth_co = tcol_arr(:,29)
-    bb_co = dim_sum_n(tcol_arr(:,15:16),1)
-      bb_aus = tcol_arr(:,3)
-      bb_SAm = tcol_arr(:,12)
-      bb_SAf = tcol_arr(:,9)
-      bb_MSEA = tcol_arr(:,4)
+    methox_co = tcol_arr(1,:)
+    biog_co = tcol_arr(2,:)
+    anth_co = dim_sum_n(tcol_arr(29:30,:),0)
+      nh_anth_co = tcol_arr(30,:)
+      sh_anth_co = tcol_arr(29,:)
+    bb_co = dim_sum_n(tcol_arr(15:16,:),0)
+      bb_aus = tcol_arr(3,:)
+      bb_SAm = tcol_arr(12,:)
+      bb_SAf = tcol_arr(9,:)
+      bb_MSEA = tcol_arr(4,:)
       other_bb = bb_co-(bb_aus+bb_SAm+bb_SAf)
-    residual_co = tcol_arr(:,0)-bb_co-anth_co-biog_co-methox_co
-    data_collect = (/todouble(tcol_arr(:,0)), todouble(methox_co), todouble(nh_anth_co), \
+    residual_co = tcol_arr(0,:)-bb_co-anth_co-biog_co-methox_co
+    data_collect = (/todouble(tcol_arr(0,:)), todouble(methox_co), todouble(nh_anth_co), \
                      todouble(sh_anth_co), todouble(residual_co),todouble(biog_co), \
                      todouble(bb_aus), todouble(bb_SAm), todouble(bb_SAf), todouble(other_bb)/)
 
@@ -380,34 +251,43 @@ begin
       model_seas_sd(j,:)=model_seas_return(:,1)
     end do 
 
-   
+    model_ClmDay = model_seas_avg&year_day
+
   ; -------------------------------
-  ; PRINT SEASONAL CYCLE INFORMATION
+  ; EXPAND TO WHOLE TIME PERIOD
   ; -------------------------------
-   name_array = (/"  MOPITT", "     FTS", "CAM-chem"/)
-   peak_date = new(dimsizes(name_array), double)
-   max_vals = new(dimsizes(name_array), double)
-     max_vals(0) = max(mopitt_seas_avg(:,0))/avg(mopitt_seas_avg(:,0))
-     peak_day = ind(mopitt_seas_avg(:,0).eq.max(mopitt_seas_avg(:,0)))
-     peak_date(0) = monthday(2004,Clm_doy(peak_day))
-     max_vals(1) = max(fts_seas_avg(:,0))/avg(fts_seas_avg(:,0))
-     peak_day = ind(fts_seas_avg(:,0).eq.max(fts_seas_avg(:,0)))
-     peak_date(1) = monthday(2004,Clm_doy(peak_day))
-     max_vals(2) = max(model_seas_avg(0,:))/avg(model_seas_avg(0,:))
-     peak_day = ind(model_seas_avg(0,:).eq.max(model_seas_avg(0,:)))
-     peak_date(2) = monthday(2004,Clm_doy(peak_day))
-   min_vals = new(dimsizes(name_array), double)
-     min_vals(0) = min(mopitt_seas_avg(:,0))/avg(mopitt_seas_avg(:,0))
-     min_vals(1) = min(fts_seas_avg(:,0))/avg(fts_seas_avg(:,0))
-     min_vals(2) = min(model_seas_avg(0,:))/avg(model_seas_avg(0,:))
+    model_doy = yyyymmdd_to_yyyyddd(toint(model_yyyymmdd))
+    model_split_doy = str_split_by_length(tostring(model_doy),4)
+    model_day_climate_sm = new((/dimsizes(model_seas_avg(:,0)), dimsizes(model_yyyymmdd)/),double)
+    do t=0, dimsizes(model_seas_avg(:,0))-1
+    do d=0,dimsizes(model_ClmDay)-1
+      clm_index := ind((toint(model_split_doy(:,1)).eq.model_ClmDay(d)))
+      model_day_climate_sm(t, clm_index)=model_seas_avg(t, d)
+    end do
+    end do
+    model_yfrac = cd_calendar(model_time, 4)
 
-   peak_to_trough = max_vals-min_vals
-
-   print("******************************")
-   print(name_array+" Peak-to-trough: "+sprintf("%6.4g",peak_to_trough*100) \
-         + "%; Peak date (MMDD): "+peak_date)
+  ; -------------------------------
+  ; DAILY ANOMALIES
+  ; -------------------------------
+    model_day_anom = data_collect-model_day_climate_sm
 
 
+;--------------------------------------------
+; GET CAM-chem anomaly dates
+;--------------------------------------------
+   model_anomaly_dummy=new(dimsizes(event_dates), integer)
+   do k= 0, dimsizes(event_dates)-1
+     model_anomaly_dummy(k) = ind(model_yyyymmdd.eq.event_dates(k))
+   end do
+
+   ; account for missing values
+   remove_missing = ind(.not.ismissing(model_anomaly_dummy))
+   model_anomaly = model_anomaly_dummy(remove_missing)
+   anomaly_yfrac = yyyymmdd_to_yyyyfrac(event_dates(remove_missing),0.5)
+   plot_xvals = ispan(0,dimsizes(anomaly_yfrac)-1,1)
+
+ 
 ;********************************************
 ;--------------------------------------------
 ; plot
@@ -422,82 +302,88 @@ if (PLOT) then
     res@gsnFrame            = False                     ; don't advance frame
     res@gsnMaximize         = True
 
-    res@trYMinF             = 0.0
+    res@trYMinF             = -1.0
     ; MAX for Different stations
     if (location.eq."Darwin") then
-       res@trYMaxF             = 2.5
-       res@trYMinF             = 0.0
+       res@trYMaxF             = 0.3
+       res@trYMinF             = -0.3
     else if (location.eq."Lauder") then
-       res@trYMaxF             = 2.0
-       res@trYMinF             = 0.0
+       res@trYMaxF             = 0.85
+       res@trYMinF             = -0.2
     else if (location.eq."Wollongong") then
-       res@trYMaxF             = 2.0
-       res@trYMinF             = 0.0
+       res@trYMaxF             = 0.9
+       res@trYMinF             = -0.2
     else
        res@trYMaxF             = 3.5
     end if
     end if
     end if
-    res@trXMinF             = 0
-    res@trXMaxF             = 367
+    res@trXMinF             = -0.5
+    res@trXMaxF             = plot_xvals(dimsizes(plot_xvals)-1)+1.5
 
     res@tmYLMode        = "Manual"	
-      res@tmYLTickStartF  = 0.0
+      res@tmYLTickStartF  = -1.0
       res@tmYLTickEndF    = 4.5
       res@tmYLTickSpacingF= 0.5
-      res@tmYLLabelFontHeightF = 0.028
-      res@tiYAxisFontHeightF  = 0.028
+      res@tmYLLabelFontHeightF = 0.024
+      res@tiYAxisFontHeightF  = 0.024
 
     res@tmXBMode              = "Explicit"
-      res@tmXBValues           = (ispan(15,365,30))
-      res@tmXBLabels           = (/"Jan", "Feb", "Mar", "Apr", "May", "Jun",\
-                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"/)
-      res@tiXAxisString          = "Year"
+      res@tmXBValues           = plot_xvals
+      res@tmXBLabels           = event_names(remove_missing)
       ;res@tmXBLabelsOn = False
-      res@tmXBLabelFontHeightF = 0.028
-      res@tiXAxisFontHeightF  = 0.028
+      res@tmXBLabelFontHeightF = 0.024
+      res@tiXAxisFontHeightF  = 0.024
 
     res@tmYLMajorOutwardLengthF = 0.0               ; draw tickmarks inward
     res@tmYLMinorOutwardLengthF = 0.0               ; draw minor ticks inward
     res@tmXBMajorOutwardLengthF = 0.0               
     res@tmXBMinorOutwardLengthF = 0.0              
 
-    res@vpWidthF             = 1.0
-    res@vpHeightF            = 0.5          ; set height of plot
+    res@vpWidthF             = 0.85
+    res@vpHeightF            = 0.2          ; set height of plot
     ;res@vpYF                 = 1.0
 
     res@tiMainString        = ""
-    res@tiXAxisString       = "Month"
+    res@tiXAxisString       = "Event"
     res@tiYAxisString       = "CO column"
 
+    res@gsnStringFontHeightF     = 0.024
+
+    colors_tags = (/"steelblue3","lemonchiffon4","lemonchiffon3","lightgoldenrod1","springgreen3",\
+                     "firebrick4", "firebrick2", "sienna2", "orange", "black"/)
   ; -------------------------------
   ; timeseries - weekly averages and climatology
   ; -------------------------------
   ; daily smooth seasonal cycle
-  ; MOPITT
-    res@xyLineColor         = "black"
-    res@xyLineThicknessF    = 10.5
-    res@xyDashPatterns      =1
-  plot1 = gsn_csm_xy(wks,mopitt_seas_avg&year_day,mopitt_seas_avg(:,0)/1e18,res)
-
-    res@tiYAxisString       = ""
-    res@tiXAxisString       = ""
-
-  if (PLOTFTS) then
-  ; FTS
-    res@xyLineColor         = "gray50"
-  plot1b = gsn_csm_xy(wks,fts_seas_avg&year_day,fts_seas_avg(:,0)/1e18,res)
-  overlay(plot1, plot1b)
-  end if ;(PLOTFTS)
-
-    res@gsnLeftString            := "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
-    res@gsnStringFontHeightF     = 0.028
-
   ; CAM-chem
     res@xyLineColor         = "black"
-    res@xyDashPatterns      =0
-  plot1c = gsn_csm_xy(wks,model_seas_avg&year_day,model_seas_avg(0,:)/1e18,res)
-  overlay(plot1, plot1c)
+    res@gsnYRefLine           = 0.              ; reference line   
+    res@gsnXYBarChart         = True            ; create bar chart 
+    res@gsnXYBarChartBarWidth = 0.10           ; change bar widths
+    ; base plot
+    plot1 = gsn_csm_xy(wks,plot_xvals,model_day_anom(0,model_anomaly)*0,res)
+
+    ; -------------------------------
+    ; add in model sums
+    ; -------------------------------
+    ;data      = new((/dimsizes(model_day_anom(:,:))/),double)
+    ; data(0,:) = model_day_anom&year_day*0
+    ;do k=1, dimsizes(model_day_anom(:,0))-1
+    ;   data(k,:) = data(k-1,:)+ model_seas_avg(k,:)
+    ;end do
+
+    do i = 0,dimsizes(data_collect(:,0))-2
+      res@gsnXYBarChartColors = colors_tags(i)	
+      plot1b = gsn_csm_xy(wks,plot_xvals+(0.10*(i+1)),model_day_anom(i+1,model_anomaly)/1e18,res)
+      overlay(plot1,plot1b)
+    end do
+
+
+    res@gsnXYBarChartColors = "black"	
+    res@gsnLeftString            := "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
+    plot1_final = gsn_csm_xy(wks,plot_xvals,model_day_anom(0,model_anomaly)/1e18,res)
+    overlay(plot1,plot1_final)
 
   ; -------------------------------
   ; add in model sums
@@ -531,8 +417,8 @@ if (PLOT) then
     ;res@lbJustification          = "TopLeft"
 
 
-  plot1d = gsn_csm_xy(wks,model_seas_avg&year_day,data/1e18,res)
-  overlay(plot1, plot1d)
+  ;plot1d = gsn_csm_xy(wks,model_seas_avg&year_day,data/1e18,res)
+  ;overlay(plot1, plot1d)
 
   ; -------------------------------
   ; ADD CUSTOM TEXT
@@ -543,12 +429,7 @@ if (PLOT) then
   txres@txFontHeightF = 0.022                   ; font smaller. default big
   txres@txJust = "CenterLeft"                   ; font smaller. default big
   txres@txFontColor = "black"
-  gsn_text_ndc(wks,"MOPITT "+version+suff,0.78,0.78,txres)
-  txres@txFontColor = "gray50"
-  gsn_text_ndc(wks,"FTS ("+network+")",0.78,0.75,txres)
-  txres@txFontHeightF = 0.024                   ; font smaller. default big
-  txres@txFontColor = "black"
-  gsn_text_ndc(wks,location,0.15,0.69,txres)
+  gsn_text_ndc(wks,location,0.15,0.56,txres)
 
   ; -------------------------------
   ; DRAW IT OUT
