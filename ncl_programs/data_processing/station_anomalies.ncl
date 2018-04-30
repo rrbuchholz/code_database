@@ -33,10 +33,10 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Darwin"
+  location = "Wollongong"
   surface = "land"
   year_s = 2001
-  network = "TCCON"
+  network = "NDACC"
 
   ;------------
   ; scale of outside sd
@@ -220,6 +220,7 @@ begin
     fts_yyyymmdd         = cd_calendar(fts_local, 2)
 
   end if ;(PLOTFTS)
+
 
 ;********************************************
 ;--------------------------------------------
