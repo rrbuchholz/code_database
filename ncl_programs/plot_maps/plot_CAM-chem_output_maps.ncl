@@ -22,7 +22,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "O3"
+  tracer = "ISOP"
+  region = "Australia"
 
   ; -------------------------------
   ; file location
@@ -33,35 +34,42 @@ begin
 
   camfile_2 = systemfunc ("ls "+in_folder+"/noanth/*ANN*.nc")
 
-  camfile_3 = systemfunc ("ls "+in_folder+"/diff/*ANN*.nc")
-
 
   ;------------
   ; toggles
   ;------------
   PLOT           = True
 
-
-  region_name =  "World"
-    ; latmin                         = -45               ; zoom to Australia
-    ;  latmax                         = -10
-    ;  lonmin                         = 100
-    ;  lonmax                         = 160
-
-    ; latmin                         = 20               ; zoom to North America
-    ;  latmax                         = 60
-    ;  lonmin                         = 220
-    ;  lonmax                         = 300
-
-    ;  latmin                         = -40               ; zoom to Amazon
-    ;  latmax                         = 10
-    ;  lonmin                         = 270
-    ;  lonmax                         = 330
-
+  if (region.eq."World") then
       latmin                         = -90               ; zoom to World
       latmax                         = 90
       lonmin                         = 0
       lonmax                         = 360
+      loncenter                      = 180
+      region_name =  "World"
+  else if (region.eq."Australia") then
+     latmin                          = -50               ; zoom to Australia
+      latmax                         = -10
+      lonmin                         = 100
+      lonmax                         = 180
+      loncenter                      = 140
+      region_name =  "Australia"
+  else if (region.eq."CONUS") then
+      latmin                          = 20               ; zoom to North America
+      latmax                         = 60
+      lonmin                         = 220
+      lonmax                         = 300
+      loncenter                      = 260
+      region_name =  "NorthAmerica"
+  else if (region.eq."Amazon") then
+    ;  latmin                         = -40               ; zoom to Amazon
+    ;  latmax                         = 10
+    ;  lonmin                         = 270
+    ;  lonmax                         = 330
+  end if
+  end if
+  end if
+  end if
 
 
 ;--------------------------------------------
@@ -77,34 +85,41 @@ begin
   if (PLOT) then
     mapType = "x11"
     mapName = tracer+"_diff"
-    mapType@wkWidth = 800
-    mapType@wkHeight = 1000 
+    mapType@wkWidth = 1200
+    mapType@wkHeight = 1200 
   end if ;PLOT
 
 
   cr = "~C~"
 
 ;********************************************
+;-------------------
 ; load files and extract
+;-------------------
   fin = addfiles(camfile_1, "r")
    tracer_fields_1  = fin[:]->$tracer$
+   tracer_fields_1= tracer_fields_1/1e-09
 
   fin2 = addfiles(camfile_2, "r")
    tracer_fields_2  = fin2[:]->$tracer$
+   tracer_fields_2= tracer_fields_2/1e-09
 
-  fin3 = addfiles(camfile_3, "r")
-   tracer_fields_3  = fin3[:]->$tracer$
-glob_avg = dim_avg_n(tracer_fields_1(:,:,{0:70},{220:300}), (/2,3/))
-glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
-  test = (tracer_fields_1-tracer_fields_2)/glob_avg_array
-  ;lonFlip(test)
-  copy_VarAtts(tracer_fields_1, test)
-  copy_VarCoords(tracer_fields_1, test)
 
-printVarSummary(tracer_fields_1)
-printVarSummary(test)
+;-------------------
+; calculations
+;-------------------
+  glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
+  ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
+  glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
+  rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array
+    copy_VarAtts(tracer_fields_1, rel_glob_diff)
+    copy_VarCoords(tracer_fields_1, rel_glob_diff)
 
-  ;********************************************
+  rel_glob_avg  = tracer_fields_1/glob_avg_array
+    copy_VarAtts(tracer_fields_1, rel_glob_avg)
+    copy_VarCoords(tracer_fields_1, rel_glob_avg)
+
+;********************************************
   ;-------------------
   ; MAP PLOT
   ;-------------------
@@ -117,15 +132,12 @@ printVarSummary(test)
     ;-------------------
     mapres = True
     mapres@tiMainString              = ""                  ; changing main large title
-    mapres@gsnLeftString             = ""                  ; change left 
-  ;  mapres@gsnRightString            = emiss_diff@units    ; change right title
     mapres@gsnFrame                  = False               ; do not advance frame
     mapres@gsnDraw		     = False	           ; don't draw it yet
     mapres@gsnMaximize               = True  
 
-
-    mapres@gsnLeftStringFontHeightF  = 0.015
-    mapres@gsnRightStringFontHeightF  = 0.015
+    mapres@gsnLeftStringFontHeightF  = 0.016
+    mapres@gsnRightStringFontHeightF = 0.016
 
     mapres@cnFillOn                  = True
     mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
@@ -138,39 +150,44 @@ printVarSummary(test)
       mapres@mpMaxLatF               = latmax
       mapres@mpMinLonF               = lonmin
       mapres@mpMaxLonF               = lonmax
+      mapres@mpCenterLonF            = loncenter
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-      mapres@cnMinLevelValF          = 0e-08                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 4e-08                ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 2e-09                ; set the interval between contours
-
-      ;mapres@cnMinLevelValF          = 0                 ; set the minimum contour level
-      ;mapres@cnMaxLevelValF          = 1e13                ; set the maximum contour level
-      ;mapres@cnLevelSpacingF         = 5e11                ; set the interval between contours
-
+      mapres@cnMinLevelValF          = 0.                ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 3.                ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
 
     ;-------------------
     ; do the plotting
     ;-------------------
     panel_res                       = True
-      panel_res@txString            = "CAM-chem "+ tracer
+      panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
-     ; panel_res@gsnFrame          = False             ; don't advance frame yet
-     ; panel_res@gsnDraw           = False             ; draw later, in maximize mode
-
+      mapres@gsnRightString        = "ppb" 
+      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " with Anthropogenic emissions" 
       mapres@cnFillPalette       = "BlAqGrYeOrRe"
     map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
+
+      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " without Anthropogenic emissions"
     map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
 
+     mapres@cnFillPalette       = "WhiteYellowOrangeRed"
+     mapres@cnMinLevelValF          = 0              ; set the minimum contour level
+     mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
+     mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
+     mapres@gsnLeftString     = "Anth_sim concentrations relative to CONUS anth_sim average"   ;
+     mapres@gsnRightString     = "" 
+    map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
 
-     mapres@cnFillPalette       = "BlueDarkRed18"
+     mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to CONUS anth_sim average"   ;
+     mapres@cnFillPalette       = "hotcold_18lev"
      mapres@cnMinLevelValF          = -1.              ; set the minimum contour level
      mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
      mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
-    map3 = gsn_csm_contour_map_ce(wks,test(0,55,:,:),mapres)
+    map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
 
 
-    gsn_panel(wks,(/map1,map2,map3/),(/3,1/),panel_res)
+    gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
     ;draw(map3)
     ;frame(wks)
 
