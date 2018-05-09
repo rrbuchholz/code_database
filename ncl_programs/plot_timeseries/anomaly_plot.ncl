@@ -44,7 +44,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
@@ -73,7 +73,7 @@ begin
   ; determined from an ncl_filedump
   sat_tcol      = "MOPITT_CO_TCOL_FILLED"
   sat_anom      = "MOPITT_CO_ANOMALY"
-  timearray     = "time"
+  timearray     = "YYYYMM"
 
 
   ; -------------------------------
@@ -118,10 +118,7 @@ begin
   do i=0,11
      ; get indices of array related to specific month
      month_ind := ind(months.eq.(i+1))
-print(month_ind)
-print(mopitt_time(month_ind))
      co_to_avg := mopitt_tcol(month_ind)
-printVarSummary(co_to_avg)
 
      climate_co(i) =  dim_avg_n(tofloat(co_to_avg),0)
      climate_co_sd(i) =  dim_stddev_n(tofloat(co_to_avg),0)
@@ -141,6 +138,14 @@ printVarSummary(co_to_avg)
      climate_co_sd_ext(y*12+m) = climate_co_sd(m)
     end do
   end do
+
+printVarSummary(climate_co_ext)
+printVarSummary(mopitt_anom)
+rel_anomalies = mopitt_anom/climate_co_ext
+print("Range of anomalies:")
+print(min(mopitt_anom)+" to " + max(mopitt_anom))
+print("...relative to climatological mean month values...")
+print(min(rel_anomalies)+" to " + max(rel_anomalies))
 
 ;--------------------------------------------
 ; plot
