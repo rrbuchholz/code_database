@@ -30,18 +30,18 @@ begin
 ; user input
 ;--------------------------------------------
   if (.not. isvar("year")) then      ; is YYYYMMDD=<value> from command line?
-       year = 2014
+       year = 2017
   end if
   outres = "0.94x1.2"
-  input_species = "acet"
-  output_species = "CH3COCH3"
+  input_species = "co"
+  output_species = "CO"
   outpath = "/data14b/buchholz/gfas/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------
   ; gfas files
   ; -------------------------------
   gfas_dir = "/data14b/buchholz/gfas/orig_0.1/"
-  gfas_files = systemfunc ("ls "+gfas_dir+"*_"+input_species+"_*"+year+"*.nc")
+  gfas_files = systemfunc ("ls "+gfas_dir+"*_"+input_species+"_*"+year+".nc")
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -51,7 +51,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  netCDF         = True                       ; for netCDF output
+  netCDF         = False                       ; for netCDF output
   PLOT           = True
 ;--------------------------------------------
 ; end user input
@@ -143,21 +143,39 @@ begin
   ; -------------------------------
   ; gfas load
   ; -------------------------------
-    fin = addfiles(gfas_files, "r")            ; read in
-    ListSetType (fin, "cat") 
-      tracer_dummy       = fin[:]->$gfas_tracer$
-;print(min(tracer_dummy))
-;tracer_dummy=where(tracer_dummy.eq.-32766,tracer_dummy@_FillValue,tracer_dummy)
-;print(min(tracer_dummy))
-;print(tracer_dummy(0,0,0:20))
-;print(num(ismissing(tracer_dummy)))
-;printVarSummary(tracer_dummy)
+    fin = addfile(gfas_files, "r")            ; read in
+    ;ListSetType (fin, "cat") 
+      tracer_dummy       = fin->$gfas_tracer$
+      ;tracer_new = new(dimsizes(tracer_dummy), double)
+      ;tracer_new = tracer_dummy@scale_factor*(tracer_dummy-tracer_dummy@scale_factor)
+      ;tracer_new = todouble(tracer_dummy)
+printVarSummary(tracer_new)
+print("Number of missing vals:")
+print(num(ismissing(tracer_new)))
+print(min(tracer_new))
+exit
+
+print(min(tracer_dummy))
+print(tracer_dummy(0,0,0:20))
+print("Number of missing vals:")
+print(num(ismissing(tracer_dummy)))
+printVarSummary(tracer_dummy)
+exit
+
+
+print("Fill Value change")
+test = tracer_dummy@_FillValue
+test@add_offset = tracer_dummy@add_offset
+test@scale_factor = tracer_dummy@scale_factor
+print(short2flt(test))
 
       tracer_all:= short2flt(tracer_dummy(:,::-1,:)) ; reorder N->S to S->N
-      delete_VarAtts(tracer_all,(/"_FillValue_original","missing_value_original"/))
-;printVarSummary(tracer_all)
-;print(min(tracer_all))
+      delete_VarAtts(tracer_all,(/"_FillValue_original"/))
+printVarSummary(tracer_all)
+print(min(tracer_all))
+print(tracer_all(0,0,0:20))
 
+exit
       ; load and convert time format
       time_dummy       = fin[:]->$gfas_time$
       time = cd_convert(time_dummy, "hours since 1900-01-01 00:00:0.0" )
