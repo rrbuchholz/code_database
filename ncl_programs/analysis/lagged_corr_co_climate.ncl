@@ -28,8 +28,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "SouthSAmerica"
-  plot_title = "(g) Southern South America"
+  location = "MaritimeSEA"
+  plot_title = "(a) Maritime SEA"
     ;pltname      = "~/"+location+"_laggedcorr2"
     pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
@@ -51,7 +51,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
@@ -143,10 +143,17 @@ acr = esccr(overlap_index_vals(:,0,:),mopitt_anom,maxlag)
  sond_lagcorrs = escorc(m_select_data,i_select_data)
  alldata_lagcorrs = escorc(overlap_index_vals,mopitt_anom)
 
-print(sond_lagcorrs(2,:))
-print(max(sond_lagcorrs(2,:)))
-;print(alldata_lagcorrs)
-;print(split_dates(m_select_ind,:))
+
+;--------------------------------------------
+; collect maximum vals
+;-------------------------------------------- 
+ max_vals = new((/2,dimsizes(sond_lagcorrs(:,0))/),float)
+ do i = 0, dimsizes(sond_lagcorrs(:,0))-1
+   ind_max_val = ind(abs(sond_lagcorrs(i,:)).eq.max(abs(sond_lagcorrs(i,:))))
+   max_vals(0,i)= ind_max_val
+   max_vals(1,i)= sond_lagcorrs(i,ind_max_val)
+ end do 
+   ;print(max_vals)
 
 ;--------------------------------------------
 ; plot
@@ -166,7 +173,7 @@ if (PLOT) then
 
     res@xyLineThicknessF    = 10.0
     res@xyDashPatterns      = (/0,1,2,3,4/)
-    res@xyLineColors         = (/"red2","orange", "forestgreen", "purple4"/)
+    res@xyLineColors        = (/"red2","orange", "forestgreen", "purple4"/)
 
     res@tmBorderThicknessF  = 3.0
     res@tmXBMajorThicknessF = 3.0
@@ -176,15 +183,6 @@ if (PLOT) then
     res@tmYLMinorOutwardLengthF = 0.0               ; draw minor ticks inward
     res@tmXBMajorOutwardLengthF = 0.0               
     res@tmXBMinorOutwardLengthF = 0.0   
-
-    ;res@tmXBMode            = "Explicit"
-      ;res@tmXBValues         = (/0,6,12/)
-      ;res@tmXBLabels         = (/"0", "6", "12"/)
-      res@tmXBMinorPerMajor  = 1	
-      ;res@tmXBLabelFontHeightF = 0.028
-      ;res@tmYLLabelFontHeightF = 0.028
-      ;res@tiXAxisFontHeightF  = 0.028
-      ;res@tiYAxisFontHeightF  = 0.028
 
     res@trYMinF             = -0.6
     res@trYMaxF             = 0.8
@@ -196,7 +194,7 @@ if (PLOT) then
     res@tiXAxisString       = "Monthly lag"
     res@tiYAxisString       = "Correlation (r)"
 
-    res@pmLegendDisplayMode      = "Never"        ; turn on legend
+    res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@lgPerimOn                = True           ; Turn off perimeter
     res@pmLegendWidthF           = 0.20           ; Change width and
     res@pmLegendHeightF          = 0.20             ; height of legend
@@ -213,6 +211,15 @@ if (PLOT) then
 
     ; selected month correlations
     plot1 = gsn_csm_xy(wks,xx,sond_lagcorrs,res)
+
+    res@pmLegendDisplayMode      = "Never"        ; turn on legend
+    res@xyMarkLineMode      = "Markers"
+    res@xyMarkers           = (/4,4,4,4/)            ; choose type of marker  
+    res@xyMarkerThicknessF  = (/6,6,6,6/)
+    res@xyMarkerSizeF       = 0.024
+    res@xyMarkerColors      = "black"
+    plot1a = gsn_csm_xy(wks,max_vals(0,:),max_vals(1,:),res)
+    overlay(plot1, plot1a)
 
     ; all data with sliding anomaly method
     plot2 = gsn_csm_xy(wks,xx,alldata_lagcorrs,res)

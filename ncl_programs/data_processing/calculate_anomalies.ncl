@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "CentralSAfrica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
   region_name = "Central Southern Africa"
 
   version = "V7T"
@@ -61,7 +61,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = False
+  PLOT           = True
     plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
@@ -78,7 +78,7 @@ begin
                      loc+"_"+version+"MOPITTanomalies.csv"
   end if
 
-  NETCDF            = True
+  NETCDF            = False
   if (NETCDF) then
      nc_outname      = data_folder+"/V7/anomalies/"+\
                         loc+"_"+version+"MOPITTanomalies.nc"
@@ -270,6 +270,12 @@ print(new_month_co_avg(sep09))
   do j = 0, dimsizes(climate_time)-1
     month_anomaly(j)= tofloat(new_month_co_avg(j))-climate_co(month_array(j))
   end do
+
+print("Maximum error:")
+print(max(month_err_avg))
+rel_err = month_err_avg/climate_co_ext
+print("Maximum relative error:")
+print(max(rel_err))
 
 ;--------------------------------------------
 ; plot
