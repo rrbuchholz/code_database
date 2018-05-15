@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "Central Southern Africa"
+  loc = "CentralSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "Central South America"
 
   version = "V7T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
@@ -101,6 +101,8 @@ begin
   timearray     = "Time"
 
   sat_err       = "RetrievedCOTotalColumnError"
+  sat_num       = "NumberInAvg"
+  sat_rand      = "RetrievedCOColRandMax"
 
   ; -------------------------------
   ; STATION PARAMETERS
@@ -166,6 +168,8 @@ begin
   print("***Reading MOPITT data at " + location)
     mopitt_tcol    = mopitt_in[:]->$sat_tcol$
     mopitt_err     = mopitt_in[:]->$sat_err$
+    mopitt_num     = mopitt_in[:]->$sat_num$
+    mopitt_rand    = mopitt_in[:]->$sat_rand$
     mopitt_time    = mopitt_in[:]->$timearray$       ; local time in seconds since 1993-1-1 00:00:00 (TAI93)
     mopitt_date    = cd_calendar(mopitt_time, 0)
     years = floattointeger(mopitt_date(:,0))
@@ -217,8 +221,10 @@ begin
   ; MONTH AVERAGES
   ; -------------------------------
   month_co_avg  = new(dimsizes(climate_co_ext), float)
-  month_err_avg  = new(dimsizes(climate_co_ext), float)
+  month_err_avg = new(dimsizes(climate_co_ext), float)
   month_co_sd   = new(dimsizes(climate_co_ext), float)
+  month_num     = new(dimsizes(climate_co_ext), float)
+  month_randmax = new(dimsizes(climate_co_ext), float)
 
   do y = toint(startyear), toint(endyear)
     do m=0,11
@@ -228,11 +234,15 @@ begin
         if (dimsizes(ind_yearmonth).eq.1) then
           month_co_avg(index_month)=mopitt_tcol(ind_yearmonth)
           month_err_avg(index_month)=mopitt_err(ind_yearmonth)
+          month_num(index_month)= mopitt_num(ind_yearmonth)
+          month_randmax(index_month)= mopitt_rand(ind_yearmonth)
           ;month_anomaly_orig(index_month)= mopitt_tcol(ind_yearmonth)-climate_co(m)
         else 
           month_co_avg(index_month)=dim_avg_n(mopitt_tcol(ind_yearmonth),0)
           month_err_avg(index_month)=dim_avg_n(mopitt_err(ind_yearmonth),0)
           month_co_sd(index_month)=dim_stddev_n(mopitt_tcol(ind_yearmonth),0)
+          month_num(index_month) = dim_sum_n(mopitt_num(ind_yearmonth),0)
+          month_randmax(index_month) = max(mopitt_rand(ind_yearmonth))
           ;month_anomaly_orig(index_month)= dim_avg_n(mopitt_tcol(ind_yearmonth),0)-climate_co(m)
         end if
       end if
@@ -240,6 +250,10 @@ begin
   end do
 
   month_avg_yfrac = yyyymm_to_yyyyfrac(stringtodouble(climate_time),0.5)
+
+;print(min(month_num))
+;print(avg(month_num))
+;print(max(month_randmax))
 
   ; -------------------------------
   ; 2009-09 has only one day, 
@@ -398,12 +412,16 @@ if (PLOT) then
    yb1    = new( (/2*dimsizes(plottime)/), double )
    do k=0,dimsizes(plottime)-1
      ya1(k) = plottime(k)
-     yb1(k) = climate_co_sd_ext(k)
-     yb1(2*dimsizes(plottime)-1-k) = 0-climate_co_sd_ext(k)
+     ;yb1(k) = climate_co_sd_ext(k)
+     ;yb1(2*dimsizes(plottime)-1-k) = 0-climate_co_sd_ext(k)
+     yb1(k) = 1.26254e16
+     yb1(2*dimsizes(plottime)-1-k) = 0-1.26254e16
+     ;yb1(k) = 3.11092e15
+     ;yb1(2*dimsizes(plottime)-1-k) = 0-3.11092e15
      ya1(2*dimsizes(plottime)-1-k) = plottime(k)
    end do
     gsres                          = True         ; poly res
-    gsres@gsFillColor              = "grey"       ; color chosen
+    gsres@gsFillColor              = "green"       ; color chosen
     gsres@gsFillOpacityF           = 0.4                 
     dum3 = gsn_add_polygon(wks,plot5,ya1,yb1,gsres)
 

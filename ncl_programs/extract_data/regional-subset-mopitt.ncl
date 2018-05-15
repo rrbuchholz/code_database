@@ -32,7 +32,7 @@ begin
   ; MOPITT
   ; -------------------------------
   version = "V7T"
-  year = 2001
+  year = 2016
   ; V6 T and N work all files, V7 all versions work
   all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02T-"+year+"*.he5")
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
@@ -44,7 +44,7 @@ begin
   ; select location
   ;------------
   outfolder = "~/MOPITT_subset/SH_regions_v7/"
-  location = "WCentralSAmerica"
+  location = "CentralSAmerica"
 ;SAmerica,Indonesia
 
   ;------------
@@ -92,6 +92,7 @@ begin
   apost_surf     = "RetrievedCOSurfaceMixingRatio"+suff
   vmr_avker      = "RetrievalAveragingKernelMatrix"+suff
   pressure_surf  = "SurfacePressure"+suff
+  diag           = "RetrievedCOTotalColumnDiagnostics"+suff
 
 
   if (location.eq."SAfrica") then
@@ -262,6 +263,7 @@ begin
          ret_profile(:,1:9)  = ret_dummy(:,:,0)
       ak           := fin->$vmr_avker$
       psurf        := fin->$pressure_surf$
+      two_diag     := fin->$diag$
 
     ;--------------------------------------------
     ; select region to bin (daytime retrievals)
@@ -297,6 +299,8 @@ begin
     region_dofs    := dim_avg_n_Wrap(dofs(region),0)
     region_ap      := dim_avg_n_Wrap(apriori(region),0)
     region_psurf   := dim_avg_n_Wrap(psurf(region),0)
+    region_max_smooth_e := max(abs(two_diag(region,0)))
+    region_max_rand_e := max(abs(two_diag(region,1)))
 
     ak_dims := dimsizes(ak(region, :, :))
     if (dimsizes(ak_dims).eq.2) then
@@ -325,6 +329,12 @@ begin
             lon_selected = region_lon
           ;--- errors
             err_selected = region_err
+          ;--- num_avg
+            num_selected = num(tcol(region))
+          ;--- smooth_err
+            smooth_e_selected = region_max_smooth_e
+          ;--- rand_err
+            rand_e_selected = region_max_rand_e
           ;--- surface pressure
             psurf_selected = region_psurf
           ;--- dofs
@@ -349,6 +359,9 @@ begin
             temp2 := lat_selected
             temp3 := lon_selected
             temp4 := err_selected
+            temp4I := num_selected
+            temp4II := smooth_e_selected
+            temp4III := rand_e_selected
             temp5 := psurf_selected
             temp8 := dofs_selected
             temp9 := ap_selected
@@ -366,6 +379,9 @@ begin
             lon_selected := array_append_record(temp3,region_lon,0)
           ;--- errors
             err_selected := array_append_record(temp4,region_err,0)
+            num_selected := array_append_record(temp4I,num(tcol(region)),0)
+            smooth_e_selected := array_append_record(temp4II,region_max_smooth_e,0)
+            rand_e_selected := array_append_record(temp4III,region_max_rand_e,0)
           ;--- surface pressure
             psurf_selected := array_append_record(temp5,region_psurf,0)
           ;--- dofs
@@ -449,7 +465,13 @@ if (netCDF) then
    dofs_selected!0                = "time"
    dofs_selected@average_op_ncl   = mopitt_selected@average_op_ncl
    ap_selected!0                  = "time"
-   ap_selected@average_op_ncl    = mopitt_selected@average_op_ncl
+   ap_selected@average_op_ncl     = mopitt_selected@average_op_ncl
+   num_selected!0                 = "time"
+   num_selected@average_op_ncl    = mopitt_selected@average_op_ncl
+   smooth_e_selected!0            = "time"
+   smooth_e_selected@average_op_ncl = mopitt_selected@average_op_ncl
+   rand_e_selected!0              = "time"
+   rand_e_selected@average_op_ncl = mopitt_selected@average_op_ncl
 
    m_apriori_selected!0           = "time"
    m_apriori_selected@average_op_ncl = mopitt_selected@average_op_ncl
@@ -462,6 +484,12 @@ if (netCDF) then
      fout->RetrievedCOTotalColumn        = mopitt_selected
    ;--- total column error
      fout->RetrievedCOTotalColumnError   = err_selected
+   ;--- Number of values in day averages
+     fout->NumberInAvg                   = num_selected
+   ;--- Maximum regional day smoothing error
+     fout->RetrievedCOColSmoothMax       = smooth_e_selected
+   ;--- Maximum regional day measurement error
+     fout->RetrievedCOColRandMax         = rand_e_selected
    ;--- latitude
      fout->Latitude                      = lat_selected
    ;--- longitude
