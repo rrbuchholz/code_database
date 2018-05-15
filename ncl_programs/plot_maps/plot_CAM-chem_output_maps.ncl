@@ -22,8 +22,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "ISOP"
-  region = "Australia"
+  tracer = "ISOPNO3"
+  region = "NAmerica"
 
   ; -------------------------------
   ; file location
@@ -54,7 +54,7 @@ begin
       lonmax                         = 180
       loncenter                      = 140
       region_name =  "Australia"
-  else if (region.eq."CONUS") then
+  else if (region.eq."NAmerica") then
       latmin                          = 20               ; zoom to North America
       latmax                         = 60
       lonmin                         = 220
@@ -84,7 +84,7 @@ begin
   ; -------------------------------
   if (PLOT) then
     mapType = "x11"
-    mapName = tracer+"_diff"
+    mapName = "~/"+tracer+"_"+region+"_diff"
     mapType@wkWidth = 1200
     mapType@wkHeight = 1200 
   end if ;PLOT
@@ -109,6 +109,7 @@ begin
 ; calculations
 ;-------------------
   glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
+  ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{30:40},{270:290}), (/2,3/))
   ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
   glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
   rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array
@@ -154,13 +155,14 @@ begin
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
       mapres@cnMinLevelValF          = 0.                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 3.                ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
+      mapres@cnMaxLevelValF          = 0.002                ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.0001                ; set the interval between contours
 
     ;-------------------
     ; do the plotting
     ;-------------------
     panel_res                       = True
+      panel_res@gsnMaximize               = True  
       panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
       mapres@gsnRightString        = "ppb" 
@@ -175,14 +177,14 @@ begin
      mapres@cnMinLevelValF          = 0              ; set the minimum contour level
      mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
-     mapres@gsnLeftString     = "Anth_sim concentrations relative to CONUS anth_sim average"   ;
+     mapres@gsnLeftString     = "Anth_sim concentrations relative to N. America anth_sim average"   ;
      mapres@gsnRightString     = "" 
     map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
 
-     mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to CONUS anth_sim average"   ;
+     mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to N. America anth_sim avg"   ;
      mapres@cnFillPalette       = "hotcold_18lev"
-     mapres@cnMinLevelValF          = -1.              ; set the minimum contour level
-     mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
+     mapres@cnMinLevelValF          = -1.0              ; set the minimum contour level
+     mapres@cnMaxLevelValF          = 1.0               ; set the maximum contour level
      mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
     map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
 
