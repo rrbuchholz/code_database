@@ -24,15 +24,16 @@ begin
 ;--------------------------------------------
   tracer = "ISOPNO3"
   region = "NAmerica"
+  timeslice = "JJA"
 
   ; -------------------------------
   ; file location
   ; -------------------------------
   in_folder = "/glade2/work/buchholz/CAM_chem_output/anth_v_noanth/"
 
-  camfile_1 = systemfunc ("ls "+in_folder+"/anth/*ANN*.nc")
+  camfile_1 = systemfunc ("ls "+in_folder+"/anth/*"+timeslice+"*.nc")
 
-  camfile_2 = systemfunc ("ls "+in_folder+"/noanth/*ANN*.nc")
+  camfile_2 = systemfunc ("ls "+in_folder+"/noanth/*"+timeslice+"*.nc")
 
 
   ;------------
@@ -155,8 +156,8 @@ begin
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
       mapres@cnMinLevelValF          = 0.                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 0.002                ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.0001                ; set the interval between contours
+      mapres@cnMaxLevelValF          = 0.002               ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.0001             ; set the interval between contours
 
     ;-------------------
     ; do the plotting
@@ -166,11 +167,11 @@ begin
       panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
       mapres@gsnRightString        = "ppb" 
-      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " with Anthropogenic emissions" 
+      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " with Anthropogenic emissions " +timeslice
       mapres@cnFillPalette       = "BlAqGrYeOrRe"
     map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
 
-      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " without Anthropogenic emissions"
+      mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " without Anthropogenic emissions "+timeslice
     map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
 
      mapres@cnFillPalette       = "WhiteYellowOrangeRed"
