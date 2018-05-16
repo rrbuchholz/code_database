@@ -41,7 +41,7 @@ begin
   ; gfas files
   ; -------------------------------
   gfas_dir = "/data14b/buchholz/gfas/orig_0.1/"
-  gfas_files = systemfunc ("ls "+gfas_dir+"*_"+input_species+"_*"+year+".nc")
+  gfas_files = systemfunc ("ls "+gfas_dir+"*_"+input_species+"_*"+year+".grib")
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -51,7 +51,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  netCDF         = False                       ; for netCDF output
+  netCDF         = True                       ; for netCDF output
   PLOT           = True
 ;--------------------------------------------
 ; end user input
@@ -63,8 +63,11 @@ begin
   ; names of gfas data structures
   ; determined from an ncl_filedump
   ; -------------------------------
-  gfas_tracer        = input_species+"fire"
-  gfas_time          = "time"
+  ;gfas_tracer        = input_species+"fire"
+  ;gfas_time          = "time"
+  gfas_tracer        = output_species+"FIRE_GDS0_SFC_ave24h"
+  gfas_time          = "initial_time0_hours"
+
 
   ; -------------------------------
   ; plotting parameters
@@ -101,6 +104,7 @@ begin
   if (outres.eq."0.94x1.2") then
    ; higher res - 1 deg
    newlon  = fspan(0,358.8, 288)
+   ;newlon  = fspan(0,358.75, 288)
      newlon@units      = "degrees_east"
      newlon@long_name  = "longitude"
      newlon!0          = "lon"
@@ -145,40 +149,12 @@ begin
   ; -------------------------------
     fin = addfile(gfas_files, "r")            ; read in
     ;ListSetType (fin, "cat") 
-      tracer_dummy       = fin->$gfas_tracer$
-      ;tracer_new = new(dimsizes(tracer_dummy), double)
-      ;tracer_new = tracer_dummy@scale_factor*(tracer_dummy-tracer_dummy@scale_factor)
-      ;tracer_new = todouble(tracer_dummy)
-printVarSummary(tracer_new)
-print("Number of missing vals:")
-print(num(ismissing(tracer_new)))
-print(min(tracer_new))
-exit
+      tracer_all       = fin->$gfas_tracer$
+        tracer_all = tracer_all(:,::-1,:) ; Flip the latitude dimension 
 
-print(min(tracer_dummy))
-print(tracer_dummy(0,0,0:20))
-print("Number of missing vals:")
-print(num(ismissing(tracer_dummy)))
-printVarSummary(tracer_dummy)
-exit
-
-
-print("Fill Value change")
-test = tracer_dummy@_FillValue
-test@add_offset = tracer_dummy@add_offset
-test@scale_factor = tracer_dummy@scale_factor
-print(short2flt(test))
-
-      tracer_all:= short2flt(tracer_dummy(:,::-1,:)) ; reorder N->S to S->N
-      delete_VarAtts(tracer_all,(/"_FillValue_original"/))
-printVarSummary(tracer_all)
-print(min(tracer_all))
-print(tracer_all(0,0,0:20))
-
-exit
       ; load and convert time format
-      time_dummy       = fin[:]->$gfas_time$
-      time = cd_convert(time_dummy, "hours since 1900-01-01 00:00:0.0" )
+      time_dummy       = fin->$gfas_time$
+      time = cd_convert(time_dummy, "hours since 1800-01-01 00:00" )
         time@long_name = "Time"
         time@calendar = "Gregorian"
         time!0 = "time"
@@ -191,9 +167,13 @@ exit
         date@units = "YYYYMMDD"
         delete(date@calendar)
 
-      delete(tracer_all&time )
+      delete(tracer_all&initial_time0_hours )
       tracer_all!0 = "time"
       tracer_all&time = (time)
+      tracer_all!1 = "latitude"
+      tracer_all!2 = "longitude"
+
+printVarSummary(tracer_all)
 
   ; -------------------------------
   ; gfas res for sums/avgs
@@ -321,7 +301,7 @@ exit
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "gfas.emis_"+output_species+"_"+outres+"_mol_"+year+"new.nc"
+      outfilename = "gfas.emis_fromgrib_"+output_species+"_"+outres+"_mol_"+year+"new.nc"
       fout = addfile(outpath+outfilename, "c")
 
       ;------------
@@ -357,8 +337,8 @@ exit
       emiss_regrid@long_name = output_species +" gfas fire emissions"
       emiss_regrid@vmax      = max(emiss_regrid)
       emiss_regrid@vmin      = min(emiss_regrid)
-      delete(emiss_regrid@missing_value)
-      delete(emiss_regrid@fmissing_value)
+      ;delete(emiss_regrid@missing_value)
+      ;delete(emiss_regrid@fmissing_value)
 
        ;--- date
          fout->date             = date
