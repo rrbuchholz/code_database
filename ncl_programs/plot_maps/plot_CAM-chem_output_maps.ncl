@@ -22,9 +22,9 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "ISOPNO3"
-  region = "NAmerica"
-  timeslice = "JJA"
+  tracer = "ISOP"
+  region = "Australia"
+  timeslice = "ANN"
 
   ; -------------------------------
   ; file location
@@ -110,10 +110,10 @@ begin
 ; calculations
 ;-------------------
   glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
-  ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{30:40},{270:290}), (/2,3/))
   ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
+    print(glob_avg)
   glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
-  rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array
+  rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array 
     copy_VarAtts(tracer_fields_1, rel_glob_diff)
     copy_VarCoords(tracer_fields_1, rel_glob_diff)
 
@@ -156,8 +156,8 @@ begin
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
       mapres@cnMinLevelValF          = 0.                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 0.002               ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.0001             ; set the interval between contours
+      mapres@cnMaxLevelValF          = 3.               ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.1             ; set the interval between contours
 
     ;-------------------
     ; do the plotting
@@ -182,11 +182,11 @@ begin
      mapres@gsnRightString     = "" 
     map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
 
-     mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to N. America anth_sim avg"   ;
+     mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to N. America anth_sim average"   ;
      mapres@cnFillPalette       = "hotcold_18lev"
-     mapres@cnMinLevelValF          = -1.0              ; set the minimum contour level
+     mapres@cnMinLevelValF          = -1.0             ; set the minimum contour level
      mapres@cnMaxLevelValF          = 1.0               ; set the maximum contour level
-     mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
+     mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
     map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
 
 
