@@ -44,7 +44,7 @@ begin
   ; select location
   ;------------
   outfolder = "~/MOPITT_subset/SH_regions_v7/"
-  location = "CentralSAmerica"
+  location = "Indonesia"
 ;SAmerica,Indonesia
 
   ;------------
