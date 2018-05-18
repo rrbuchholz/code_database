@@ -35,7 +35,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "CentralSAmerica" ; Australasia, SAmerica, SAfrica, Indonesia
+  loc = "Indonesia" ; Australasia, SAmerica, SAfrica, Indonesia
   region_name = "Central South America"
 
   version = "V7T"
@@ -251,9 +251,16 @@ begin
 
   month_avg_yfrac = yyyymm_to_yyyyfrac(stringtodouble(climate_time),0.5)
 
-;print(min(month_num))
-;print(avg(month_num))
-;print(max(month_randmax))
+;month_num=where(month_num.lt.150,month_num@_FillValue,month_num)
+;month_randmax=where(month_randmax.gt.6.9e+17,month_randmax@_FillValue,month_randmax)
+print("Min num month retrievals:")
+print(min(month_num))
+print("Avg num month retrievals:")
+print(avg(month_num))
+print("Maximum rand error:")
+print(max(month_randmax))
+print("Average rand error:")
+print(avg(month_randmax))
 
   ; -------------------------------
   ; 2009-09 has only one day, 
@@ -414,8 +421,8 @@ if (PLOT) then
      ya1(k) = plottime(k)
      ;yb1(k) = climate_co_sd_ext(k)
      ;yb1(2*dimsizes(plottime)-1-k) = 0-climate_co_sd_ext(k)
-     yb1(k) = 1.26254e16
-     yb1(2*dimsizes(plottime)-1-k) = 0-1.26254e16
+     yb1(k) = 6.351612628e15
+     yb1(2*dimsizes(plottime)-1-k) = 0-6.351612628e15
      ;yb1(k) = 3.11092e15
      ;yb1(2*dimsizes(plottime)-1-k) = 0-3.11092e15
      ya1(2*dimsizes(plottime)-1-k) = plottime(k)

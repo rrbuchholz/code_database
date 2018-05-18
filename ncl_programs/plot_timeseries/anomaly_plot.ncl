@@ -29,14 +29,14 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "CentralSAmerica" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V7T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "Central South America"
-  sub_label = "(g) "
+  location_title = "MaritimeSEA"
+  sub_label = "(a) "
     year_s = 2001
     year_e = 2017
 
@@ -44,7 +44,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
@@ -184,7 +184,7 @@ if (PLOT) then
     res@tiMainString           = ""
     res@tiXAxisString          = ""
 
-    res@pmLegendDisplayMode      = "Never"               ; turn on legend
+    res@pmLegendDisplayMode      = "Always"               ; turn on legend
       res@lgPerimOn                = False               ; Turn off perimeter
       res@pmLegendWidthF           = 0.20                ; Change width and
       res@pmLegendHeightF          = 0.50                ; height of legend
@@ -269,6 +269,22 @@ if (PLOT) then
   dum3 = gsn_add_polyline(wks,plot3,xx,yy,res_lines)      ; add polyline
 
   ; -------------------------------
+  ; Add random error
+  ; -------------------------------
+   ya1    = new( (/2*dimsizes(plottime)/), double )
+   yb1    = new( (/2*dimsizes(plottime)/), double )
+   do k=0,dimsizes(plottime)-1
+     ya1(k) = plottime(k)
+     yb1(k) = 1.0e16
+     yb1(2*dimsizes(plottime)-1-k) = 0-1.0e16
+     ya1(2*dimsizes(plottime)-1-k) = plottime(k)
+   end do
+    gsres                          = True         ; poly res
+    gsres@gsFillColor              = "black"       ; color chosen
+    gsres@gsFillOpacityF           = 0.6                 
+    dum3 = gsn_add_polygon(wks,plot3,ya1,yb1,gsres)
+
+  ; -------------------------------
   ; Define a polygon for std-dev
   ; -------------------------------
    ya1    = new( (/2*dimsizes(plottime)/), float )
@@ -306,13 +322,13 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"              ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-    gsn_text_ndc(wks,location_title,0.155,0.71,txres)
-    ;gsn_text_ndc(wks,location_title,0.155,0.67,txres)
+    ;gsn_text_ndc(wks,location_title,0.155,0.71,txres)
+    gsn_text_ndc(wks,location_title,0.155,0.67,txres)
      txres@txPerimOn        = False
-    gsn_text_ndc(wks,"(c)",0.17,0.64,txres)
-    gsn_text_ndc(wks,"(d)",0.17,0.43,txres)
-    ;gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
-    ;gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
+    ;gsn_text_ndc(wks,"(c)",0.17,0.64,txres)
+    ;gsn_text_ndc(wks,"(d)",0.17,0.43,txres)
+    gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
+    gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
 
   draw(plot1)
   frame(wks)
