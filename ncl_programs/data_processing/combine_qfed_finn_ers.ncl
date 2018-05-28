@@ -24,8 +24,8 @@
 ;
 ;   Requires:
 ;         path to qfed files separated into years
-;         path to FINN emission ratios file
-;         path to FINN VOC speciation
+;         path to FINN 4-land type emission ratios file
+;         path to FINN 4-land type VOC speciation
 ;         path to MOZART molecular weight file
 ;         emission ratio files must have line (or column for VOC) order:
 ;         1: Savanna Grasslands
@@ -459,7 +459,7 @@ begin
       ; Variables
       ;------------
       emiss_regrid@long_name = dummy_var2(tracer)+" QFED/FINN fire emissions"
-      emiss_regrid@_FillValue := 0.0
+      ;emiss_regrid@_FillValue := 0.0
       emiss_regrid@vmax      = max(emiss_regrid)
       emiss_regrid@vmin      = min(emiss_regrid)
       ;delete(emiss_regrid@missing_value)

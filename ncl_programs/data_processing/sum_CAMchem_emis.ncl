@@ -24,13 +24,13 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2002
+  ystart = 2014
   yend = 2017
   reso = "0.9x1.25"
 
-  machine = "cheyenne"         ; modeling1, modeling2, cheyenne
-  repository = "FINN1.6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT
-    s_name = "CO"
+  machine = "modeling1"         ; modeling1, modeling2, cheyenne
+  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN
+    s_name = "CO2"
 
   tracers = (/"CO"/)
   sm_tracers = (/"co"/)
@@ -79,6 +79,19 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED_native") then
      outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
+    end if
+    end if
+
+    if (repository.eq."GFAS") then
+     emis_dir = top_dir+ "gfas/cam_"+reso+"/regridded"
+     e_file_in = "gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+     indir = emis_dir+"/allyears/"
+     outpath = emis_dir+"/region_sums/"
+    else if (repository.eq."GFAS/FINN") then
+     emis_dir = top_dir+ "gfas/cam_"+reso+"/from_co2"
+     e_file_in = "gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+     indir = emis_dir+"/allyears/"
+     outpath = emis_dir+"/region_sums/"
     end if
     end if
 
@@ -395,9 +408,18 @@ if (NETCDF) then
       if (repository.eq."QFED_native") then
         outfilename = "qfed.emis_"+tracer+"_Tg_regional_"+ystart+".nc"
       else if (repository.eq."QFED/FINN") then
-        outfilename = "qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc"
+        outfilename = "qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_"+ystart+"_"+yend+".nc"
+      else if (repository.eq."GFAS") then
+        outfilename = "gfas.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
+      else if (repository.eq."GFAS/FINN") then
+        outfilename = "gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional_"+ystart+"_"+yend+".nc"
+      else if (repository.eq."FINN") then
+        outfilename = "finn.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       else
-        outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional.nc"
+        outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
+      end if
+      end if
+      end if
       end if
       end if
       fout = addfile(outpath+outfilename, "c")
@@ -421,14 +443,23 @@ if (NETCDF) then
           fAtt@title              = "Emissions of "+ tracer+\
                                   " from FINN emission ratios applied to QFED "+s_name+", daily"
         else if (repository.eq."QFED".or.repository.eq."QFED_native") then
-          fAtt@history            = s_name+" is from QFED, Level3b v2.4 "+\
+          fAtt@history            = tracer+" is from QFED, Level3b v2.4 "+\
                                   "(qfed-2_4_r6) Gridded Emission Estimates"
           fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group"
           fAtt@title              = "Emissions of "+ tracer+" from QFED, daily"
         else if (repository.eq."FINN".or.repository.eq."FINN1.5"\
                  .or.repository.eq."FINN1.6") then
-          fAtt@history            = s_name+" is from "+repository+", v1.5"
+          fAtt@history            = tracer+" is from "+repository+", v1.5"
           fAtt@title              = "Emissions of "+ tracer+" from FINN, daily"
+        else if (repository.eq."GFAS") then
+          fAtt@history            = tracer+" is from "+repository+", v1.2"
+          fAtt@title              = "Emissions of "+ tracer+" from GFAS, daily"
+        else if (repository.eq."GFAS/FINN") then
+          fAtt@history            = s_name+" is from "+repository+", v1.2 with "+\
+                                  "FINN emission ratios applied"
+          fAtt@title              = "Emissions of "+ tracer+" from FINN emission ratios applied to GFAS "+s_name+", daily"
+        end if
+        end if
         end if
         end if
         end if

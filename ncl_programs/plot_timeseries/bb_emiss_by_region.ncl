@@ -22,11 +22,11 @@ begin
 ; =========================================
   tracer = "CO"
   reso = "0.9x1.25"
-  ystart = 2016
+  ystart = 2014
   yend = 2017
   
   PLOT = True
-    plottype = "png"
+    plottype = "x11"
       plottype@wkWidth  = 1200
       plottype@wkHeight = 1200
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
@@ -40,18 +40,23 @@ begin
 
   ;order = (/"QFED x CO", "QFED x CO2", "QFED", "FINN"/)
   ;order = (/ "QFED", "FINN"/)
-  order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
+  ;order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
+  ;order = (/  "QFED regridded","QFED x FINN", "FINN 1.5","GFAS x FINN", "GFAS regridded"/)
+  order = (/  "QFED regridded", "FINN 1.5", "GFAS x FINN", "GFAS regridded"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
    top_dir = "/data14b/buchholz/"
    qfed_dir = "qfed/cam_"+reso+"/"
    finn_dir = "finn/cam_"+reso+"/"
-   e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\
-                 qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\                 
-                 finn_dir+"region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc"/)  
-
+   gfas_dir = "gfas/cam_"+reso+"/"
+   e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+                 ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
+                 ;qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\                 
+                 finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
+                 gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc",\
+                 gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc"/)  
+print(top_dir+e_file_in(0))
   ; -------------------------------
   ; data names (from ncl_filedump)
   ; here they specify different regions
@@ -223,7 +228,7 @@ if (PLOT) then
   overlay(plot6,plot6a)
 
   panel_res                       = True
-      panel_res@txString              = "BB emissions for "+ tracer + " " + ystart
+      panel_res@txString              = "BB emissions for "+ tracer + " " + ystart + " to " + yend
       panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopRight"
 

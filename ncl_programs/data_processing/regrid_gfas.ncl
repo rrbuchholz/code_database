@@ -32,7 +32,7 @@ begin
   if (.not. isvar("year")) then      ; is YYYYMMDD=<value> from command line?
        year = 2017
   end if
-  outres = "0.94x1.2"
+  outres = "0.9x1.25"
   input_species = "co"
   output_species = "CO"
   outpath = "/data14b/buchholz/gfas/cam_"+outres+"/regridded/"+year+"/"
@@ -101,10 +101,9 @@ begin
   ; lat/lon for re-gridding
   ; -------------------------------
 
-  if (outres.eq."0.94x1.2") then
+  if (outres.eq."0.9x1.25") then
    ; higher res - 1 deg
-   newlon  = fspan(0,358.8, 288)
-   ;newlon  = fspan(0,358.75, 288)
+   newlon  = fspan(0,358.75, 288)
      newlon@units      = "degrees_east"
      newlon@long_name  = "longitude"
      newlon!0          = "lon"
