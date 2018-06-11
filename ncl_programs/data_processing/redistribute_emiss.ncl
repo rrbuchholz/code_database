@@ -58,42 +58,53 @@ begin
          emiss_type = "from_co2"         ; from_co, from_co2, regridded
     end if
 
+         MIN_EF         = True
+         MAX_EF         = False
 
   ; -------------------------------
   ; input emission files
   ; -------------------------------
   top_dir = "/net/modeling1/data14b/buchholz/"
+   f_ext = "qfed.emis._"
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
   else if (emiss_type.eq."regridded") then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
+  else if (MIN_EF) then
+    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"_min/"
+    f_ext = "qfed.emis.min_"
+  else if (MAX_EF) then
+    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"_max/"
+    f_ext = "qfed.emis.max_"
   else
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
+  end if
+  end if
   end if
   end if
   
   ; OC/BC
   if (tracer.eq."OC".or.tracer.eq."BC")
-    e_file_in = emis_dir+"qfed.emis_"+tracer+"_"+outres+"_mol_"+year+".nc"
+    e_file_in = emis_dir+f_ext+tracer+"_"+outres+"_mol_"+year+".nc"
   ; VBS
   else if (tracer.eq."VBS") then
-    pom_file_in = emis_dir+"qfed.emis_pom_a4_"+outres+"_mol_"+year+".nc"
+    pom_file_in = emis_dir+f_ext+"pom_a4_"+outres+"_mol_"+year+".nc"
     specs_ivoc = (/"C3H6", "C3H8", "C2H6", "C2H4", "BIGENE", "BIGALK", "CH3COCH3", \
                    "MEK", "CH3CHO", "CH2O", "BENZ", "TOLUENE", "XYLENE"/)
     e_file_in = new(dimsizes(specs_ivoc), string)
     do i = 0, dimsizes(specs_ivoc)-1
-      e_file_in(i) = emis_dir+"qfed.emis_"+specs_ivoc(i)+"_"+outres+"_mol_"+year+".nc"
+      e_file_in(i) = emis_dir+f_ext+specs_ivoc(i)+"_"+outres+"_mol_"+year+".nc"
     end do
   ; SOAG
   else if (tracer.eq."SOAG") then
     specs_soag = (/"BIGALK", "BIGENE", "TOLUENE", "BENZ",  "XYLENE", "ISOP", "C10H16"/)
     e_file_in = new(dimsizes(specs_soag), string)
     do i = 0, dimsizes(specs_soag)-1
-      e_file_in(i) = emis_dir+"qfed.emis_"+specs_soag(i)+"_"+outres+"_mol_"+year+".nc"
+      e_file_in(i) = emis_dir+f_ext+specs_soag(i)+"_"+outres+"_mol_"+year+".nc"
     end do
   ; SO4
   else if (tracer.eq."SO4") then
-    e_file_in = emis_dir+"qfed.emis_SO2_orig_"+outres+"_mol_"+year+".nc"
+    e_file_in = emis_dir+f_ext+"SO2_orig_"+outres+"_mol_"+year+".nc"
   end if
   end if
   end if
@@ -297,7 +308,14 @@ begin
     ; create file for each 
     ; split CAM-chem species
     ;-------------------
+    if (MAX_EF) then
+      outfilename = "qfed.emis.max_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
+    else if (MIN_EF) then
+      outfilename = "qfed.emis.min_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
+    else 
       outfilename = "qfed.emis_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
+    end if
+    end if
       ; copy file to new file
       system("cp "+e_file_in(0)+" "+emis_dir+outfilename)
       ; open the new file to overwrite

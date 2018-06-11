@@ -6,18 +6,19 @@
 # (netCDF operators)
 #-------------------
 
-#workdir=/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/   # working directory
+workdir=/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/   # working directory
 #workdir=/data14b/buchholz/qfed/cam_0.9x1.25/regridded/   # working directory
 #workdir=/data14b/buchholz/gfas/cam_0.9x1.25/from_co2/   # working directory
-workdir=/data14b/buchholz/gfas/cam_0.9x1.25/regridded/   # working directory
-file_list="$(ls $workdir/2014/)"
-arr=$(echo "$file_list" | sed 's/2014new*.nc//g')        # remove year specific to file
-arr=$(echo "$file_list" | sed 's/2014new*.nc//g')        # remove year specific to file (gfas)
+#workdir=/data14b/buchholz/gfas/cam_0.9x1.25/regridded/   # working directory
+#workdir=/data14b/buchholz/gfas/cam_0.9x1.25/regridded/   # working directory
+file_list="$(ls $workdir/2014_max/)"
+arr=$(echo "$file_list" | sed 's/2014*.nc//g')        # remove year specific to file
+#arr=$(echo "$file_list" | sed 's/2014new*.nc//g')        # remove year specific to file (gfas)
 
 echo $arr
 
 for x in $arr ; do
-    echo ${workdir}2014/${x}2014new.nc \
+    echo ${workdir}2014_max/${x}2014.nc \
 
   #ncrcat ${workdir}2000/${x}2000.nc \
   #       ${workdir}2001/${x}2001.nc \
@@ -33,10 +34,9 @@ for x in $arr ; do
   #       ${workdir}2011/${x}2011.nc \
   #       ${workdir}2012/${x}2012.nc \
   #       ${workdir}2013/${x}2013.nc \
-  ncrcat ${workdir}2014/${x}2014new.nc \
-         ${workdir}2015/${x}2015new.nc \
-         ${workdir}2016/${x}2016new.nc \
-         ${workdir}2017/${x}2017new.nc \
+  ncrcat ${workdir}2014_max/${x}2014.nc \
+         ${workdir}2015_max/${x}2015.nc \
+         ${workdir}2016_max/${x}2016.nc \
+         ${workdir}2017_max/${x}2017.nc \
          ${workdir}allyears/${x}2014_2017.nc       # Concatenate along
 done
-

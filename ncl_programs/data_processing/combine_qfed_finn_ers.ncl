@@ -59,7 +59,7 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2018
+    year = 2014
     qfed_version = "v2.5"
     outres = "0.9x1.25"
     ratio_species = "co2"
@@ -79,10 +79,28 @@ begin
     qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
   end if
 
+  ;------------
+  ; toggles
+  ;------------
+  netCDF         = True                       ; for netCDF output
+  PLOT           = False
+  MIN_EF         = False
+  MAX_EF         = True
+
   ; -------------------------------
   ; FINN emission ratios
   ; -------------------------------
-  finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_jun2017.csv"
+  if (MAX_EF)
+    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_max_jun2017.csv"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"_max/"
+  else if (MIN_EF)
+    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_min_jun2017.csv"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"_min/"
+  else
+    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_jun2017.csv"
+  end if
+  end if
+
   finn_VOC = "/net/modeling1/home/buchholz/data/VOC_emissionfactors_speciation_20150313.csv"
 
   ; -------------------------------
@@ -90,11 +108,6 @@ begin
   ; -------------------------------
   molwts = "/net/modeling1/home/buchholz/data/species_molwts.txt"
 
-  ;------------
-  ; toggles
-  ;------------
-  netCDF         = True                       ; for netCDF output
-  PLOT           = False
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
@@ -396,9 +409,17 @@ begin
 ;exit
 
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
+      else if (MIN_EF)
+        outfilename = "qfed.emis.min_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else if (MAX_EF)
+        outfilename = "qfed.emis.max_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
       else 
         outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
+      end if
+      end if
       end if
 
       if (NRT) then
@@ -611,10 +632,19 @@ begin
            bb_template@missing_value := 0.0
            bb_template@fmissing_value := 0.0
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
+      else if (MIN_EF)
+        outfilename = "qfed.emis.min_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else if (MAX_EF)
+        outfilename = "qfed.emis.max_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
       else 
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
       end if
+      end if
+      end if
+
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
