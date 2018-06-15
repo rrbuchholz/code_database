@@ -59,7 +59,7 @@ begin
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
   else
-    year = 2014
+    year = 2013
     qfed_version = "v2.5"
     outres = "0.9x1.25"
     ratio_species = "co2"
@@ -84,8 +84,8 @@ begin
   ;------------
   netCDF         = True                       ; for netCDF output
   PLOT           = False
-  MIN_EF         = False
-  MAX_EF         = True
+  MIN_EF         = True
+  MAX_EF         = False
 
   ; -------------------------------
   ; FINN emission ratios

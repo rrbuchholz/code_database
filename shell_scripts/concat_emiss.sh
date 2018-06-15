@@ -11,14 +11,14 @@ workdir=/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/   # working directory
 #workdir=/data14b/buchholz/gfas/cam_0.9x1.25/from_co2/   # working directory
 #workdir=/data14b/buchholz/gfas/cam_0.9x1.25/regridded/   # working directory
 #workdir=/data14b/buchholz/gfas/cam_0.9x1.25/regridded/   # working directory
-file_list="$(ls $workdir/2014_max/)"
+file_list="$(ls $workdir/2014_min/)"
 arr=$(echo "$file_list" | sed 's/2014*.nc//g')        # remove year specific to file
 #arr=$(echo "$file_list" | sed 's/2014new*.nc//g')        # remove year specific to file (gfas)
 
 echo $arr
 
 for x in $arr ; do
-    echo ${workdir}2014_max/${x}2014.nc \
+    echo ${workdir}2014_min/${x}2014.nc \
 
   #ncrcat ${workdir}2000/${x}2000.nc \
   #       ${workdir}2001/${x}2001.nc \
@@ -33,10 +33,10 @@ for x in $arr ; do
   #       ${workdir}2010/${x}2010.nc \
   #       ${workdir}2011/${x}2011.nc \
   #       ${workdir}2012/${x}2012.nc \
-  #       ${workdir}2013/${x}2013.nc \
-  ncrcat ${workdir}2014_max/${x}2014.nc \
-         ${workdir}2015_max/${x}2015.nc \
-         ${workdir}2016_max/${x}2016.nc \
-         ${workdir}2017_max/${x}2017.nc \
-         ${workdir}allyears/${x}2014_2017.nc       # Concatenate along
+  ncrcat ${workdir}2013_min/${x}2013.nc \
+         ${workdir}2014_min/${x}2014.nc \
+         ${workdir}2015_min/${x}2015.nc \
+         ${workdir}2016_min/${x}2016.nc \
+         ${workdir}2017_min/${x}2017.nc \
+         ${workdir}allyears/${x}2013_2017.nc       # Concatenate along
 done

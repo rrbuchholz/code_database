@@ -58,8 +58,8 @@ begin
          emiss_type = "from_co2"         ; from_co, from_co2, regridded
     end if
 
-         MIN_EF         = True
-         MAX_EF         = False
+         MIN_EF         = False
+         MAX_EF         = True
 
   ; -------------------------------
   ; input emission files
