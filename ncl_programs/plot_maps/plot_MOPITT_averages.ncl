@@ -30,7 +30,9 @@ begin
 ;***************************************************************
     version = "V7T"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
     sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
    ; -------------------------------
    ; SELECT OUTPUT
@@ -133,7 +135,6 @@ begin
     mapres@cnFillMode                = "CellFill"     ; fill as grid boxes not contours
     mapres@cnLinesOn                 = False
 
-
     mapres@lbTitleFontHeightF       = 0.014
     mapres@lbLabelFontHeightF       = 0.014
     mapres@lbTitlePosition          = "bottom"      ; Label Bar title
@@ -159,11 +160,17 @@ begin
     ;  mapres@mpMinLonF               = -180
     ;  mapres@mpMaxLonF               = -50
       ;-------------------------------------
-      mapres@mpMinLatF               = -70       ; zoom to SH
-      mapres@mpMaxLatF               = 15
-      mapres@mpMinLonF               = -120
-      mapres@mpMaxLonF               = 245
+      ;mapres@mpMinLatF               = -70       ; zoom to SH
+      ;mapres@mpMaxLatF               = 15
+      ;mapres@mpMinLonF               = -120
+      ;mapres@mpMaxLonF               = 245
       ;mapres@mpCenterLonF            = 70
+      ;-------------------------------------
+      mapres@mpMinLatF               = -85       ; zoom to +/- 80
+      mapres@mpMaxLatF               = 85
+      mapres@mpMinLonF               = -170
+      mapres@mpMaxLonF               = 185
+      ;mapres@mpCenterLonF            = 150
 
     ;-----------------------------------
     ; end define resources
@@ -175,10 +182,10 @@ begin
     mapres@lbTitleString             = "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
     mapres@gsnRightString            = ""               ; change right title
     mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    labels = fspan(1e18,3.0e18, 21)
-    labels_strings = (/"1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
-                       "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9",\
-                       "3.0"/)
+    labels = fspan(0.5e18,2.8e18, 20)
+    labels_strings = (/"0.5","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
+                       "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8" /); ,"2.8","2.9",\
+    ;                   "3.0"/)
     mapres@cnLevels                  = labels
     mapres@lbLabelStrings            = labels_strings
     ;mapres@cnLevelSelectionMode      = "ManualLevels"
@@ -229,16 +236,30 @@ begin
     ;-------------------
     boxres = True
       boxres@gsLineColor      = "black"
-      boxres@gsLineThicknessF = 15
+      boxres@gsLineThicknessF = 10
 
-      region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
-                       "CentralSAmerica", "SouthAmerica"/)
-      region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
-                       "CSAm","SSAm"/)
-      latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-60./)
-      latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-25./)
-      lonmin = (/110.,110.,90.,0.,0.,-80 + 360.,-80 + 360./)
-      lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-32 + 360./)
+      ;region_name = (/"NorthAustralasia","SouthAustralasia","Indonesia","CSAfrica","SSAfrica",\
+      ;                 "CentralSAmerica", "SouthAmerica"/)
+      ;region_acr = (/"NAus","SAus","MSEA","CSAf","SSAf",\
+      ;                 "CSAm","SSAm"/)
+      ;latmin = (/-25.,-50.,-10.,-25.,-40.,-25.,-60./)
+      ;latmax = (/-10.,-25.,10.,-10.,-25.,-5.,-25./)
+      ;lonmin = (/110.,110.,90.,0.,0.,-80 + 360.,-80 + 360./)
+      ;lonmax = (/180.,180.,160.,59.,59.,-32 + 360.,-32 + 360./)
+
+      region_name = (/"Australasia","Indonesia","SAfrica",\
+                      "SouthAmerica", "Siberia", "NAmerica"/)
+      region_acr = (/"NAus","MSEA","SAf",\
+                       "SAm", "Sib", "NAm"/)
+      latmin = (/-50.,-10.,-40.,-60.,50., 25./)
+      latmax = (/-10.,10.,5.,4.,85.,70./)
+      lonmin = (/110.,90.,0.,-80 + 360.,91.,-170.+360./)
+      lonmax = (/180.,160.,60.,-40 + 360.,190.,-53.+360./)
+
+     region_names = (/"Australasia", "Maritime SEA", \
+                    "Southern Africa", "South ~C~America",\
+                    "Siberia", "North ~C~America" /)
+
 
 
    ; -----------------------------------------------------
@@ -247,7 +268,7 @@ begin
     do j=0,dimsizes(region_name)-1
      region_lon := (/lonmin(j), lonmin(j), lonmax(j), lonmax(j), lonmin(j)/)
      region_lat := (/latmin(j), latmax(j), latmax(j), latmin(j), latmin(j)/)
-     dum(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
+     ;dum(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
      ;dum2(j) = gsn_add_polyline(wks,map,region_lon,region_lat,boxres)
     end do
 
@@ -291,23 +312,30 @@ begin
     ;-------------------
     ;drawNDCGrid(wks)
        txres = True
-        txres@txFontHeightF  = 0.016
+        txres@txFontHeightF  = 0.014
         ;txres@txFont         = "helvetica-bold"
         txres@txJust         = "BottomLeft"
         txres@txFontColor    = "black"
         ;txres@txPerimOn      = True
+        txres@txBackgroundFillColor="white"
 
      
     ;gsn_text_ndc(wks,"test",0.1,0.1,txres)
     text = new(dimsizes(region_name),graphic)
     do k=0,dimsizes(region_name)-1
-      if (k.eq.2) then
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-5,txres)
-      else if (k.eq.5.or.k.eq.6)
+      if (k.eq.1) then
+        txres@txJust         = "TopLeft"
+        ;text(k) = gsn_add_text(wks,map,region_names(k),lonmin(k)+2, latmax(k)+15,txres)
+      else if (k.eq.3)
         txres@txJust         = "BottomRight"
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmin(k)-4, latmax(k)-15,txres)
+        ;text(k) = gsn_add_text(wks,map,region_names(k),lonmin(k)-2, latmin(k)+2,txres)
+      else if (k.eq.5)
+        txres@txJust         = "BottomLeft"
+        ;text(k) = gsn_add_text(wks,map,region_names(k),lonmin(k)+2, latmin(k)+2,txres)
       else
-        text(k) = gsn_add_text(wks,map,region_acr(k),lonmax(k)+2, latmax(k)-11,txres)
+        txres@txJust         = "BottomLeft"
+        ;text(k) = gsn_add_text(wks,map,region_names(k),lonmin(k)+2, latmin(k)-15,txres)
+      end if
       end if
       end if
     end do
@@ -359,8 +387,11 @@ begin
   panel_res@gsnPanelFigureStringsPerimOn = True
   panel_res@gsnPanelMainString    = "MOPITT Total column, SOND, 2001-2016"
   panel_res@gsnPanelMainFontHeightF = 0.028 
-  gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
+  ;gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
   ;frame(wks)
+
+  draw(map)    ; All plots will be drawn.
+  frame(wks)
 
   end if    ; PLOT
 

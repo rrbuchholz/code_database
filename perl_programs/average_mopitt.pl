@@ -14,10 +14,10 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
     #------------------------------------
     # concatenate files
     #------------------------------------
-    for  $i (2001..2001) {
+    for  $i (2014..2014) {
          $to_combine = "";
          print"$to_combine\n";
-         for  $j (9..12) {
+         for  $j (1..12) {
           $dateval = $i.sprintf("%02d",$j);
           chomp($fname = `ls $rundir$dateval/month/*.he5`);
           $to_combine = $to_combine.$fname." ";
@@ -25,7 +25,8 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
          print "\n";
 
          #$outfile = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/".$i."_dummy.nc";
-         $outfile = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/".$dateval."_dummy.nc";
+         #$outfile = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/".$dateval."_dummy.nc";
+         $outfile = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/".$dateval."_01to12.nc";
          #print "$outfile\n";
          #chomp(`ls $rundir$i*/month/*.he5`);
          print "Averaging $i\n";
@@ -33,6 +34,7 @@ $tracerlist = "RetrievedCOTotalColumnDay,RetrievedCOTotalColumnNight,RetrievedCO
         # note ncra requires a time dimension in files, nces requires no time dimension
          print "nces -O -v $tracerlist $to_combine$outfile\n";
         `nces -O -v $tracerlist $to_combine$outfile`;
+     exit
      }
 
      chomp(@final_average = `ls /net/mopfl/home/buchholz/MOPITT_subset/V7/averages/*dummy.nc`);
