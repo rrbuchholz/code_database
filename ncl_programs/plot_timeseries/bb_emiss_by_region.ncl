@@ -23,17 +23,17 @@ begin
   tracer = "CO"
   reso = "0.9x1.25"
   ystart = 2014
-  yend = 2017
+  yend = 2015
   
   PLOT = True
-    plottype = "x11"
-      plottype@wkWidth  = 1200
-      plottype@wkHeight = 1200
+    plottype = "png"
+      plottype@wkWidth  = 1800
+      plottype@wkHeight = 1800
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/BB_Emiss"
 
-
+  CMIP = True
 ; =========================================
 ; SET UP
 ; =========================================
@@ -42,7 +42,7 @@ begin
   ;order = (/ "QFED", "FINN"/)
   ;order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
   ;order = (/  "QFED regridded","QFED x FINN", "FINN 1.5","GFAS x FINN", "GFAS regridded"/)
-  order = (/  "QFED regridded", "FINN 1.5", "GFAS x FINN", "GFAS regridded"/)
+  order = (/  "QFED", "FINN 1.5", "GFAS"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
@@ -50,12 +50,13 @@ begin
    qfed_dir = "qfed/cam_"+reso+"/"
    finn_dir = "finn/cam_"+reso+"/"
    gfas_dir = "gfas/cam_"+reso+"/"
-   e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+   cmip6_dir ="gfed/cmip6_cam_"+reso+"/"
+   e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
                  ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-                 ;qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_Tg_regional.nc",\                 
+                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc",\                 
                  finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
-                 gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc",\
-                 gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc"/)  
+                 ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
+                 gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
 print(top_dir+e_file_in(0))
   ; -------------------------------
   ; data names (from ncl_filedump)
@@ -155,6 +156,26 @@ printVarSummary(emiss_in1)
  emiss5_weekly_avg = dim_avg_n(emiss5_4d,2)
  emiss6_weekly_avg = dim_avg_n(emiss6_4d,2)
 
+; ----------------------------------------
+; Month averages
+; ----------------------------------------
+if(CMIP) then
+    fin2 = addfile(top_dir+cmip6_dir+"region_sums/finn.emis_CO_0.9x1.25_CMIP6_Tg_regional_1750_2015.nc", "r")
+      cmip_time_dummy := fin2->time
+      cmip_yfrac_dummy:= tofloat(cd_calendar(cmip_time_dummy,4))
+      cmip_range_ind  := ind(cmip_yfrac_dummy.ge.ystart.and.cmip_yfrac_dummy.lt.yend)
+      cmip_time = cmip_time_dummy(cmip_range_ind)
+      cmip_yfrac = tofloat(cd_calendar(cmip_time,4))
+
+      cmip_emiss1_monthly     := fin2->$emiss1$(cmip_range_ind)
+      cmip_emiss2_monthly     := fin2->$emiss2$(cmip_range_ind)
+      cmip_emiss3_monthly     := fin2->$emiss3$(cmip_range_ind)
+      cmip_emiss4_monthly     := fin2->$emiss4$(cmip_range_ind)
+      cmip_emiss5_monthly     := fin2->$emiss5$(cmip_range_ind)
+      cmip_emiss6_monthly     := fin2->$emiss6$(cmip_range_ind)
+
+end if
+
 
 ; =========================================
 ; PLOT the timeseries
@@ -182,6 +203,12 @@ if (PLOT) then
       res@lgLabelFontHeightF       = 0.024
       res@pmLegendOrthogonalPosF   = -1.1
       res@pmLegendParallelPosF     = 0.3
+
+   res@tmXBMode         = "Explicit"
+   res@tmXBValues       = (/2014.,2014.5,2015./)
+   res@tmXBLabels       = (/"201401","201406","201501"/)
+   res@tmXBLabelFontHeightF = 0.030
+   res@tmYLLabelFontHeightF = 0.030
   ;--------------------------
   ; Do the plotting
   ;--------------------------
@@ -195,17 +222,22 @@ if (PLOT) then
   ; daily
    res@xyExplicitLegendLabels   = "daily " + order
     res@pmLegendOrthogonalPosF   = -1.8
+   res@trYMaxF          = 1.6
   plot1  = gsn_csm_xy(wks,yfrac,emiss_in1,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
+   res@trYMaxF          = 0.6
   plot2  = gsn_csm_xy(wks,yfrac,emiss_in2,res) ; create plot
+   res@trYMaxF          = 1.2
   plot3  = gsn_csm_xy(wks,yfrac,emiss_in3,res) ; create plot
+   res@trYMaxF          = 0.7
   plot4  = gsn_csm_xy(wks,yfrac,emiss_in4,res) ; create plot
+   res@trYMaxF          = 1.5
   plot5  = gsn_csm_xy(wks,yfrac,emiss_in5,res) ; create plot
   plot6  = gsn_csm_xy(wks,yfrac,emiss_in6,res) ; create plot
 
    res@xyMarkLineModes  := "Lines"                               ; choose which have markers
    res@xyDashPatterns      = (/0,16,14,3/)
-   res@xyLineThicknesses = (/5.0, 5.0, 5.0, 5.0/)                ; make second line thicker
+   res@xyLineThicknesses = (/8.0, 8.0, 8.0, 8.0/)                ; make second line thicker
    res@xyLineColors      = (/"red","blue","limegreen"/)          ; change line color
 
   ; weekly
@@ -220,12 +252,36 @@ if (PLOT) then
   plot5a  = gsn_csm_xy(wks,yfrac2,emiss5_weekly_avg,res) ; create plot
   plot6a  = gsn_csm_xy(wks,yfrac2,emiss6_weekly_avg,res) ; create plot
 
+
+  res@xyLineColors      := (/"black"/)  ; Line color
+  res@xyExplicitLegendLabels   := "monthly CMIP6"
+  res@pmLegendDisplayMode        = "Always"        ; turn on legend
+    res@pmLegendOrthogonalPosF   = -1.38
+      res@pmLegendParallelPosF     = 0.28
+  plot1b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss1_monthly,res) ; create plot
+  res@pmLegendDisplayMode      = "Never"        ; turn on legend
+  plot2b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss2_monthly,res) ; create plot
+  plot3b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss3_monthly,res) ; create plot
+  plot4b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss4_monthly,res) ; create plot
+  plot5b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss5_monthly,res) ; create plot
+  plot6b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss6_monthly,res) ; create plot
+
+
+
+
   overlay(plot1,plot1a)
   overlay(plot2,plot2a)
   overlay(plot3,plot3a)
   overlay(plot4,plot4a)
   overlay(plot5,plot5a)
   overlay(plot6,plot6a)
+
+  overlay(plot1,plot1b)
+  overlay(plot2,plot2b)
+  overlay(plot3,plot3b)
+  overlay(plot4,plot4b)
+  overlay(plot5,plot5b)
+  overlay(plot6,plot6b)
 
   panel_res                       = True
       panel_res@txString              = "BB emissions for "+ tracer + " " + ystart + " to " + yend

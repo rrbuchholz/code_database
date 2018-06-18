@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2014
-  yend = 2017
+  ystart = 1750
+  yend = 2015
   reso = "0.9x1.25"
 
   machine = "modeling1"         ; modeling1, modeling2, cheyenne
-  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN
+  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
     s_name = "CO2"
 
   tracers = (/"CO"/)
@@ -93,6 +93,13 @@ do t = 0, dimsizes(tracers)-1
      indir = emis_dir+"/allyears/"
      outpath = emis_dir+"/region_sums/"
     end if
+    end if
+
+    if (repository.eq."CMIP6") then
+     emis_dir = top_dir+ "gfed/cmip6_cam_"+reso
+     e_file_in = "emissions-cmip6_"+tracer+"_bb_surface_"+ystart+"-"+yend+"_"+reso+"_c20170322.nc"
+     indir = emis_dir+"/1750_2015/"
+     outpath = emis_dir+"/region_sums/"
     end if
 
   else if (machine.eq."cheyenne") then 
@@ -167,8 +174,11 @@ do t = 0, dimsizes(tracers)-1
     emiss           = "fire"
   else if (repository.eq."QFED_native") then
     emiss           = "biomass"
+  else if (repository.eq."CMIP6") then
+    emiss           = "emiss_bb"
   else
     emiss           = "bb"
+  end if
   end if
   end if
   ; -------------------------------
@@ -273,6 +283,12 @@ do t = 0, dimsizes(tracers)-1
      tracer_emiss = (emiss_in/NAv)*mw          ; molec -> mol -> g
      ; g cm-2 d-1
      tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
+
+     if (repository.eq."CMIP6") then           ; d-1 -> m-1
+       month_days = days_in_month(yyyy,mm)
+       month_days_array = conform(tracer_emiss, month_days, 0)
+       tracer_emiss = tracer_emiss*month_days_array
+     end if
      ; g m-2 d-1
      tracer_emiss = (tracer_emiss*100*100)     ; cm-2 -> m-2
       tracer_emiss!0 = "time"
@@ -281,6 +297,8 @@ do t = 0, dimsizes(tracers)-1
       tracer_emiss&lat = lat
       tracer_emiss!2 = "lon"
       tracer_emiss&lon = lon
+
+
 
      ; weight by gridbox area
        ; prevent negative weights 
@@ -415,8 +433,11 @@ if (NETCDF) then
         outfilename = "gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional_"+ystart+"_"+yend+".nc"
       else if (repository.eq."FINN") then
         outfilename = "finn.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
+      else if (repository.eq."CMIP6") then
+        outfilename = "finn.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       else
         outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
+      end if
       end if
       end if
       end if
@@ -458,6 +479,10 @@ if (NETCDF) then
           fAtt@history            = s_name+" is from "+repository+", v1.2 with "+\
                                   "FINN emission ratios applied"
           fAtt@title              = "Emissions of "+ tracer+" from FINN emission ratios applied to GFAS "+s_name+", daily"
+        else if (repository.eq."CMIP6") then
+          fAtt@history            = tracer+" is from "+repository
+          fAtt@title              = "Emissions of "+ tracer+" from CMIP6, daily"
+        end if
         end if
         end if
         end if
