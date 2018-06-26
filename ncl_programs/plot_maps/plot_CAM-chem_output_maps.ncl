@@ -22,9 +22,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "ISOP"
+  tracer = "O3"
   region = "Australia"
-  timeslice = "ANN"
+  timeslice = "DJF"
+
+  ; Plot definitions
+    units = "ppb"
+    maxlev = 35.0
+    lev_spacing = 1.0
+
+   STATIONS = True
 
   ; -------------------------------
   ; file location
@@ -49,10 +56,10 @@ begin
       loncenter                      = 180
       region_name =  "World"
   else if (region.eq."Australia") then
-     latmin                          = -50               ; zoom to Australia
-      latmax                         = -10
-      lonmin                         = 100
-      lonmax                         = 180
+     latmin                          = -45               ; zoom to Australia
+      latmax                         = -25
+      lonmin                         = 125
+      lonmax                         = 170
       loncenter                      = 140
       region_name =  "Australia"
   else if (region.eq."NAmerica") then
@@ -97,22 +104,41 @@ begin
 ;-------------------
 ; load files and extract
 ;-------------------
+
+  if (units.eq."ppt") then
+    divisor = 1e-12
+  else if (units.eq."ppb") then
+    divisor = 1e-09
+  else if (units.eq."kg/m2/sec") then
+    divisor = 1
+  end if
+  end if
+  end if
   fin = addfiles(camfile_1, "r")
    tracer_fields_1  = fin[:]->$tracer$
-   tracer_fields_1= tracer_fields_1/1e-09
+   tracer_fields_1= tracer_fields_1/divisor
 
   fin2 = addfiles(camfile_2, "r")
    tracer_fields_2  = fin2[:]->$tracer$
-   tracer_fields_2= tracer_fields_2/1e-09
+   tracer_fields_2= tracer_fields_2/divisor
 
-
+printVarSummary(tracer_fields_1)
 ;-------------------
 ; calculations
 ;-------------------
-  glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
-  ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
+
+  if (tracer.eq."MEG_ISOP") then
+    glob_avg = dim_avg_n(tracer_fields_1(:,{20:60},{220:300}), (/1,2/))
     print(glob_avg)
-  glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
+    glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0/))
+  else
+    ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
+    glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
+    print(glob_avg)
+    glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
+  end if
+
+
   rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array 
     copy_VarAtts(tracer_fields_1, rel_glob_diff)
     copy_VarCoords(tracer_fields_1, rel_glob_diff)
@@ -120,6 +146,7 @@ begin
   rel_glob_avg  = tracer_fields_1/glob_avg_array
     copy_VarAtts(tracer_fields_1, rel_glob_avg)
     copy_VarCoords(tracer_fields_1, rel_glob_avg)
+   
 
 ;********************************************
   ;-------------------
@@ -155,9 +182,9 @@ begin
       mapres@mpCenterLonF            = loncenter
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-      mapres@cnMinLevelValF          = 0.                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 3.               ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.1             ; set the interval between contours
+      mapres@cnMinLevelValF          = 0.                  ; set the minimum contour level
+      mapres@cnMaxLevelValF          = maxlev              ; set the maximum contour level
+      mapres@cnLevelSpacingF         = lev_spacing         ; set the interval between contours
 
     ;-------------------
     ; do the plotting
@@ -166,13 +193,21 @@ begin
       panel_res@gsnMaximize               = True  
       panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
-      mapres@gsnRightString        = "ppb" 
+      mapres@gsnRightString        = units
       mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " with Anthropogenic emissions " +timeslice
       mapres@cnFillPalette       = "BlAqGrYeOrRe"
-    map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
+    if (tracer.eq."MEG_ISOP") then
+      map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,:,:),mapres)
+    else
+      map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
+    end if
 
       mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " without Anthropogenic emissions "+timeslice
-    map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
+    if (tracer.eq."MEG_ISOP") then
+      map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,:,:),mapres)
+    else
+      map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
+    end if
 
      mapres@cnFillPalette       = "WhiteYellowOrangeRed"
      mapres@cnMinLevelValF          = 0              ; set the minimum contour level
@@ -180,19 +215,68 @@ begin
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
      mapres@gsnLeftString     = "Anth_sim concentrations relative to N. America anth_sim average"   ;
      mapres@gsnRightString     = "" 
-    map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
+    if (tracer.eq."MEG_ISOP") then
+      map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,:,:),mapres)
+    else
+      map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
+    end if
 
      mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to N. America anth_sim average"   ;
      mapres@cnFillPalette       = "hotcold_18lev"
      mapres@cnMinLevelValF          = -1.0             ; set the minimum contour level
      mapres@cnMaxLevelValF          = 1.0               ; set the maximum contour level
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
-    map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
+    if (tracer.eq."MEG_ISOP") then
+      map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,:,:),mapres)
+    else
+      map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
+    end if
 
 
-    gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
-    ;draw(map3)
-    ;frame(wks)
+
+    ;gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
+
+     if (STATIONS) then
+    ; ===================
+    ; Locations
+    ; ===================
+    ;
+    ; Add the locations as filled circles
+    ;
+    ;  station_name = (/"Lauder", "Wollongong", "Darwin" /)
+    ;  station_lon = (/169.68, 150.88, 130.892/)
+    ;  station_lat = (/-45.03, -34.41, -12.425/)
+
+      station_name = (/"Sydney", "Wollongong", "Canberra" /)
+      station_lon = (/151.21, 150.88, 149.13/)
+      station_lat = (/-33.86, -34.41, -35.28/)
+      pmres                    = True
+        pmres@gsMarkerIndex    = 16        ; filled markers
+        ;pmres@gsMarkerSizeF   = 0.005
+        pmres@gsMarkerSizeF    = 0.008
+        pmres@gsMarkerColor    = "black"
+
+      tstatn = gsn_add_polymarker(wks,map1,station_lon,station_lat,pmres)
+
+    ; ===================
+    ; Add locations names
+    ; ===================
+    ;
+       txres = True
+        txres@txFontHeightF  = 0.024
+        txres@txFont         = "helvetica-bold"
+        txres@txJust         = "BottomLeft"
+        txres@txFontColor    = "black"
+
+     text = gsn_add_text(wks,map1,station_name(0),station_lon(0)+0.5,station_lat(0)-0.5,txres)
+        txres@txJust         = "TopLeft"
+     text = gsn_add_text(wks,map1,station_name(1),station_lon(1)+0.5,station_lat(1)-0.5,txres)
+        txres@txJust         = "BottomRight"
+     text = gsn_add_text(wks,map1,station_name(2),station_lon(2)-0.5,station_lat(2)-1,txres)
+    end if
+
+    draw(map1)
+    frame(wks)
 
   end if    ; PLOT
 
