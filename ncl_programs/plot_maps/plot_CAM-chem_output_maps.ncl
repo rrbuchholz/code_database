@@ -22,16 +22,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "O3"
+  tracer = "CO"
   region = "Australia"
   timeslice = "DJF"
 
   ; Plot definitions
     units = "ppb"
-    maxlev = 35.0
-    lev_spacing = 1.0
+    maxlev = 100.
+    lev_spacing = 5.
 
-   STATIONS = True
+   STATIONS = False
 
   ; -------------------------------
   ; file location
@@ -56,14 +56,14 @@ begin
       loncenter                      = 180
       region_name =  "World"
   else if (region.eq."Australia") then
-     latmin                          = -45               ; zoom to Australia
-      latmax                         = -25
-      lonmin                         = 125
-      lonmax                         = 170
+     latmin                          = -50               ; zoom to Australia
+      latmax                         = -10
+      lonmin                         = 100
+      lonmax                         = 180
       loncenter                      = 140
       region_name =  "Australia"
   else if (region.eq."NAmerica") then
-      latmin                          = 20               ; zoom to North America
+      latmin                         = 20               ; zoom to North America
       latmax                         = 60
       lonmin                         = 220
       lonmax                         = 300
@@ -111,35 +111,57 @@ begin
     divisor = 1e-09
   else if (units.eq."kg/m2/sec") then
     divisor = 1
+  else if (units.eq."aod".or.units.eq."K".or.units.eq."W/m2") then
+    divisor = 1
+  end if
   end if
   end if
   end if
   fin = addfiles(camfile_1, "r")
-   tracer_fields_1  = fin[:]->$tracer$
-   tracer_fields_1= tracer_fields_1/divisor
+   if (tracer.eq."ISOPNITA") then
+     tracer_fields_1_a  = fin[:]->$tracer$
+     tracer_fields_1_b  = fin[:]->ISOPNITB
+     tracer_fields_1 = tracer_fields_1_a + tracer_fields_1_b
+     copy_VarMeta(tracer_fields_1_a,tracer_fields_1)
+     tracer_fields_1= tracer_fields_1/divisor
+   else
+     tracer_fields_1  = fin[:]->$tracer$
+     tracer_fields_1= tracer_fields_1/divisor
+   end if
 
   fin2 = addfiles(camfile_2, "r")
-   tracer_fields_2  = fin2[:]->$tracer$
-   tracer_fields_2= tracer_fields_2/divisor
+   if (tracer.eq."ISOPNITA") then
+     tracer_fields_2_a  = fin2[:]->$tracer$
+     tracer_fields_2_b  = fin2[:]->ISOPNITB
+     tracer_fields_2 = tracer_fields_2_a + tracer_fields_2_b
+     copy_VarMeta(tracer_fields_2_a,tracer_fields_2)
+     tracer_fields_2= tracer_fields_2/divisor
+   else
+     tracer_fields_2  = fin2[:]->$tracer$
+     tracer_fields_2= tracer_fields_2/divisor
+   end if
 
 printVarSummary(tracer_fields_1)
 ;-------------------
 ; calculations
 ;-------------------
 
-  if (tracer.eq."MEG_ISOP") then
+  if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
+     .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
+     .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
     glob_avg = dim_avg_n(tracer_fields_1(:,{20:60},{220:300}), (/1,2/))
     print(glob_avg)
     glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0/))
   else
-    ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
-    glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
+    glob_avg = dim_avg_n(tracer_fields_1(:,:,{20:60},{220:300}), (/2,3/))
+    ;glob_avg = dim_avg_n(tracer_fields_1(:,:,{-10:-50},{100:180}), (/2,3/))
     print(glob_avg)
     glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0,1/))
   end if
 
 
-  rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array 
+  rel_glob_diff  = (tracer_fields_1-tracer_fields_2)/glob_avg_array
     copy_VarAtts(tracer_fields_1, rel_glob_diff)
     copy_VarCoords(tracer_fields_1, rel_glob_diff)
 
@@ -195,15 +217,24 @@ printVarSummary(tracer_fields_1)
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
       mapres@gsnRightString        = units
       mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " with Anthropogenic emissions " +timeslice
+      ;mapres@gsnLeftString     = "CAM-chem surface ISOPNITA+B with Anthropogenic emissions " +timeslice
+
       mapres@cnFillPalette       = "BlAqGrYeOrRe"
-    if (tracer.eq."MEG_ISOP") then
+    if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
+     .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
+     .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,:,:),mapres)
     else
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
     end if
 
       mapres@gsnLeftString     = "CAM-chem surface "+ tracer + " without Anthropogenic emissions "+timeslice
-    if (tracer.eq."MEG_ISOP") then
+      ;mapres@gsnLeftString     = "CAM-chem surface ISOPNITA+B without Anthropogenic emissions " +timeslice
+    if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
+     .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
+     .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
       map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,:,:),mapres)
     else
       map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
@@ -215,26 +246,31 @@ printVarSummary(tracer_fields_1)
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
      mapres@gsnLeftString     = "Anth_sim concentrations relative to N. America anth_sim average"   ;
      mapres@gsnRightString     = "" 
-    if (tracer.eq."MEG_ISOP") then
+    if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
+     .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
+     .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
       map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,:,:),mapres)
     else
       map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
     end if
 
      mapres@gsnLeftString     = "Difference between simulations (anth - no_anth), relative to N. America anth_sim average"   ;
+     ;mapres@gsnLeftString     = "Difference between simulations (anth - no_anth)"   ;
+     ;mapres@gsnRightString     = "W/m2" 
      mapres@cnFillPalette       = "hotcold_18lev"
-     mapres@cnMinLevelValF          = -1.0             ; set the minimum contour level
-     mapres@cnMaxLevelValF          = 1.0               ; set the maximum contour level
+     mapres@cnMinLevelValF          = -1.             ; set the minimum contour level
+     mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
-    if (tracer.eq."MEG_ISOP") then
+    if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
+     .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
+     .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
       map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,:,:),mapres)
     else
       map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)
     end if
 
-
-
-    ;gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
 
      if (STATIONS) then
     ; ===================
@@ -275,8 +311,12 @@ printVarSummary(tracer_fields_1)
      text = gsn_add_text(wks,map1,station_name(2),station_lon(2)-0.5,station_lat(2)-1,txres)
     end if
 
-    draw(map1)
-    frame(wks)
+
+    gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
+
+
+    ;draw(map1)
+    ;frame(wks)
 
   end if    ; PLOT
 
