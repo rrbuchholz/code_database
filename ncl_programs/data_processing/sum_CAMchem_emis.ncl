@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 1750
-  yend = 2015
+  ystart = 2017
+  yend = 2017
   reso = "0.9x1.25"
 
-  machine = "modeling1"         ; modeling1, modeling2, cheyenne
-  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  machine = "cheyenne"         ; modeling1, modeling2, cheyenne
+  repository = "FINN1.5"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
     s_name = "CO2"
 
   tracers = (/"CO"/)
@@ -112,8 +112,10 @@ do t = 0, dimsizes(tracers)-1
      emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
-     emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
+     ;emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
+     ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
+     emis_dir = "/glade/p/work/emmons/emis/finn1.6_v20180630/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"_"+reso+".nc")
     else if (repository.eq."QFED_NRT") then
      emis_dir = top_dir+ "emis/qfed_finn_nrt_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
@@ -431,10 +433,10 @@ if (NETCDF) then
         outfilename = "gfas.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       else if (repository.eq."GFAS/FINN") then
         outfilename = "gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional_"+ystart+"_"+yend+".nc"
-      else if (repository.eq."FINN") then
+      else if (repository.eq."FINN".or.repository.eq."FINN1.5".or.repository.eq."FINN1.6") then
         outfilename = "finn.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       else if (repository.eq."CMIP6") then
-        outfilename = "finn.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
+        outfilename = "cmip.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       else
         outfilename = "qfed.emis_"+tracer+"_"+reso+"_"+repository+"_Tg_regional_"+ystart+"_"+yend+".nc"
       end if

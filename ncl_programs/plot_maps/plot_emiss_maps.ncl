@@ -26,9 +26,10 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "CO2"
-  year = 2014
-  repository = "QFED_native"
+  tracer = "CO"
+  year = 2017
+  repository = "FINN1.5"
+  timeslice = ""
 
   ; -------------------------------
   ; emission files
@@ -38,11 +39,27 @@ begin
   ;e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/regridded/allyears/qfed.emis_"+tracer+"_0.9x1.25_mol_2014_2016.nc"
   ;e_file_1 = "/data14b/buchholz/gfas/cam_0.9x1.25/from_co2/2014/gfas.emis_fromgrib_"+tracer+"_0.9x1.25_mol_2014new.nc"
 
-   emis_dir = "/data14b/buchholz/qfed/orig_0.25/co2_"+year+"/"
-   e_file_1 = systemfunc ("ls "+emis_dir+"*"+year+"*.nc4")
+   ;emis_dir = "/data14b/buchholz/qfed/orig_0.25/co2_"+year+"/"
+   ;e_file_1 = systemfunc ("ls "+emis_dir+"*"+year+"*.nc4")
 
   ;e_file_1 = "/data14b/buchholz/finn/cam_0.9x1.25/allyears/emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
   ;e_file_1 = "/data14b/buchholz/gfed/cmip6_cam_0.9x1.25/1750_2015/emissions-cmip6_"+tracer+"_bb_surface_1750-2015_0.9x1.25_c20170322.nc"
+
+;CHEYENNE
+;QFED & GFAS
+   ;emis_dir = "/glade/p/work/buchholz/"
+    ;emis_dir = "/glade/p/work/buchholz/emis/qfed2.5_finn_2000_2018_1x1/"
+    ;emis_dir = "/glade/p/work/buchholz/emis/gfas_finn_2014_2017_1x1/"
+    ;e_file_1 = systemfunc("ls "+emis_dir+"*"+tracer+"_*.nc")
+;FINN
+   ;emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
+   ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_2017*.nc")
+   ;emis_dir = "/glade/p/work/emmons/emis/finn1.6_v20180630/"
+   emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
+   e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
+
+print(e_file_1)
+
 
 
   ;------------
@@ -52,11 +69,11 @@ begin
   TIMEPLOT       = False
   MONTHAVG       = True
 
-  region_name =  "Australasia"
-      latmin                         = -45               ; zoom to Australia
-      latmax                         = -10
-      lonmin                         = 100
-      lonmax                         = 160
+  region_name =  "World"
+    ;  latmin                         = -45               ; zoom to Australia
+    ;  latmax                         = -10
+    ;  lonmin                         = 100
+    ;  lonmax                         = 160
 
    ;   latmin                         = 20               ; zoom to North America
    ;   latmax                         = 60
@@ -68,6 +85,10 @@ begin
     ;  lonmin                         = 270
     ;  lonmax                         = 330
 
+      latmin                         = -80               ; World
+      latmax                         = 80
+      lonmin                         = -170
+      lonmax                         = 185
 
 ;--------------------------------------------
 ; end user input
@@ -78,7 +99,8 @@ begin
   ; -------------------------------
   ; names of fire emission structure
   ; -------------------------------
-  if (repository.eq."FINN") then
+  if (repository.eq."FINN".or.repository.eq."FINN1.6"\
+     .or.repository.eq."FINN1.6new".or.repository.eq."FINN1.5") then
     fire_emiss           = "fire"
   else if (repository.eq."QFED_native") then
     fire_emiss           = "biomass"
@@ -103,7 +125,7 @@ begin
   ; plotting parameters
   ; -------------------------------
   if (PLOT) then
-    mapType = "png"
+    mapType = "x11"
       mapType@wkWidth  = 1200
       mapType@wkHeight = 1200
     mapName = tracer+"_"+repository
@@ -131,7 +153,7 @@ begin
     fin1 = addfile(e_file_1, "r")
       time_dummy := fin1->time
       yfrac_dummy:= tofloat(cd_calendar(time_dummy,4))
-      range_ind  := ind(yfrac_dummy.ge.2013.and.yfrac_dummy.lt.2017)
+      range_ind  := ind(yfrac_dummy.ge.2013.and.yfrac_dummy.lt.2018)
       file1_time = time_dummy(range_ind)
       emiss_dummy          = fin1->$fire_emiss$
       emiss_file1 = emiss_dummy(range_ind,:,:)
@@ -142,6 +164,7 @@ begin
       ;selected_ind = ind(time_split(:,1).eq.5)
       selected_ind = ind(time_split(:,0).eq.year)
       ndims = dimsizes(emiss_file1)
+
       test = dim_sum_n_Wrap(emiss_file1(selected_ind,:,:),0)
 
       mw = 28.
@@ -160,7 +183,14 @@ begin
       emiss_tg_dummy  = (emiss_tg_dummy /NAv)*mw       ; molec -> mol -> g
       emiss_tg_dummy  = (emiss_tg_dummy /1e12)         ; g -> Tg
 
-      emiss_tg = dim_sum_n_Wrap(emiss_tg_dummy ,0)
+      newtime = time_split(selected_ind,:)
+      if (timeslice.eq."SON") then
+        ind_selected = ind(newtime(:,1).eq.9.or.newtime(:,1).eq.10.or.newtime(:,1).eq.11)
+      else
+        ind_selected = ind(newtime(:,1).gt.0)
+      end if
+
+      emiss_tg = dim_sum_n_Wrap(emiss_tg_dummy(ind_selected,:,:) ,0)
 
       lat = tofloat(test&lat)
        newlat = lat
@@ -201,8 +231,8 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
   ;-------------------
   if (PLOT) then
     wks = gsn_open_wks(mapType,mapName)
-    ;gsn_define_colormap(wks,"WhiteYellowOrangeRed")        ; change colour map
-    gsn_define_colormap(wks,"MPL_Greys")        ; change colour map
+    gsn_define_colormap(wks,"WhiteYellowOrangeRed")        ; change colour map
+    ;gsn_define_colormap(wks,"MPL_Greys")        ; change colour map
     ;-------------------
     ; define resources 
     ; to use for plotting
@@ -233,6 +263,7 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
       mapres@mpMaxLatF               = latmax
       mapres@mpMinLonF               = lonmin
       mapres@mpMaxLonF               = lonmax
+      ;mapres@mpCenterLonF            = 160
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
       ;mapres@cnMinLevelValF          = -5e11                ; set the minimum contour level
@@ -240,8 +271,8 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
       ;mapres@cnLevelSpacingF         = 5e10                ; set the interval between contours
 
       mapres@cnMinLevelValF          = 0.                 ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 1.2               ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.06               ; set the interval between contours
+      mapres@cnMaxLevelValF          = 0.2               ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.01               ; set the interval between contours
 
 
     ;-------------------
@@ -260,14 +291,15 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
     ;-------------------
     ;drawNDCGrid(wks)
        txres = True
-        txres@txFontHeightF  = 0.024
+        txres@txFontHeightF  = 0.022
         ;txres@txFont         = "helvetica-bold"
         txres@txJust         = "BottomLeft"
         txres@txFontColor    = "black"
         txres@txPerimOn      = True
         txres@txBackgroundFillColor="white"
 
-     text = gsn_add_text(wks,map1,repository+" "+year+" "+tracer, 101, -44,txres)
+     ;text = gsn_add_text(wks,map1,repository+" "+year+" "+tracer, 101, -44,txres)
+     text = gsn_add_text(wks,map1,repository+" "+year+" "+timeslice+" "+tracer, 30, -75,txres)
 
     ;gsn_panel(wks,(/map1,map2,map3/),(/3,1/),panel_res)
     draw(map1)

@@ -22,18 +22,18 @@ begin
 ; =========================================
   tracer = "CO"
   reso = "0.9x1.25"
-  ystart = 2014
-  yend = 2015
+  ystart = 2016
+  yend = 2018
   
   PLOT = True
-    plottype = "png"
+    plottype = "x11"
       plottype@wkWidth  = 1800
       plottype@wkHeight = 1800
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/BB_Emiss"
 
-  CMIP = True
+  CMIP = False
 ; =========================================
 ; SET UP
 ; =========================================
@@ -42,7 +42,8 @@ begin
   ;order = (/ "QFED", "FINN"/)
   ;order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
   ;order = (/  "QFED regridded","QFED x FINN", "FINN 1.5","GFAS x FINN", "GFAS regridded"/)
-  order = (/  "QFED", "FINN 1.5", "GFAS"/)
+  ;order = (/  "QFED", "FINN 1.5", "GFAS"/)
+  order = (/  "QFED", "FINN 1.5", "FINN1.6", "FINN1.6new" /)
   ; -------------------------------
   ; emission files
   ; -------------------------------
@@ -57,7 +58,15 @@ begin
                  finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
                  ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
                  gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
-print(top_dir+e_file_in(0))
+
+   ; cheyenne
+   top_dir = "/glade/p/work/buchholz/data_processing/CAM-chem/emissions/"
+   e_file_in := (/"qfed.emis_CO_0.9x1.25_QFED_cross_FINN_Tg_regional.nc",\               
+                 "qfed.emis_CO_0.9x1.25_FINN1.5_Tg_regional.nc",\
+                 "qfed.emis_CO_0.9x1.25_FINN1.6_Tg_regional.nc",\
+                 "finn.emis_CO_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
+print(top_dir+e_file_in)
+
   ; -------------------------------
   ; data names (from ncl_filedump)
   ; here they specify different regions
@@ -84,6 +93,7 @@ print(top_dir+e_file_in(0))
       range_ind  := ind(yfrac_dummy.ge.ystart.and.yfrac_dummy.lt.yend)
       time = time_dummy(range_ind)
       yfrac = tofloat(cd_calendar(time,4))
+      yyyymmdd = (cd_calendar(time,2))
 
    emiss_in1 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in2 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
@@ -99,6 +109,9 @@ print(top_dir+e_file_in(0))
       time_2_dummy := fin->time
       yfrac_2_dummy:= tofloat(cd_calendar(time_2_dummy,4))
       range_2_ind  := ind(yfrac_2_dummy.ge.ystart.and.yfrac_2_dummy.lt.yend)
+      timenew := time_2_dummy(range_2_ind)
+      yyyymmddnew := (cd_calendar(timenew,2))
+
       dummy_1     := fin->$emiss1$
       dummy_2     := fin->$emiss2$
       dummy_3     := fin->$emiss3$
@@ -106,15 +119,25 @@ print(top_dir+e_file_in(0))
       dummy_5     := fin->$emiss5$
       dummy_6     := fin->$emiss6$
 
-printVarSummary(range_2_ind)
+     ind_overlap := ind(yyyymmdd.ge.yyyymmddnew(0).and.yyyymmdd.le.yyyymmddnew(dimsizes(yyyymmddnew)-1))
+
+     if (yyyymmddnew(dimsizes(yyyymmddnew)-1).gt.yyyymmdd(dimsizes(yyyymmdd)-1))
+        print("*--------------------------------New file ends after old file")
+        cut_range := ind(yyyymmddnew.le.yyyymmdd(dimsizes(yyyymmdd)-1))
+        newrange := range_2_ind(cut_range)
+        range_2_ind := newrange
+     end if
+
+;printVarSummary(ind_overlap)
+;printVarSummary(range_2_ind)
 printVarSummary(dummy_1)
 printVarSummary(emiss_in1)
-      emiss_in1(i,:) = dummy_1(range_2_ind)
-      emiss_in2(i,:) = dummy_2(range_2_ind)
-      emiss_in3(i,:) = dummy_3(range_2_ind)
-      emiss_in4(i,:) = dummy_4(range_2_ind)
-      emiss_in5(i,:) = dummy_5(range_2_ind)
-      emiss_in6(i,:) = dummy_6(range_2_ind)
+      emiss_in1(i,ind_overlap) = dummy_1(range_2_ind)
+      emiss_in2(i,ind_overlap) = dummy_2(range_2_ind)
+      emiss_in3(i,ind_overlap) = dummy_3(range_2_ind)
+      emiss_in4(i,ind_overlap) = dummy_4(range_2_ind)
+      emiss_in5(i,ind_overlap) = dummy_5(range_2_ind)
+      emiss_in6(i,ind_overlap) = dummy_6(range_2_ind)
   end do
 
 ; ----------------------------------------
@@ -201,12 +224,10 @@ if (PLOT) then
       res@pmLegendWidthF           = 0.15            ; Change width and
       res@pmLegendHeightF          = 0.1             ; height of legend
       res@lgLabelFontHeightF       = 0.024
-      res@pmLegendOrthogonalPosF   = -1.1
-      res@pmLegendParallelPosF     = 0.3
 
-   res@tmXBMode         = "Explicit"
-   res@tmXBValues       = (/2014.,2014.5,2015./)
-   res@tmXBLabels       = (/"201401","201406","201501"/)
+   ;res@tmXBMode         = "Explicit"
+   ;res@tmXBValues       = (/2014.,2014.5,2015./)
+   ;res@tmXBLabels       = (/"201401","201406","201501"/)
    res@tmXBLabelFontHeightF = 0.030
    res@tmYLLabelFontHeightF = 0.030
   ;--------------------------
@@ -214,36 +235,39 @@ if (PLOT) then
   ;--------------------------
    res@xyMarkLineModes  = (/"Markers", "Markers", "Markers", "Markers"/)   ; choose which have markers
     res@xyMarkers           := (/0,1,2,3/)               ; choose type of marker  
-    res@xyMarkerColors      := (/"red4","mediumpurple4","darkgreen"/)  ; Marker color
+    res@xyMarkerColors      := (/"mediumpurple4", "red4","red","darkgreen"/)  ; Marker color
     res@xyMarkerThicknessF  = 2
-    res@xyMarkerOpacityF    := (/0.25,0.25,0.25/)
+    res@xyMarkerOpacityF    := (/0.25,0.25,0.25,0.25/)
     res@xyMarkerSizes       := (/0.008,0.010,0.008,0.008/)    ; Marker size (default 0.01)
 
   ; daily
    res@xyExplicitLegendLabels   = "daily " + order
-    res@pmLegendOrthogonalPosF   = -1.8
-   res@trYMaxF          = 1.6
+    res@pmLegendOrthogonalPosF   = -1.42
+    res@pmLegendParallelPosF     = 0.7
+   res@trYMaxF          = 0.2
   plot1  = gsn_csm_xy(wks,yfrac,emiss_in1,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
-   res@trYMaxF          = 0.6
+   res@trYMaxF          = 0.4
   plot2  = gsn_csm_xy(wks,yfrac,emiss_in2,res) ; create plot
-   res@trYMaxF          = 1.2
+   res@trYMaxF          = 1.3
   plot3  = gsn_csm_xy(wks,yfrac,emiss_in3,res) ; create plot
-   res@trYMaxF          = 0.7
+   res@trYMaxF          = 2.0
   plot4  = gsn_csm_xy(wks,yfrac,emiss_in4,res) ; create plot
-   res@trYMaxF          = 1.5
+   res@trYMaxF          = 0.6
   plot5  = gsn_csm_xy(wks,yfrac,emiss_in5,res) ; create plot
+   res@trYMaxF          = 1.0
   plot6  = gsn_csm_xy(wks,yfrac,emiss_in6,res) ; create plot
 
    res@xyMarkLineModes  := "Lines"                               ; choose which have markers
    res@xyDashPatterns      = (/0,16,14,3/)
-   res@xyLineThicknesses = (/8.0, 8.0, 8.0, 8.0/)                ; make second line thicker
-   res@xyLineColors      = (/"red","blue","limegreen"/)          ; change line color
+   res@xyLineThicknesses = (/8.0, 10.0, 4.0, 4.0/)                ; make second line thicker
+   res@xyLineColors      = (/"blue3", "red4","red","limegreen"/)          ; change line color
 
   ; weekly
   res@xyExplicitLegendLabels   = "weekly " + order
   res@pmLegendDisplayMode        = "Always"        ; turn on legend
-    res@pmLegendOrthogonalPosF   = -1.5
+    res@pmLegendOrthogonalPosF   = -1.42
+    res@pmLegendParallelPosF     = 0.2
   plot1a  = gsn_csm_xy(wks,yfrac2,emiss1_weekly_avg,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
   plot2a  = gsn_csm_xy(wks,yfrac2,emiss2_weekly_avg,res) ; create plot
@@ -253,10 +277,11 @@ if (PLOT) then
   plot6a  = gsn_csm_xy(wks,yfrac2,emiss6_weekly_avg,res) ; create plot
 
 
+if(CMIP) then
   res@xyLineColors      := (/"black"/)  ; Line color
   res@xyExplicitLegendLabels   := "monthly CMIP6"
   res@pmLegendDisplayMode        = "Always"        ; turn on legend
-    res@pmLegendOrthogonalPosF   = -1.38
+    res@pmLegendOrthogonalPosF   = -1.30
       res@pmLegendParallelPosF     = 0.28
   plot1b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss1_monthly,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
@@ -266,6 +291,13 @@ if (PLOT) then
   plot5b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss5_monthly,res) ; create plot
   plot6b  = gsn_csm_xy(wks,cmip_yfrac,cmip_emiss6_monthly,res) ; create plot
 
+  overlay(plot1,plot1b)
+  overlay(plot2,plot2b)
+  overlay(plot3,plot3b)
+  overlay(plot4,plot4b)
+  overlay(plot5,plot5b)
+  overlay(plot6,plot6b)
+end if
 
 
 
@@ -276,12 +308,7 @@ if (PLOT) then
   overlay(plot5,plot5a)
   overlay(plot6,plot6a)
 
-  overlay(plot1,plot1b)
-  overlay(plot2,plot2b)
-  overlay(plot3,plot3b)
-  overlay(plot4,plot4b)
-  overlay(plot5,plot5b)
-  overlay(plot6,plot6b)
+
 
   panel_res                       = True
       panel_res@txString              = "BB emissions for "+ tracer + " " + ystart + " to " + yend
