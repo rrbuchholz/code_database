@@ -22,7 +22,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "ISOP"
+  tracer = "OH"
   region = "Australia"
   timeslice = "ANN"
 
