@@ -141,7 +141,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 8 && $min >= 30 && $processed == 1){
-`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/p/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
 }
 
 #------------------------------
