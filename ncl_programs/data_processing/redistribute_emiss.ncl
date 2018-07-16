@@ -48,6 +48,12 @@ begin
 
     if (.not. isvar("NRT")) then        ; is NRT=<boolean> from command line?
          NRT = False
+         MIN_EF         = False
+         MAX_EF         = True
+    end if
+    if (NRT.eq.True) then
+         MIN_EF         = False
+         MAX_EF         = False
     end if
 
     if (.not. isvar("outres")) then     ; is outres=<name> from command line?
@@ -58,14 +64,12 @@ begin
          emiss_type = "from_co2"         ; from_co, from_co2, regridded
     end if
 
-         MIN_EF         = False
-         MAX_EF         = True
 
   ; -------------------------------
   ; input emission files
   ; -------------------------------
   top_dir = "/net/modeling1/data14b/buchholz/"
-   f_ext = "qfed.emis._"
+   f_ext = "qfed.emis_"
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
   else if (emiss_type.eq."regridded") then

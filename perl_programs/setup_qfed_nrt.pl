@@ -30,7 +30,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20180415;
+#$current_date = 20180714;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -104,7 +104,9 @@ else{
 
 #------------------------------
 #Check Processed and send e-mail
-chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl`);
+chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
+#$current_date_check = $current_date+10;
+chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
 $proc_file = grep { /True/ } @check_file;
