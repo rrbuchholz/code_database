@@ -24,16 +24,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2017
+  ystart = 2002
   yend = 2017
   reso = "0.9x1.25"
 
   machine = "cheyenne"         ; modeling1, modeling2, cheyenne
-  repository = "FINN1.5"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
-    s_name = "CO2"
+  repository = "FINN1.6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+    s_name = "BC"
 
-  tracers = (/"CO"/)
-  sm_tracers = (/"co"/)
+  tracers = (/"BC"/)
+  sm_tracers = (/"bc"/)
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -103,25 +103,25 @@ do t = 0, dimsizes(tracers)-1
     end if
 
   else if (machine.eq."cheyenne") then 
-    top_dir = "/glade/p/work/buchholz/"
+    top_dir = "/glade/work/buchholz/"
 
     if (repository.eq."FINN_NRT") then
      emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
     else if (repository.eq."FINN1.5") then
-     emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
+     emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
-     ;emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
-     ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
-     emis_dir = "/glade/p/work/emmons/emis/finn1.6_v20180630/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"_"+reso+".nc")
+     emis_dir = "/glade/p_old/work/emmons/emis/finn1.6/cesm_format/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
+     ;emis_dir = "/glade/work/emmons/emis/finn1.6_v20180630/"
+     ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"_"+reso+".nc")
     else if (repository.eq."QFED_NRT") then
      emis_dir = top_dir+ "emis/qfed_finn_nrt_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
     else if (repository.eq."QFED/FINN") then
-     emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2017_1x1/"
-     e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc")
+     emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2018_1x1/"
+     e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+"*.nc")
     end if
     end if
     end if

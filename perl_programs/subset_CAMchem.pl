@@ -2,17 +2,17 @@
 #
 # Script for subsetting species or a region from CAMchem output
 #
-$runtype = "noanth";
+$runtype = "anth";
 $region = "COALA_region_";
-$rundir = "/glade/scratch/buchholz/archive/fmerra.208.FCSD.1deg.chey180418.noanth/atm/hist/";
+$rundir = "/glade/scratch/buchholz/archive/fmerra.208.FCSD.1deg.chey180418/atm/hist/";
 #$rundir = "/glade/scratch/buchholz/archive/fmerra.208.FCSD.1deg.chey180418".$runtype."/atm/hist/";
 #$rundir = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey180617.cmip.".$runtype."/atm/hist/";
 #$rundir = "/glade/scratch/buchholz/CAMchem_fmerra_e15_BAM_constE/";
-$outdir = "/glade2/work/buchholz/CAM_chem_output/anth_v_noanth/".$runtype."/";
+$outdir = "/glade/work/buchholz/CAM_chem_output/anth_v_noanth/".$runtype."/";
 #------------------------------------
 # create tracer list of tagged tracers to extract
 #------------------------------------
-$tracerlist = "CO,O3,CH2O,ISOP,PAN,OH,NO2,NOX,NOY,HNO3,ALKNIT,ISOPNO3,MEG_ISOP,AEROD_v,AODVIS,AODVISdn,AQRAIN,H2O,HONITR,HPALD,IEPOX,ISOPNITA,ISOPNITB,ISOPOOH,MPAN,NOA,ONITR,Q,T,TERPNIT,FSNS,FSDS,FLDS,FLNS";
+$tracerlist = "CO,O3,CH2O,CLDTOT,CLOUD,ISOP,PAN,OH,NO2,NOX,NOY,jno2,HNO3,ALKNIT,ISOPNO3,MEG_ISOP,AEROD_v,AODVIS,AODVISdn,AQRAIN,H2O,HONITR,HPALD,IEPOX,ISOPNITA,ISOPNITB,ISOPOOH,MPAN,NOA,ONITR,Q,T,TERPNIT,FSNS,FSDS,FLDS,FLNS";
 #$tracerlist = "CO";
 #for  $s (0..29) {
 #  print"CO".sprintf("%02d",$s+1).", ";
@@ -25,7 +25,7 @@ print "$tracerlist \n";
 #------------------------------------
 for  $i (2004..2015) {
   $y =  sprintf("%04d",$i);
-  $outfile = $outdir."CAM_chem_fmerra2_FCSD_1deg_".$region.$runtype."_".$y.".nc";
+  $outfile = $outdir."CAM_chem_fmerra2_FCSD_1deg_".$region.$runtype."_".$y."_new.nc";
   print "$outfile\n";
   chomp(@to_combine = `ls $rundir*h0.*$y-*.nc`);
   print "Combining $y\n";

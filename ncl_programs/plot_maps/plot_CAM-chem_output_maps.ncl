@@ -22,25 +22,21 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-<<<<<<< HEAD
-  tracer = "OH"
-=======
-  tracer = "CO"
->>>>>>> 5e6cb66d170d3dcecba2d0822b0348946b9513e8
-  region = "Australia"
-  timeslice = "DJF"
+  tracer = "jno2"
+  region = "NAmerica"
+  timeslice = "JJA"
 
   ; Plot definitions
-    units = "ppb"
-    maxlev = 100.
-    lev_spacing = 5.
+    units = "/s"
+    maxlev = 8.0e-03
+    lev_spacing = 0.2e-03
 
    STATIONS = False
 
   ; -------------------------------
   ; file location
   ; -------------------------------
-  in_folder = "/glade2/work/buchholz/CAM_chem_output/anth_v_noanth/"
+  in_folder = "/glade/work/buchholz/CAM_chem_output/anth_v_noanth/"
 
   camfile_1 = systemfunc ("ls "+in_folder+"/anth/*"+timeslice+"*.nc")
 
@@ -115,7 +111,8 @@ begin
     divisor = 1e-09
   else if (units.eq."kg/m2/sec") then
     divisor = 1
-  else if (units.eq."aod".or.units.eq."K".or.units.eq."W/m2") then
+  else if (units.eq."aod".or.units.eq."K".or.units.eq."W/m2"\
+           .or.units.eq."/s".or.units.eq."fraction") then
     divisor = 1
   end if
   end if
@@ -153,7 +150,8 @@ printVarSummary(tracer_fields_1)
   if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
      .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
      .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
-     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS"\
+     .or.tracer.eq."CLDTOT") then
     glob_avg = dim_avg_n(tracer_fields_1(:,{20:60},{220:300}), (/1,2/))
     print(glob_avg)
     glob_avg_array = conform_dims(dimsizes(tracer_fields_1),glob_avg,(/0/))
@@ -227,7 +225,8 @@ printVarSummary(tracer_fields_1)
     if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
      .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
      .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
-     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS"\
+     .or.tracer.eq."CLDTOT") then
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,:,:),mapres)
     else
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
@@ -238,7 +237,8 @@ printVarSummary(tracer_fields_1)
     if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
      .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
      .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
-     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS"\
+     .or.tracer.eq."CLDTOT") then
       map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,:,:),mapres)
     else
       map2 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
@@ -253,7 +253,8 @@ printVarSummary(tracer_fields_1)
     if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
      .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
      .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
-     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS"\
+     .or.tracer.eq."CLDTOT") then
       map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,:,:),mapres)
     else
       map3 = gsn_csm_contour_map_ce(wks,rel_glob_avg(0,55,:,:),mapres)
@@ -269,7 +270,8 @@ printVarSummary(tracer_fields_1)
     if (tracer.eq."MEG_ISOP".or.tracer.eq."AEROD_v"\
      .or.tracer.eq."AODVIS".or.tracer.eq."AODVISdn"\
      .or.tracer.eq."AODDUST".or.tracer.eq."FSNS"\
-     .or.tracer.eq."FSDS".or.tracer.eq."FLDS") then
+     .or.tracer.eq."FSDS".or.tracer.eq."FLDS"\
+     .or.tracer.eq."CLDTOT") then
       map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,:,:),mapres)
     else
       map4 = gsn_csm_contour_map_ce(wks,rel_glob_diff(0,55,:,:),mapres)

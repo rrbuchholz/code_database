@@ -26,7 +26,7 @@ begin
   yend = 2015
   
   PLOT = True
-    plottype = "png"
+    plottype = "x11"
       plottype@wkWidth  = 1800
       plottype@wkHeight = 1800
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
@@ -45,7 +45,7 @@ uncert2 = True
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   top_dir = "/glade2/work/buchholz/CAM_chem_output/fire_uncert/"
+   top_dir = "/glade/work/buchholz/CAM_chem_output/fire_uncert/"
    e_file_in = (/ ;"cmip/cmip_CO_regional_2014.nc",\
                    "qfedBBCO/qfedBBCO_CO_regional_2014.nc",\
                    "finnBBCO/finnBBCO_CO_regional_2014.nc",\

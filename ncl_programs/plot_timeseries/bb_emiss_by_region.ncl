@@ -20,7 +20,7 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "CO"
+  tracer = "BC"
   reso = "0.9x1.25"
   ystart = 2016
   yend = 2018
@@ -60,11 +60,11 @@ begin
                  gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
 
    ; cheyenne
-   top_dir = "/glade/p/work/buchholz/data_processing/CAM-chem/emissions/"
-   e_file_in := (/"qfed.emis_CO_0.9x1.25_QFED_cross_FINN_Tg_regional.nc",\               
-                 "qfed.emis_CO_0.9x1.25_FINN1.5_Tg_regional.nc",\
-                 "qfed.emis_CO_0.9x1.25_FINN1.6_Tg_regional.nc",\
-                 "finn.emis_CO_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
+   top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
+   e_file_in := (/"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
+                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.5_Tg_regional_2005_2017.nc",\
+                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2002_2017.nc",\
+                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
 print(top_dir+e_file_in)
 
   ; -------------------------------
@@ -244,18 +244,22 @@ if (PLOT) then
    res@xyExplicitLegendLabels   = "daily " + order
     res@pmLegendOrthogonalPosF   = -1.42
     res@pmLegendParallelPosF     = 0.7
-   res@trYMaxF          = 0.2
+   ;res@trYMaxF          = 0.2
+   res@trYMaxF          = 0.0016
   plot1  = gsn_csm_xy(wks,yfrac,emiss_in1,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
-   res@trYMaxF          = 0.4
+   ;res@trYMaxF          = 0.4
+   res@trYMaxF          = 0.009
   plot2  = gsn_csm_xy(wks,yfrac,emiss_in2,res) ; create plot
-   res@trYMaxF          = 1.3
+   ;res@trYMaxF          = 1.3
+   res@trYMaxF          = 0.012
   plot3  = gsn_csm_xy(wks,yfrac,emiss_in3,res) ; create plot
-   res@trYMaxF          = 2.0
+   ;res@trYMaxF          = 2.0
   plot4  = gsn_csm_xy(wks,yfrac,emiss_in4,res) ; create plot
-   res@trYMaxF          = 0.6
+   ;res@trYMaxF          = 0.6
+   res@trYMaxF          = 0.0034
   plot5  = gsn_csm_xy(wks,yfrac,emiss_in5,res) ; create plot
-   res@trYMaxF          = 1.0
+   ;res@trYMaxF          = 1.0
   plot6  = gsn_csm_xy(wks,yfrac,emiss_in6,res) ; create plot
 
    res@xyMarkLineModes  := "Lines"                               ; choose which have markers

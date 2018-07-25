@@ -18,9 +18,10 @@ begin
 ; USER DEFINED
 ; =========================================
   ;tracer = (/"CO", "O3", "CH2O", "ISOP", "PAN", "OH"/)
-  tracer = (/"HPALD", "IEPOX", "ISOPOOH", "MPAN", "ISOP", "FSDS"/)
+  ;tracer = (/"HPALD", "IEPOX", "ISOPOOH", "MPAN", "ISOP", "FSDS"/)
   ;tracer = (/"NOA", "ONITR", "HONITR", "TERPNIT", "NOY" , "ALKNIT"/)
   ;tracer = (/"ISOP", "MEG_ISOP", "T", "AODVIS", "H2O", "OH" /)
+  tracer = (/"ISOP", "MEG_ISOP", "T", "CLDTOT", "jno2", "OH" /)
   ;tracer = (/"CO", "O3", "CH2O", "NOY", "PAN","ALKNIT"/)
   reso = "0.9x1.25"
   ystart = 2005
@@ -35,7 +36,7 @@ begin
     plotname = "~/surf_ts_bteamSUM"
 
 tcol = False
-noanth = True
+noanth = False
 
 ; =========================================
 ; SET UP
@@ -45,9 +46,10 @@ noanth = True
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   top_dir = "/glade2/work/buchholz/CAM_chem_output/anth_v_noanth/"
-   e_file_in = systemfunc ("ls "+top_dir+"anth/*COALA_*.nc")
+   top_dir = "/glade/work/buchholz/CAM_chem_output/anth_v_noanth/"
+   e_file_in = systemfunc ("ls "+top_dir+"anth/*COALA_*new.nc")
    e_file_in_noanth = systemfunc ("ls "+top_dir+"noanth/*COALA_*.nc")
+
 
   ; -------------------------------
   ; data names (from ncl_filedump)
@@ -82,7 +84,7 @@ print(e_file_in(0))
     do i=1,dimsizes(tracer)-1
       tgas        := tracer(i)
       dummy_1     := fin[:]->$tgas$
-      if (tgas.eq."MEG_ISOP".or.tgas.eq."FSDS".or.tgas.eq."AODVIS") then
+      if (tgas.eq."MEG_ISOP".or.tgas.eq."FSDS".or.tgas.eq."AODVIS".or.tgas.eq."CLDTOT") then
         tracer_array(i,:,55,:,:) = dummy_1
       else
         tracer_array(i,:,:,:,:) = dummy_1
@@ -277,70 +279,73 @@ printVarSummary(tracer_array_selected)
   overlay(plot2,plot2b)
 
   ; Tracer3
-   ;res@tiYAxisString            = "Surface K"
-     res@trYMaxF          = max((tracer_array_selected(2,55,:,:,:)/1e-09))+0.08
-     res@trYMinF          = 0.
+   res@tiYAxisString            = "Surface K"
+     ;res@trYMaxF          = max((tracer_array_selected(2,55,:,:,:)/1e-09))+0.08
+     res@trYMaxF          = max((tracer_array_selected(2,55,:,:,:)))+2.
+     res@trYMinF          = 288.
    res@xyMarkerColors       := (/"orange","red","red4"/)          ; change line color
    res@xyLineColors         := (/"orange","red","red4"/)          ; change line color
-  plot3  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,2,:)/1e-09,res) ; create plot
+  plot3  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,2,:),res) ; create plot
    res@xyMarkerColors       := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
    res@xyLineColors         := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
-  plot3a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,1,:)/1e-09,res) ; create plot
+  plot3a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,1,:),res) ; create plot
    res@xyMarkerColors       := (/"cyan","blue","mediumpurple4"/)         ; change line color
    res@xyLineColors         := (/"cyan","blue","mediumpurple4"/)          ; change line color
-  plot3b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,0,:)/1e-09,res) ; create plot
+  plot3b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(2,55,:,0,:),res) ; create plot
   overlay(plot3,plot3a)
   overlay(plot3,plot3b)
 
 
   ; Tracer4
    ;res@tiYAxisString            = "AOD"
-     res@trYMinF          = 0.
-     res@trYMaxF          = max(tracer_array_selected(3,55,:,:,:)/1e-09)
+   res@tiYAxisString            = "Fraction"
+     res@trYMinF          = 0.35
+     res@trYMaxF          = max(tracer_array_selected(3,55,:,:,:))+0.1
    res@xyMarkerColors       := (/"orange","red","red4"/)          ; change line color
    res@xyLineColors         := (/"orange","red","red4"/)          ; change line color
-  plot4  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,2,:)/1e-09,res) ; create plot
+  plot4  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,2,:),res) ; create plot
    res@xyMarkerColors       := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
    res@xyLineColors         := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
-  plot4a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,1,:)/1e-09,res) ; create plot
+  plot4a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,1,:),res) ; create plot
    res@xyMarkerColors       := (/"cyan","blue","mediumpurple4"/)          ; change line color
    res@xyLineColors         := (/"cyan","blue","mediumpurple4"/)          ; change line color
-  plot4b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,0,:)/1e-09,res) ; create plot
+  plot4b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(3,55,:,0,:),res) ; create plot
   overlay(plot4,plot4a)
   overlay(plot4,plot4b)
 
 
   ; Tracer5
   ; res@tiYAxisString            = "Surface vmr mol/mol"
-  ;   res@trYMinF          = 0.008
-     res@trYMaxF          = max(tracer_array_selected(4,55,:,:,:)/1e-09)+4
+   res@tiYAxisString            = "Rate"
+     res@trYMinF          = 0.0031
+     res@trYMaxF          = max(tracer_array_selected(4,55,:,:,:))+0.0002
    res@xyMarkerColors       := (/"orange","red","red4"/)          ; change line color
    res@xyLineColors         := (/"orange","red","red4"/)          ; change line color
-  plot5  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,2,:)/1e-09,res) ; create plot
+  plot5  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,2,:),res) ; create plot
     res@xyMarkerColors       := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
    res@xyLineColors         := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
-  plot5a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,1,:)/1e-09,res) ; create plot
+  plot5a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,1,:),res) ; create plot
   res@xyMarkerColors       := (/"cyan","blue","mediumpurple4"/)          ; change line color
    res@xyLineColors         := (/"cyan","blue","mediumpurple4"/)          ; change line color
-  plot5b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,0,:)/1e-09,res) ; create plot
+  plot5b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(4,55,:,0,:),res) ; create plot
   overlay(plot5,plot5a)
   overlay(plot5,plot5b)
 
-   ;res@tiYAxisString            = "Surface vmr ppt"
-   res@tiYAxisString            = "Flux W/m2"
-     res@trYMinF          = 240.
+   res@tiYAxisString            = "Surface vmr ppt"
+   ;res@tiYAxisString            = "Flux W/m2"
+   ;  res@trYMinF          = 240.
   ; Tracer6
      ;res@trYMinF          = 1.
-     res@trYMaxF          = max(tracer_array_selected(5,55,:,:,:))+5
+     res@trYMaxF          = max(tracer_array_selected(5,55,:,:,:)/1e-12)+0.01
    res@xyMarkerColors       := (/"orange","red","red4"/)          ; change line color
    res@xyLineColors         := (/"orange","red","red4"/)          ; change line color
-  plot6  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,2,:),res) ; create plot
+  plot6  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,2,:)/1e-12,res) ; create plot
    res@xyMarkerColors       := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
    res@xyLineColors         := (/"forestgreen","yellowgreen","yellow"/)          ; change line color
-  plot6a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,1,:),res) ; create plot
+  plot6a  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,1,:)/1e-12,res) ; create plot
    res@xyMarkerColors       := (/"cyan","blue","mediumpurple4"/)          ; change line color
    res@xyLineColors         := (/"cyan","blue","mediumpurple4"/)          ; change line color
-  plot6b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,0,:),res) ; create plot
+  plot6b  = gsn_csm_xy(wks,yfrac(ind_djfm),tracer_array_selected(5,55,:,0,:)/1e-12,res) ; create plot
   overlay(plot6,plot6a)
   overlay(plot6,plot6b)
 
