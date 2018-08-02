@@ -26,16 +26,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "CO"
-  year = 2017
-  repository = "FINN1.5"
+  tracer = "C2H6"
+  year = 2014
+  repository = "QFED"
   timeslice = ""
 
   ; -------------------------------
   ; emission files
   ; -------------------------------
   ;e_file_1 = "/data14b/buchholz/qfed/cam_1.9x2.5/2012/qfed.emis_"+tracer+"_1.9x2.5_mol_2012.nc"
-  ;e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/2014/qfed.emis_"+tracer+"_0.9x1.25_mol_2014.nc"
+  e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/2014/qfed.emis_"+tracer+"_0.9x1.25_mol_2014.nc"
   ;e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/regridded/allyears/qfed.emis_"+tracer+"_0.9x1.25_mol_2014_2016.nc"
   ;e_file_1 = "/data14b/buchholz/gfas/cam_0.9x1.25/from_co2/2014/gfas.emis_fromgrib_"+tracer+"_0.9x1.25_mol_2014new.nc"
 
@@ -55,8 +55,8 @@ begin
    ;emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
    ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_2017*.nc")
    ;emis_dir = "/glade/p/work/emmons/emis/finn1.6_v20180630/"
-   emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
-   e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
+   ;emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
+   ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
 
 print(e_file_1)
 
@@ -69,26 +69,26 @@ print(e_file_1)
   TIMEPLOT       = False
   MONTHAVG       = True
 
-  region_name =  "World"
+  region_name =  "North America"
     ;  latmin                         = -45               ; zoom to Australia
     ;  latmax                         = -10
     ;  lonmin                         = 100
     ;  lonmax                         = 160
 
-   ;   latmin                         = 20               ; zoom to North America
-   ;   latmax                         = 60
-   ;   lonmin                         = 220
-   ;   lonmax                         = 300
+      latmin                         = 10               ; zoom to North America
+      latmax                         = 70
+      lonmin                         = 220
+      lonmax                         = 300
 
     ;  latmin                         = -40               ; zoom to Amazon
     ;  latmax                         = 10
     ;  lonmin                         = 270
     ;  lonmax                         = 330
 
-      latmin                         = -80               ; World
-      latmax                         = 80
-      lonmin                         = -170
-      lonmax                         = 185
+    ;  latmin                         = -80               ; World
+    ;  latmax                         = 80
+    ;  lonmin                         = -170
+    ;  lonmax                         = 185
 
 ;--------------------------------------------
 ; end user input
@@ -164,7 +164,6 @@ print(e_file_1)
       ;selected_ind = ind(time_split(:,1).eq.5)
       selected_ind = ind(time_split(:,0).eq.year)
       ndims = dimsizes(emiss_file1)
-
       test = dim_sum_n_Wrap(emiss_file1(selected_ind,:,:),0)
 
       mw = 28.
@@ -270,9 +269,9 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
       ;mapres@cnMaxLevelValF          = 5e11                ; set the maximum contour level
       ;mapres@cnLevelSpacingF         = 5e10                ; set the interval between contours
 
-      mapres@cnMinLevelValF          = 0.                 ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 0.2               ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 0.01               ; set the interval between contours
+      ;mapres@cnMinLevelValF          = 0.                 ; set the minimum contour level
+      ;mapres@cnMaxLevelValF          = 0.2               ; set the maximum contour level
+      ;mapres@cnLevelSpacingF         = 0.01               ; set the interval between contours
 
 
     ;-------------------
