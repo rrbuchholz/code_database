@@ -20,9 +20,9 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "BC"
+  tracer = "C2H6"
   reso = "0.9x1.25"
-  ystart = 2016
+  ystart = 2000
   yend = 2018
   
   PLOT = True
@@ -34,6 +34,7 @@ begin
     plotname = "~/BB_Emiss"
 
   CMIP = False
+  MONTHAVG = True
 ; =========================================
 ; SET UP
 ; =========================================
@@ -52,19 +53,25 @@ begin
    finn_dir = "finn/cam_"+reso+"/"
    gfas_dir = "gfas/cam_"+reso+"/"
    cmip6_dir ="gfed/cmip6_cam_"+reso+"/"
+   ;e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+   ;              ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
+   ;              qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc",\                 
+   ;              finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
+   ;              ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
+   ;              gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
+
    e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
                  ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc",\                 
-                 finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
-                 ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
-                 gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
+                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc",\                 
+                 finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
+
 
    ; cheyenne
-   top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
-   e_file_in := (/"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
-                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.5_Tg_regional_2005_2017.nc",\
-                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2002_2017.nc",\
-                 "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
+   ;top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
+   ;e_file_in := (/"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
+   ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.5_Tg_regional_2005_2017.nc",\
+   ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2002_2017.nc",\
+   ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
 print(top_dir+e_file_in)
 
   ; -------------------------------
@@ -200,6 +207,34 @@ if(CMIP) then
 end if
 
 
+if(MONTHAVG) then
+
+  yyyymm = yyyymm_time(ystart, yend, "integer")
+  month_yfrac = yyyymm_to_yyyyfrac(yyyymm, 0.5)
+  yyyymm_compare = cd_calendar(time, -1)
+      emiss1_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+      emiss2_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+      emiss3_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+      emiss4_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+      emiss5_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+      emiss6_monthly     = new((/dimsizes(e_file_in),dimsizes(yyyymm)/), float)
+
+  do i=0,dimsizes(yyyymm)-1
+    ind_month := ind(yyyymm_compare.eq.yyyymm(i))
+    if (.not.ismissing(ind_month(0))) then
+      emiss1_monthly(:,i)     = dim_sum_n(emiss_in1(:,ind_month),1)
+      emiss2_monthly(:,i)     = dim_sum_n(emiss_in2(:,ind_month),1)
+      emiss3_monthly(:,i)     = dim_sum_n(emiss_in3(:,ind_month),1)
+      emiss4_monthly(:,i)     = dim_sum_n(emiss_in4(:,ind_month),1)
+      emiss5_monthly(:,i)     = dim_sum_n(emiss_in5(:,ind_month),1)
+      emiss6_monthly(:,i)     = dim_sum_n(emiss_in6(:,ind_month),1)
+    end if
+  end do
+
+
+end if
+
+
 ; =========================================
 ; PLOT the timeseries
 ; =========================================
@@ -245,19 +280,19 @@ if (PLOT) then
     res@pmLegendOrthogonalPosF   = -1.42
     res@pmLegendParallelPosF     = 0.7
    ;res@trYMaxF          = 0.2
-   res@trYMaxF          = 0.0016
+  ; res@trYMaxF          = 0.0016
   plot1  = gsn_csm_xy(wks,yfrac,emiss_in1,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
    ;res@trYMaxF          = 0.4
-   res@trYMaxF          = 0.009
+  ; res@trYMaxF          = 0.009
   plot2  = gsn_csm_xy(wks,yfrac,emiss_in2,res) ; create plot
    ;res@trYMaxF          = 1.3
-   res@trYMaxF          = 0.012
+  ; res@trYMaxF          = 0.012
   plot3  = gsn_csm_xy(wks,yfrac,emiss_in3,res) ; create plot
    ;res@trYMaxF          = 2.0
   plot4  = gsn_csm_xy(wks,yfrac,emiss_in4,res) ; create plot
    ;res@trYMaxF          = 0.6
-   res@trYMaxF          = 0.0034
+  ; res@trYMaxF          = 0.0034
   plot5  = gsn_csm_xy(wks,yfrac,emiss_in5,res) ; create plot
    ;res@trYMaxF          = 1.0
   plot6  = gsn_csm_xy(wks,yfrac,emiss_in6,res) ; create plot
@@ -304,7 +339,6 @@ if(CMIP) then
 end if
 
 
-
   overlay(plot1,plot1a)
   overlay(plot2,plot2a)
   overlay(plot3,plot3a)
@@ -319,8 +353,30 @@ end if
       panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopRight"
 
-    gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
+   ; gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
 
+
+
+if(MONTHAVG) then
+  res@pmLegendDisplayMode        = "Always"        ; turn on legend
+  res@xyExplicitLegendLabels   = "monthly " + order
+  res@pmLegendHeightF          = 0.08             ; height of legend
+  res@pmLegendOrthogonalPosF   = -1.65
+  res@pmLegendParallelPosF     = 0.22
+   res@tmXBLabelFontHeightF = 0.020
+   res@tmYLLabelFontHeightF = 0.020
+   res@vpWidthF         = 0.8
+   res@vpHeightF        = 0.3
+
+   res@gsnRightString   = emiss_in2@region
+  plot2b  = gsn_csm_xy(wks,month_yfrac,emiss2_monthly,res) ; create plot
+   res@gsnRightString   = emiss_in4@region
+  plot4b  = gsn_csm_xy(wks,month_yfrac,emiss4_monthly,res) ; create plot
+
+  ;overlay(plot2b,plot4b)
+  draw(plot4b)
+  frame(wks)
+end if
 
 end if
 

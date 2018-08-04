@@ -28,12 +28,12 @@ begin
   yend = 2017
   reso = "0.9x1.25"
 
-  machine = "cheyenne"         ; modeling1, modeling2, cheyenne
-  repository = "FINN1.6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
-    s_name = "BC"
+  machine = "modeling1"         ; modeling1, modeling2, cheyenne
+  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+    s_name = "C2H6"
 
-  tracers = (/"BC"/)
-  sm_tracers = (/"bc"/)
+  tracers = (/"C2H6"/)
+  sm_tracers = (/"c2h6"/)
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -57,7 +57,7 @@ do t = 0, dimsizes(tracers)-1
     top_dir = "/data14b/buchholz/"
     if (repository.eq."FINN") then
      emis_dir = top_dir+ "finn/cam_0.9x1.25"
-     e_file_in = "emissions-finn1.5_CO_bb_surface_2002-2017_0.9x1.25.nc"
+     e_file_in = "emissions-finn1.5_"+tracer+"_bb_surface_2002-2017_0.9x1.25.nc"
 
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
@@ -384,16 +384,27 @@ do t = 0, dimsizes(tracers)-1
 
   ;********************************************
   ; Extract regional timeseries
-   region_names = (/"Maritime SEA", "Australasia", \
-                    "Southern Africa", "South America",\
+  ; region_names = (/"Maritime SEA", "Australasia", \
+  ;                  "Southern Africa", "South America",\
+  ;                  "Siberia", "North America" /)
+  ;                   minlat, maxlat, minlon, maxlon
+  ; region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+  ;                   (/-50., -10.,     110.,     180./),\ ;Australasia
+  ;                   (/-40.,   5.,       0.,      60./),\ ;SAfrica
+  ;                   (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
+  ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
+  ;                   (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+
+   region_names = (/"Canada", "Northwest Canada", \
+                    "USA", "Northwest USA",\
                     "Siberia", "North America" /)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
-                     (/-50., -10.,     110.,     180./),\ ;Australasia
-                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
-                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
-                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
-                     (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+   region_select = (/(/ 50.,  70., 360.-130., 360.-60./),\  ;Canada
+                     (/ 55.,  65., 360.-120., 360.-100./),\ ;NWCan
+                     (/ 20.,  50., 360.-130., 360.-70./),\  ;USA
+                     (/ 40.,  50., 360.-120., 360.-105./),\ ;NWUS
+                     (/ 50.,  85.,      91.,     190./),\   ;Siberia
+                     (/ 25.,  70., 360.-170., 360.-53./) /) ;NAmerica
 
      ; -------------------------------
      ; sums
