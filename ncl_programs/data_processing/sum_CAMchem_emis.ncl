@@ -24,16 +24,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2002
-  yend = 2017
+  ystart = 2000
+  yend = 2018
   reso = "0.9x1.25"
 
-  machine = "modeling1"         ; modeling1, modeling2, cheyenne
-  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
-    s_name = "C2H6"
+  machine = "modeling1"        ; modeling1, modeling2, cheyenne
+  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+    s_name = "C3H8"
 
-  tracers = (/"C2H6"/)
-  sm_tracers = (/"c2h6"/)
+  tracers = (/"C3H8"/)
+  sm_tracers = (/"c3h8"/)
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -377,7 +377,7 @@ do t = 0, dimsizes(tracers)-1
     ;------------------
     ; Total average
     ;------------------
-     total_avg = avg(year_sum_array)
+     total_avg = avg(year_sum_array(0:dimsizes(year_sum_array)-2))
      print(ystart+" to "+yend+", average yearly emissions of "+tracer+" (Tg): " + total_avg)
 
 
@@ -404,7 +404,7 @@ do t = 0, dimsizes(tracers)-1
                      (/ 20.,  50., 360.-130., 360.-70./),\  ;USA
                      (/ 40.,  50., 360.-120., 360.-105./),\ ;NWUS
                      (/ 50.,  85.,      91.,     190./),\   ;Siberia
-                     (/ 25.,  70., 360.-170., 360.-53./) /) ;NAmerica
+                     (/ 25.,  70., 360.-160., 360.-53./) /) ;NAmerica
 
      ; -------------------------------
      ; sums

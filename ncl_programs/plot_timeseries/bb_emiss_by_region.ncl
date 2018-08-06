@@ -20,7 +20,7 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "C2H6"
+  tracer = "C3H8"
   reso = "0.9x1.25"
   ystart = 2000
   yend = 2018
@@ -62,8 +62,8 @@ begin
 
    e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
                  ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc",\                 
-                 finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
+                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc"/);,\                 
+               ;  finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
 
 
    ; cheyenne
@@ -209,6 +209,28 @@ end if
 
 if(MONTHAVG) then
 
+  yyyy = ispan(ystart, yend, 1)
+  yyyy_compare_dummy = cd_calendar(time, 0)
+  yyyy_compare = yyyy_compare_dummy(:,0)
+  emiss1_yearly    = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+  emiss2_yearly     = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+  emiss3_yearly     = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+  emiss4_yearly     = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+  emiss5_yearly     = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+  emiss6_yearly     = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
+
+  do i=0,dimsizes(yyyy)-1
+    ind_year := ind(yyyy_compare.eq.yyyy(i))
+    if (.not.ismissing(ind_year(0))) then
+      emiss1_yearly(:,i)     = dim_sum_n(emiss_in1(:,ind_year),1)
+      emiss2_yearly(:,i)     = dim_sum_n(emiss_in2(:,ind_year),1)
+      emiss3_yearly(:,i)     = dim_sum_n(emiss_in3(:,ind_year),1)
+      emiss4_yearly(:,i)     = dim_sum_n(emiss_in4(:,ind_year),1)
+      emiss5_yearly(:,i)     = dim_sum_n(emiss_in5(:,ind_year),1)
+      emiss6_yearly(:,i)     = dim_sum_n(emiss_in6(:,ind_year),1)
+    end if
+  end do
+
   yyyymm = yyyymm_time(ystart, yend, "integer")
   month_yfrac = yyyymm_to_yyyyfrac(yyyymm, 0.5)
   yyyymm_compare = cd_calendar(time, -1)
@@ -233,6 +255,13 @@ if(MONTHAVG) then
 
 
 end if
+
+print(dim_avg_n(emiss1_yearly(:,0:dimsizes(yyyy)-2),1))
+print(dim_avg_n(emiss2_yearly(:,0:dimsizes(yyyy)-2),1))
+print(dim_avg_n(emiss3_yearly(:,0:dimsizes(yyyy)-2),1))
+print(dim_avg_n(emiss4_yearly(:,0:dimsizes(yyyy)-2),1))
+print(dim_avg_n(emiss5_yearly(:,0:dimsizes(yyyy)-2),1))
+print(dim_avg_n(emiss6_yearly(:,0:dimsizes(yyyy)-2),1))
 
 
 ; =========================================
@@ -353,7 +382,7 @@ end if
       panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopRight"
 
-   ; gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
+    ;gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
 
 
 
