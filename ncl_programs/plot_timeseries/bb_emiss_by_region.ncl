@@ -20,10 +20,10 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "C3H8"
+  tracer = "CO"
   reso = "0.9x1.25"
   ystart = 2000
-  yend = 2018
+  yend = 2015
   
   PLOT = True
     plottype = "x11"
@@ -33,7 +33,7 @@ begin
       ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/BB_Emiss"
 
-  CMIP = False
+  CMIP = True
   MONTHAVG = True
 ; =========================================
 ; SET UP
@@ -60,18 +60,19 @@ begin
    ;              ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
    ;              gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
 
-   e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+  ; e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
                  ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc"/);,\                 
+               ;  qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc"/);,\                 
                ;  finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
 
 
    ; cheyenne
-   ;top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
-   ;e_file_in := (/"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
+   top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
+   e_file_in := (/;"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
    ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.5_Tg_regional_2005_2017.nc",\
    ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2002_2017.nc",\
-   ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc"/)
+   ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc",\
+                 "cmip.emis_"+tracer+"_0.9x1.25_CMIP6_Tg_regional_2000_2015.nc"/)
 print(top_dir+e_file_in)
 
   ; -------------------------------
@@ -189,8 +190,10 @@ printVarSummary(emiss_in1)
 ; ----------------------------------------
 ; Month averages
 ; ----------------------------------------
+
 if(CMIP) then
-    fin2 = addfile(top_dir+cmip6_dir+"region_sums/finn.emis_CO_0.9x1.25_CMIP6_Tg_regional_1750_2015.nc", "r")
+    ;fin2 = addfile(top_dir+cmip6_dir+"region_sums/finn.emis_CO_0.9x1.25_CMIP6_Tg_regional_1750_2015.nc", "r")
+    fin2 = addfile(top_dir+e_file_in, "r")
       cmip_time_dummy := fin2->time
       cmip_yfrac_dummy:= tofloat(cd_calendar(cmip_time_dummy,4))
       cmip_range_ind  := ind(cmip_yfrac_dummy.ge.ystart.and.cmip_yfrac_dummy.lt.yend)
@@ -203,6 +206,36 @@ if(CMIP) then
       cmip_emiss4_monthly     := fin2->$emiss4$(cmip_range_ind)
       cmip_emiss5_monthly     := fin2->$emiss5$(cmip_range_ind)
       cmip_emiss6_monthly     := fin2->$emiss6$(cmip_range_ind)
+
+
+  yyyy = ispan(ystart, yend, 1)
+  yyyy_compare_dummy = cd_calendar(cmip_time, 0)
+  yyyy_compare = yyyy_compare_dummy(:,0)
+  cmip_emiss1_yearly     = new((/dimsizes(yyyy)/), float)
+  cmip_emiss2_yearly     = new((/dimsizes(yyyy)/), float)
+  cmip_emiss3_yearly     = new((/dimsizes(yyyy)/), float)
+  cmip_emiss4_yearly     = new((/dimsizes(yyyy)/), float)
+  cmip_emiss5_yearly     = new((/dimsizes(yyyy)/), float)
+  cmip_emiss6_yearly     = new((/dimsizes(yyyy)/), float)
+
+  do i=0,dimsizes(yyyy)-1
+    ind_year := ind(yyyy_compare.eq.yyyy(i))
+    if (.not.ismissing(ind_year(0))) then
+      cmip_emiss1_yearly(i)     = dim_sum_n(cmip_emiss1_monthly(ind_year),0)
+      cmip_emiss2_yearly(i)     = dim_sum_n(cmip_emiss2_monthly(ind_year),0)
+      cmip_emiss3_yearly(i)     = dim_sum_n(cmip_emiss3_monthly(ind_year),0)
+      cmip_emiss4_yearly(i)     = dim_sum_n(cmip_emiss4_monthly(ind_year),0)
+      cmip_emiss5_yearly(i)     = dim_sum_n(cmip_emiss5_monthly(ind_year),0)
+      cmip_emiss6_yearly(i)     = dim_sum_n(cmip_emiss6_monthly(ind_year),0)
+    end if
+  end do
+
+print(dim_avg_n(cmip_emiss1_yearly(0:dimsizes(yyyy)-2),0))
+print(dim_avg_n(cmip_emiss2_yearly(0:dimsizes(yyyy)-2),0))
+print(dim_avg_n(cmip_emiss3_yearly(0:dimsizes(yyyy)-2),0))
+print(dim_avg_n(cmip_emiss4_yearly(0:dimsizes(yyyy)-2),0))
+print(dim_avg_n(cmip_emiss5_yearly(0:dimsizes(yyyy)-2),0))
+print(dim_avg_n(cmip_emiss6_yearly(0:dimsizes(yyyy)-2),0) + " " +cmip_emiss6_monthly@region)
 
 end if
 

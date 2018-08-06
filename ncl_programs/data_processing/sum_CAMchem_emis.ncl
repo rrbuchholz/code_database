@@ -25,12 +25,13 @@ begin
 ; user input
 ;--------------------------------------------
   ystart = 2000
-  yend = 2018
+  yend = 2015
   reso = "0.9x1.25"
 
-  machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  machine = "cheyenne"        ; modeling1, modeling2, cheyenne
+  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
     s_name = "C3H8"
+    ANTHRO = True
 
   tracers = (/"C3H8"/)
   sm_tracers = (/"c3h8"/)
@@ -122,6 +123,10 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2018_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+"*.nc")
+    else if (repository.eq."CMIP6") then
+     cmipdir = "/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/"
+     e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"*anthro_surface_1750-2015_0.9x1.25_c20170608.nc")
+    end if
     end if
     end if
     end if
@@ -178,6 +183,9 @@ do t = 0, dimsizes(tracers)-1
     emiss           = "biomass"
   else if (repository.eq."CMIP6") then
     emiss           = "emiss_bb"
+    if (ANTHRO) then
+      emiss           = "emiss_anthro"
+    end if
   else
     emiss           = "bb"
   end if
