@@ -24,17 +24,17 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2000
-  yend = 2015
+  ystart = 2003
+  yend = 2016
   reso = "0.9x1.25"
 
-  machine = "cheyenne"        ; modeling1, modeling2, cheyenne
-  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
-    s_name = "C3H8"
+  machine = "modeling1"        ; modeling1, modeling2, cheyenne
+  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+    s_name = "C2H6"
     ANTHRO = True
 
-  tracers = (/"C3H8"/)
-  sm_tracers = (/"c3h8"/)
+  tracers = (/"C2H6"/)
+  sm_tracers = (/"c2h6"/)
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -42,6 +42,12 @@ begin
   ;            "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
   ;            "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
   ; no MW data: XYLENE, BENZ
+
+
+  ; -------------------------------
+  ; toggles
+  ; -------------------------------
+   NETCDF = False
 
   ; -------------------------------
   ; begin a tracer loop
@@ -155,10 +161,6 @@ do t = 0, dimsizes(tracers)-1
    ;   continue  ; skip all the next bit and go to next file
    ; end if
 
-  ; -------------------------------
-  ; toggles
-  ; -------------------------------
-   NETCDF = True
 
   ; -------------------------------
   ; MOZART molecular weights

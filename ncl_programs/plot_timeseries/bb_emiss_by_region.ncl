@@ -20,20 +20,20 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "CO"
+  tracer = "C2H6"
   reso = "0.9x1.25"
   ystart = 2000
-  yend = 2015
+  yend = 2018
   
   PLOT = True
-    plottype = "x11"
+    plottype = "pdf"
       plottype@wkWidth  = 1800
       plottype@wkHeight = 1800
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/BB_Emiss"
 
-  CMIP = True
+  CMIP = False
   MONTHAVG = True
 ; =========================================
 ; SET UP
@@ -60,19 +60,19 @@ begin
    ;              ;gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional.nc",\  
    ;              gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
 
-  ; e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+   e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
                  ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
-               ;  qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc"/);,\                 
-               ;  finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
+                 qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc",\                 
+                 finn_dir+"region_sums/finn.emis_C2H6_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
 
 
    ; cheyenne
-   top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
-   e_file_in := (/;"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
+   ;top_dir = "/glade/work/buchholz/data_processing/CAM-chem/emissions/"
+   ;e_file_in := (/;"qfed.emis_"+tracer+"_0.9x1.25_QFED_cross_FINN_Tg_regional_2005_2017.nc",\               
    ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.5_Tg_regional_2005_2017.nc",\
    ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2002_2017.nc",\
    ;              "finn.emis_"+tracer+"_0.9x1.25_FINN1.6_Tg_regional_2017_2017.nc",\
-                 "cmip.emis_"+tracer+"_0.9x1.25_CMIP6_Tg_regional_2000_2015.nc"/)
+   ;              "cmip.emis_"+tracer+"_0.9x1.25_CMIP6_Tg_regional_2000_2015.nc"/)
 print(top_dir+e_file_in)
 
   ; -------------------------------
@@ -243,6 +243,7 @@ end if
 if(MONTHAVG) then
 
   yyyy = ispan(ystart, yend, 1)
+  year_yfrac = tofloat(yyyy)
   yyyy_compare_dummy = cd_calendar(time, 0)
   yyyy_compare = yyyy_compare_dummy(:,0)
   emiss1_yearly    = new((/dimsizes(e_file_in),dimsizes(yyyy)/), float)
@@ -289,12 +290,12 @@ if(MONTHAVG) then
 
 end if
 
-print(dim_avg_n(emiss1_yearly(:,0:dimsizes(yyyy)-2),1))
-print(dim_avg_n(emiss2_yearly(:,0:dimsizes(yyyy)-2),1))
-print(dim_avg_n(emiss3_yearly(:,0:dimsizes(yyyy)-2),1))
-print(dim_avg_n(emiss4_yearly(:,0:dimsizes(yyyy)-2),1))
-print(dim_avg_n(emiss5_yearly(:,0:dimsizes(yyyy)-2),1))
-print(dim_avg_n(emiss6_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in1@region+" "+dim_avg_n(emiss1_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in2@region+" "+dim_avg_n(emiss2_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in3@region+" "+dim_avg_n(emiss3_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in4@region+" "+dim_avg_n(emiss4_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in5@region+" "+dim_avg_n(emiss5_yearly(:,0:dimsizes(yyyy)-2),1))
+print(emiss_in6@region+" "+dim_avg_n(emiss6_yearly(:,0:dimsizes(yyyy)-2),1))
 
 
 ; =========================================
@@ -423,20 +424,52 @@ if(MONTHAVG) then
   res@pmLegendDisplayMode        = "Always"        ; turn on legend
   res@xyExplicitLegendLabels   = "monthly " + order
   res@pmLegendHeightF          = 0.08             ; height of legend
-  res@pmLegendOrthogonalPosF   = -1.65
-  res@pmLegendParallelPosF     = 0.22
+  res@pmLegendOrthogonalPosF   = -1.60
+  res@pmLegendParallelPosF     = 0.32
+  res@lgLabelFontHeightF       = 0.020
    res@tmXBLabelFontHeightF = 0.020
    res@tmYLLabelFontHeightF = 0.020
    res@vpWidthF         = 0.8
-   res@vpHeightF        = 0.3
+   res@vpHeightF        = 0.4
 
-   res@gsnRightString   = emiss_in2@region
-  plot2b  = gsn_csm_xy(wks,month_yfrac,emiss2_monthly,res) ; create plot
-   res@gsnRightString   = emiss_in4@region
-  plot4b  = gsn_csm_xy(wks,month_yfrac,emiss4_monthly,res) ; create plot
+    res@tmYLMajorOutwardLengthF = 0.0               ; draw tickmarks inward
+    res@tmYLMinorOutwardLengthF = 0.0                 ; draw minor ticsk inward
+    res@tmXBMajorOutwardLengthF = 0.0
+    res@tmXBMinorOutwardLengthF = 0.0
 
-  ;overlay(plot2b,plot4b)
-  draw(plot4b)
+   res@tmBorderThicknessF  = 4
+   res@tmXBMajorThicknessF = 4
+   res@tmYLMajorThicknessF = 4
+
+   res@tmXBMode         = "Explicit"
+   res@trXMinF          = 1999.8
+   res@trXMaxF          = 2017.2
+   res@tmXBValues       = ispan(2000,2017,2)
+   res@tmXBLabels       = ispan(2000,2017,2)
+
+   res@xyLineThicknesses = (/10.0, 10.0, 4.0, 4.0/)                ; make second line thicker
+
+
+  ;plot2b  = gsn_csm_xy(wks,month_yfrac,emiss2_monthly,res) ; create plot
+ ; plot4b  = gsn_csm_xy(wks,month_yfrac,emiss4_monthly,res) ; create plot
+   res@gsnRightString   = ""
+
+  plot1b  = gsn_csm_xy(wks,year_yfrac,emiss1_yearly,res) ; create plot
+  res@xyLineColors      := (/"red3", "red"/)  ; Line color
+  res@xyExplicitLegendLabels   = emiss_in2@region + " " + order
+  plot2b  = gsn_csm_xy(wks,year_yfrac,emiss2_yearly,res) ; create plot
+  plot3b  = gsn_csm_xy(wks,year_yfrac,emiss3_yearly,res) ; create plot
+  res@xyLineColors      := (/"blue3", "blue"/)  ; Line color
+  res@xyExplicitLegendLabels   = emiss_in4@region + " " +order
+  res@pmLegendOrthogonalPosF   = -1.40
+  res@pmLegendParallelPosF     = 0.295
+   res@gsnRightString   = "Yearly emissions"
+  plot4b  = gsn_csm_xy(wks,year_yfrac,emiss4_yearly,res) ; create plot
+  plot5b  = gsn_csm_xy(wks,year_yfrac,emiss5_yearly,res) ; create plot
+  plot6b  = gsn_csm_xy(wks,year_yfrac,emiss6_yearly,res) ; create plot
+
+  overlay(plot2b,plot4b)
+  draw(plot2b)
   frame(wks)
 end if
 
