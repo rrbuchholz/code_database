@@ -29,12 +29,27 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
+
+input_array = (/"bc", "benzene", "bigalk", "bigene", "c2h4", "c2h5oh", "c2h6", \
+                "c3h6", "c3h8", "c5h8", "ch2o", "ch3cho", "ch3coch3", "ch3oh", \
+                "co", "co2", "dms", "nh3", "nox", "oc", "so2_orig", "toluene", \
+                 "xylene"/)
+output_array = (/"BC", "BENZ", "BIGALK", "BIGENE", "C2H4", "C2H5OH", "C2H6", \
+                 "C3H6", "C3H8", "ISOP", "CH2O", "CH3CHO", "CH3COCH3", "CH3OH", \
+                 "CO", "CO2", "DMS", "NH3", "NO2", "OC", "SO2_orig", "TOLUENE", \
+                  "XYLENE"/)
+
+;input_array = (/"xylene"/)
+;output_array = (/"XYLENE"/)
+
+do t = 0, dimsizes(input_array)-1
+
   if (.not. isvar("year")) then      ; is YYYYMMDD=<value> from command line?
-       year = 2017
+       year = 2014
   end if
   outres = "0.9x1.25"
-  input_species = "co"
-  output_species = "CO"
+  input_species = input_array(t)
+  output_species = output_array(t)
   outpath = "/data14b/buchholz/gfas/cam_"+outres+"/regridded/"+year+"/"
 
   ; -------------------------------
@@ -59,13 +74,50 @@ begin
 
 ;********************************************
 ; set up
+  tracer_filename = output_species
+  if (output_species.eq."BENZ") then
+    tracer_filename = "C6H6"
+  else if (output_species.eq."BIGALK") 
+    tracer_filename = "HIALKANES"
+  else if (output_species.eq."BIGENE") 
+    tracer_filename = "HIALKENES"
+  else if (output_species.eq."ISOP") 
+    tracer_filename = "C5H8"
+  else if (output_species.eq."CH3CHO") 
+    tracer_filename = "C2H4O"
+  else if (output_species.eq."CH3COCH3") 
+    tracer_filename = "C3H6O"
+  else if (output_species.eq."DMS") 
+    tracer_filename = "C2H6S"
+  else if (output_species.eq."VOC") 
+    tracer_filename = "NMHC"
+  else if (output_species.eq."NO2") 
+    tracer_filename = "NOX"
+  else if (output_species.eq."SO2_orig") 
+    tracer_filename = "SO2"
+  else if (output_species.eq."TOLUENE") 
+    tracer_filename = "C7H8"
+  else if (output_species.eq."XYLENE") 
+    tracer_filename = "C8H10"
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
+  end if
   ; -------------------------------
   ; names of gfas data structures
   ; determined from an ncl_filedump
   ; -------------------------------
   ;gfas_tracer        = input_species+"fire"
   ;gfas_time          = "time"
-  gfas_tracer        = output_species+"FIRE_GDS0_SFC_ave24h"
+  gfas_tracer        = tracer_filename+"FIRE_GDS0_SFC_ave24h"
   gfas_time          = "initial_time0_hours"
 
 
@@ -148,18 +200,18 @@ begin
   ; -------------------------------
     fin = addfile(gfas_files, "r")            ; read in
     ;ListSetType (fin, "cat") 
-      tracer_all       = fin->$gfas_tracer$
+      tracer_all       := fin->$gfas_tracer$
         tracer_all = tracer_all(:,::-1,:) ; Flip the latitude dimension 
 
       ; load and convert time format
-      time_dummy       = fin->$gfas_time$
-      time = cd_convert(time_dummy, "hours since 1800-01-01 00:00" )
+      time_dummy       := fin->$gfas_time$
+      time := cd_convert(time_dummy, "hours since 1800-01-01 00:00" )
         time@long_name = "Time"
         time@calendar = "Gregorian"
         time!0 = "time"
         time&time = time
 
-      date = cd_calendar(time_dummy,-2)
+      date := cd_calendar(time_dummy,-2)
         date!0 = "time"
         date&time = time
         date@long_name = "Date"
@@ -200,7 +252,17 @@ printVarSummary(tracer_all)
     ; kg s-1 m-2 to molec. cm-2 s-1
     ; -------------------------------
      print(output_species)
-     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.output_species),1))
+     if (output_species.eq."SO2_orig")
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq."SO2"),1))
+     else if (output_species.eq."BENZ")
+        mw = 78.11
+     else if (output_species.eq."XYLENE")
+        mw = 106.16
+     else
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.output_species),1))
+     end if
+     end if
+     end if
      print(output_species+" MW: "+mw)
      tracer_emiss = tracer_emiss/(10000)        ; m-2 -> cm-2
      tracer_emiss = (tracer_emiss*1000/mw)*NAv  ; kg -> g -> mol -> molec
@@ -236,62 +298,6 @@ printVarSummary(tracer_all)
 
   tracername := output_species
 
-  ;********************************************
-  ; panel plots for consistency check
-  ;-------------------
-  ; MAP PLOT
-  ;-------------------
-  if (PLOT) then
-    wks = gsn_open_wks(mapType,mapName)
-    gsn_define_colormap(wks,"sunshine_9lev")        ; change colour map
-    ;-------------------
-    ; define resources 
-    ; to use for plotting
-    ;-------------------
-    mapres = True
-    mapres@tiMainString              = ""                  ; changing main large title
-    mapres@gsnLeftString             = ""                  ; change left 
-    mapres@gsnRightString            = tracer_emiss@units  ; change right title
-    mapres@gsnFrame                  = False               ; do not advance frame
-    mapres@gsnDraw		     = False	           ; don't draw it yet
-
-    mapres@cnFillOn                  = True
-    mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
-    mapres@cnLineLabelsOn            = False               ; turn off countour labels
-    mapres@cnLinesOn                 = False
-    mapres@lbLabelBarOn              = False               ; turn off individual colorbars
-
-    ;mapres@mpLimitMode               ="LatLon"            ; zoom to Australia
-    ;  mapres@mpMinLatF               = -45
-    ;  mapres@mpMaxLatF               = -10
-    ;  mapres@mpMinLonF               = 100
-     ; mapres@mpMaxLonF               = 160
-
-    mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-      mapres@cnMinLevelValF          = 1e11                ; set the minimum contour level
-      mapres@cnMaxLevelValF          = 2.5e12                ; set the maximum contour level
-      mapres@cnLevelSpacingF         = 1e11                ; set the interval between contours
-
-    ;-------------------
-    ; do the plotting
-    ;-------------------
-    ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
-
-    mapres@gsnLeftString            = "spatial avg = "+ AvgOrigGrid(0) ; change left title
-      map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
-
-    mapres@gsnLeftString            = "spatial avg = "+ Avg_Regrid(0) ; change left title
-      map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
-
-    panel_res                       = True
-      panel_res@txString            = "gfas "+ tracername +" emissions"
-      panel_res@gsnPanelLabelBar    = True                ; add common colorbar
-      panel_res@gsnPanelFigureStrings = (/"gfas high res","gfas low res"/)
-
-    gsn_panel(wks,(/map1,map2/),(/2,1/),panel_res)
-
-  end if    ; PLOT
-
     ;--------------------------------------------
     ; Write out to an netCDF file
     ;--------------------------------------------
@@ -300,7 +306,7 @@ printVarSummary(tracer_all)
       ; create file for each 
       ; CAM-chem species
       ;-------------------
-      outfilename = "gfas.emis_fromgrib_"+output_species+"_"+outres+"_mol_"+year+"new.nc"
+      outfilename = "gfas.emis_fromgrib_"+output_species+"_"+outres+"_mol_"+year+".nc"
       fout = addfile(outpath+outfilename, "c")
 
       ;------------
@@ -344,6 +350,64 @@ printVarSummary(tracer_all)
        ;--- emissions
          fout->bb               = emiss_regrid
     end if ;NetCDF
+
+end do
+
+  ;********************************************
+  ; panel plots for consistency check
+  ;-------------------
+  ; MAP PLOT
+  ;-------------------
+  if (PLOT) then
+    wks = gsn_open_wks(mapType,mapName)
+    gsn_define_colormap(wks,"sunshine_9lev")        ; change colour map
+    ;-------------------
+    ; define resources 
+    ; to use for plotting
+    ;-------------------
+    mapres = True
+    mapres@tiMainString              = ""                  ; changing main large title
+    mapres@gsnLeftString             = ""                  ; change left 
+    mapres@gsnRightString            = tracer_emiss@units  ; change right title
+    mapres@gsnFrame                  = False               ; do not advance frame
+    mapres@gsnDraw		     = False	           ; don't draw it yet
+
+    mapres@cnFillOn                  = True
+    mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
+    mapres@cnLineLabelsOn            = False               ; turn off countour labels
+    mapres@cnLinesOn                 = False
+    mapres@lbLabelBarOn              = False               ; turn off individual colorbars
+
+    ;mapres@mpLimitMode               ="LatLon"            ; zoom to Australia
+    ;  mapres@mpMinLatF               = -45
+    ;  mapres@mpMaxLatF               = -10
+    ;  mapres@mpMinLonF               = 100
+     ; mapres@mpMaxLonF               = 160
+
+    mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
+      mapres@cnMinLevelValF          = 1e10                ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 2.5e11                ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 1e11                ; set the interval between contours
+
+    ;-------------------
+    ; do the plotting
+    ;-------------------
+    ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
+
+    mapres@gsnLeftString            = "spatial avg = "+ AvgOrigGrid(0) ; change left title
+      map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
+
+    mapres@gsnLeftString            = "spatial avg = "+ Avg_Regrid(0) ; change left title
+      map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
+
+    panel_res                       = True
+      panel_res@txString            = "gfas "+ tracername +" emissions"
+      panel_res@gsnPanelLabelBar    = True                ; add common colorbar
+      panel_res@gsnPanelFigureStrings = (/"gfas high res","gfas low res"/)
+
+    gsn_panel(wks,(/map1,map2/),(/2,1/),panel_res)
+
+  end if    ; PLOT
 
 end
 

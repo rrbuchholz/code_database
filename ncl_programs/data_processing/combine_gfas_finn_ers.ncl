@@ -420,7 +420,11 @@ begin
     ; kg s-1 m-2 to molec. cm-2 s-1
     ; -------------------------------
      print(output_species)
-     mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.output_species),1))
+     if (output_species.eq."SO2_orig")
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq."SO2"),1))
+     else
+        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.output_species),1))
+     end if
      print(output_species+" MW: "+mw)
      tracer_emiss = tracer_emiss/(10000)        ; m-2 -> cm-2
      tracer_emiss = (tracer_emiss*1000/mw)*NAv  ; kg -> g -> mol -> molec
