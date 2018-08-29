@@ -3,7 +3,8 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - Currently configured to work with QFED emissions
+;   - Currently default configured to work with QFED emissions
+;   - Can choose GFAS
 ;   - load CAM emission files
 ;   Do one of the following processes
 ;   - split OC or BC into 2 files:       tracer choice
@@ -49,8 +50,9 @@ begin
     if (.not. isvar("NRT")) then        ; is NRT=<boolean> from command line?
          NRT = False
          MIN_EF         = False
-         MAX_EF         = True
+         MAX_EF         = False
     end if
+
     if (NRT.eq.True) then
          MIN_EF         = False
          MAX_EF         = False
@@ -64,6 +66,10 @@ begin
          emiss_type = "from_co2"         ; from_co, from_co2, regridded
     end if
 
+    if (.not. isvar("GFAS")) then  ; default is QFED processing
+         GFAS = False
+         repo = "QFED"
+    end if
 
   ; -------------------------------
   ; input emission files
@@ -72,20 +78,27 @@ begin
    f_ext = "qfed.emis_"
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
-  else if (emiss_type.eq."regridded") then
-    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
   else if (MIN_EF) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"_min/"
     f_ext = "qfed.emis.min_"
   else if (MAX_EF) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"_max/"
     f_ext = "qfed.emis.max_"
-  else
-    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
+  else if (GFAS) then
+    repo = "GFAS"
+    f_ext = "gfas.emis_fromgrib_"
+    emis_dir = top_dir+ "gfas/cam_"+outres+"/"+emiss_type+"/"+year+"/"
+  else ; QFED setup
+    if (emiss_type.eq."regridded") then
+      emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
+    else
+      emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
+    end if
   end if
   end if
   end if
   end if
+
   
   ; OC/BC
   if (tracer.eq."OC".or.tracer.eq."BC")
@@ -316,8 +329,11 @@ begin
       outfilename = "qfed.emis.max_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
     else if (MIN_EF) then
       outfilename = "qfed.emis.min_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
+    else if (GFAS) then
+      outfilename = "gfas.emis_fromgrib_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
     else 
       outfilename = "qfed.emis_"+new_names(i)+"_"+outres+"_mol_"+year+".nc"
+    end if
     end if
     end if
       ; copy file to new file
@@ -335,9 +351,13 @@ begin
         if (emiss_type.eq."regridded") then
           fout@title              = "Emissions of "+ new_names(i)+\
                                   "QFED CO2, daily"
+        else if (GFAS) then
+          fout@title              = "Emissions of "+ new_names(i)+\
+                                  "GFAS, daily"
         else 
           fout@title              = "Emissions of "+ new_names(i)+\
                                   " from FINN v1.6 emission x QFED CO2, daily"
+        end if
         end if
         if (new_names(i).eq."num_pom_a4".or.new_names(i).eq."num_bc_a4".or.\
             new_names(i).eq."num_so4_a1") then
@@ -372,13 +392,13 @@ begin
         end if
         copy_VarAtts(emiss_in,bb_emissions)
         copy_VarCoords(emiss_in,bb_emissions)
-        bb_emissions@long_name = new_names(i)+" QFED/FINN fire emissions"
+        bb_emissions@long_name = new_names(i)+" "+repo+"/FINN fire emissions"
         bb_emissions@_FillValue:= 0.
         bb_emissions@vmax      := tofloat(max(bb_emissions))
         bb_emissions@vmin      := tofloat(min(bb_emissions))
         if (new_names(i).eq."num_pom_a4".or.new_names(i).eq."num_bc_a4".or.\
             new_names(i).eq."num_so4_a1") then
-          bb_emissions@long_name        := new_names(i)+" QFED/FINN particle number fire emissions"
+          bb_emissions@long_name        := new_names(i)+" "+repo+"/FINN particle number fire emissions"
           bb_emissions@units            := "(particles/cm2/s)(molecules/mole)(g/kg)"
           bb_emissions@molecular_weight :=  1
         end if
