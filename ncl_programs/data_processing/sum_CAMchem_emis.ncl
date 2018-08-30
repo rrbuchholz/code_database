@@ -24,18 +24,23 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2003
-  yend = 2016
+  ystart = 2000
+  yend = 2018
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
-    s_name = "C2H6"
-    ANTHRO = True
+  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
-  tracers = (/"C2H6"/)
-  sm_tracers = (/"c2h6"/)
-  ;tracers = (/"CH3OH","CO"/)
+  ANTHRO = False
+
+  tracers = (/"CO"/)
+  sm_tracers = (/"co"/)
+  ;tracers = (/"BC", "OC", "NO", "NH3", "CO", \
+  ;            "C2H6", "C3H6", "C3H8", "CH2O", "CH3CHO",\
+  ;            "CH3COCH3", "SO2"/)
+  ;sm_tracers = (/"BC", "OC", "NO", "NH3", "CO", \
+  ;            "C2H6", "C3H6", "C3H8", "CH2O", "CH3CHO",\
+  ;            "CH3COCH3", "SO2"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
   ;            "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
@@ -47,7 +52,7 @@ begin
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   NETCDF = False
+   NETCDF = True
 
   ; -------------------------------
   ; begin a tracer loop
@@ -56,6 +61,7 @@ do t = 0, dimsizes(tracers)-1
 
   tracer = tracers(t)
   sm_tracer = sm_tracers(t)
+  s_name = tracer
 
   ; -------------------------------
   ; emission files and path setup
@@ -63,17 +69,17 @@ do t = 0, dimsizes(tracers)-1
   if (machine.eq."modeling1") then 
     top_dir = "/data14b/buchholz/"
     if (repository.eq."FINN") then
-     emis_dir = top_dir+ "finn/cam_0.9x1.25"
+     emis_dir = top_dir+ "finn/cam_0.9x1.25/"
      e_file_in = "emissions-finn1.5_"+tracer+"_bb_surface_2002-2017_0.9x1.25.nc"
 
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
      e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
-    else if (repository.eq."QFED") then
-     emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded"
-     e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
     else if (repository.eq."QFED_native") then
      emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
+    else if (repository.eq."QFED") then
+     emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded/"
+     e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
     end if
     end if
     end if
@@ -81,8 +87,8 @@ do t = 0, dimsizes(tracers)-1
 
     if (repository.eq."QFED".or.repository.eq."QFED/FINN".or.\
       repository.eq."FINN") then
-     indir = emis_dir+"/allyears/"
-     outpath = emis_dir+"/region_sums/"
+     indir = emis_dir+"allyears/"
+     outpath = emis_dir+"region_sums/"
     else if (repository.eq."QFED_native") then
      outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
@@ -96,7 +102,7 @@ do t = 0, dimsizes(tracers)-1
      outpath = emis_dir+"/region_sums/"
     else if (repository.eq."GFAS/FINN") then
      emis_dir = top_dir+ "gfas/cam_"+reso+"/from_co2"
-     e_file_in = "gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+     e_file_in = "gfas.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
      indir = emis_dir+"/allyears/"
      outpath = emis_dir+"/region_sums/"
     end if
@@ -104,7 +110,7 @@ do t = 0, dimsizes(tracers)-1
 
     if (repository.eq."CMIP6") then
      emis_dir = top_dir+ "gfed/cmip6_cam_"+reso
-     e_file_in = "emissions-cmip6_"+tracer+"_bb_surface_"+ystart+"-"+yend+"_"+reso+"_c20170322.nc"
+     e_file_in = "emissions-cmip6_"+tracer+"_bb_surface_1750-2015_"+reso+"_c20170322.nc"
      indir = emis_dir+"/1750_2015/"
      outpath = emis_dir+"/region_sums/"
     end if
@@ -311,7 +317,6 @@ do t = 0, dimsizes(tracers)-1
       tracer_emiss&lon = lon
 
 
-
      ; weight by gridbox area
        ; prevent negative weights 
        ; (redundant because no emissions over artic and anatarctica)
@@ -405,16 +410,16 @@ do t = 0, dimsizes(tracers)-1
   ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
   ;                   (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
 
-   region_names = (/"Canada", "Northwest Canada", \
-                    "USA", "Northwest USA",\
-                    "Siberia", "North America" /)
+   region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
+                    "Siberia", "North America", "India" /)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 50.,  70., 360.-130., 360.-60./),\  ;Canada
-                     (/ 55.,  65., 360.-120., 360.-100./),\ ;NWCan
-                     (/ 20.,  50., 360.-130., 360.-70./),\  ;USA
-                     (/ 40.,  50., 360.-120., 360.-105./),\ ;NWUS
+   region_select = (/(/ 54.,  67., 360.-120., 360.-93./),\  ;NWCan
+                     (/ 40.,  51., 360.-125., 360.-105./),\ ;NWUS
+                     (/ 30.,  41., 360.-102., 360.-88./),\  ;SEUS
                      (/ 50.,  85.,      91.,     190./),\   ;Siberia
-                     (/ 25.,  70., 360.-160., 360.-53./) /) ;NAmerica
+                     (/ 25.,  70., 360.-160., 360.-53./),\  ;NAmerica
+                     (/ 20.,  40.,      65.,     90./) /)   ;India
+
 
      ; -------------------------------
      ; sums
