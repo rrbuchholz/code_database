@@ -3,7 +3,7 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - For use with MOPITT CO version 6, level 2 product
+;   - For use with MOPITT CO version 6,7 and 8 level 2 products
 ;   - Loading CO data from MOPITT .he5 file
 ;          - select daytime retrievals
 ;          - select for spatial region
@@ -31,21 +31,19 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7T"
-  year = 2016
+  version = "V8T"
+  year = 2017
   ; V6 T and N work all files, V7 all versions work
   all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02T-"+year+"*.he5")
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
   ;dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02J-"+year+"*.he5")
   ;all_files = dummy(344:346)
 
-
   ;------------
   ; select location
   ;------------
-  outfolder = "~/MOPITT_subset/SH_regions_v7/"
-  location = "Indonesia"
-;SAmerica,Indonesia
+  outfolder = "~/MOPITT_subset/regions_v8/"
+  location = "NorthwestCanada"
 
   ;------------
   ; select daytime 
@@ -185,6 +183,20 @@ begin
    bottomboundary  = -10.
    rightboundary   = 165.
    leftboundary    = 91.
+  else if (location.eq."NorthwestCanada") then
+   topboundary     = 67.
+   bottomboundary  = 54.
+   rightboundary   = -93.
+   leftboundary    = -120.
+  else if (location.eq."Siberia") then
+   topboundary     = 80.
+   bottomboundary  = 50.
+   rightboundary   = 190.
+   leftboundary    = 90.
+                     ;(/ 40.,  51., 360.-125., 360.-105./),\ ;NWUS
+                     ;(/ 30.,  41., 360.-102., 360.-88./),\  ;SEUS
+  end if
+  end if
   end if
   end if
   end if
