@@ -92,7 +92,7 @@ begin
   end if ;PLOT
 
   if (PLOTREGIONS) then
-    mapType2 = "x11"
+    mapType2 = "pdf"
     mapName2 = tracer+"_regions"
   end if ;PLOT
 
@@ -101,30 +101,34 @@ begin
   ; -------------------------------
   ; Define regions
   ; -------------------------------
-   region_names = (/"AUST", "EQAS", "SEAS","INDI", "NEAS", "SIBR", \
-                    "WRUS", "EURO", "AFME","NHAF", "SHAF", "BONA", \
-                    "TENA", "CEAM", "NHSA","AMAZ", "SHSA", "NH", "SH"/)
+   region_names = (/"AUST", "NZ", "EQAS", "SEAS","INDI", "NEAS", "SIBR", \
+                    "BOAS", "EURO", "AFME","CWAS1", "CWAS2", "NHAF",\
+                    "SHAF", "BONA", "TENA", "CEAM", "NHSA","AMAZ",\
+                    "SHSA", "NH", "SH"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-48., -10.,      110.,     181./),\  ;AUST
-                     (/-10.,   8.,       90.,     160./),\  ;EQAS
-                     (/  8.,  28.,       90.,     135./),\  ;SEAS
-                     (/  4.,  36.,       60.,      90./),\  ;INDI
-                     (/ 28.,  50.,       90.,     153./),\  ;NEAS
-                     (/ 50.,  80.,       90.,     190./),\  ;SIBR
-                     (/ 36.,  80.,       40.,      90./),\  ;WRUS
-                     (/ 36.,  75.,  360.-25.,      40./),\  ;EURO
-                     (/  0.,  36.,       33.,      60./),\  ;AFME
-                     (/  0.,  36.,  360.-18.,      33./),\  ;NHAF
-                     (/ -36.,  0.,        0.,      55./),\  ;SHAF
-                     (/ 50.,  75., 360.-170., 360.-53./),\  ;BONA
-                     (/ 27.,  50., 360.-140., 360.-53./),\  ;TENA
-                     (/ 12.,  27., 360.-120., 360.-40./),\  ;CEAM
-                     (/  0.,  12.,  360.-90., 360.-30./),\  ;NHSA
-                     (/-25.,  -0.,  360.-90., 360.-30./),\  ;AMAZ
-                     (/-60., -25.,  360.-90., 360.-30./),\  ;SHSA
-                     (/  0.,  90.,       0.,      360./),\    ;NH
-                     (/-90.,   0.,       0.,      360./) /)   ;SH
+   region_select = (/(/-50., -10.,       110.,     160./),\  ;AUST
+                     (/-50., -30.,       160.,     181./),\  ;NZ
+                     (/-10.,   8.,        90.,     160./),\  ;EQAS
+                     (/  8.,  28.,        90.,     135./),\  ;SEAS
+                     (/  4.,  35.,        60.,      90./),\  ;INDI
+                     (/ 28.,  50.,        90.,     153./),\  ;NEAS
+                     (/ 50.,  80.,        90.,     190./),\  ;SIBR
+                     (/ 50.,  80.,        30.,      90./),\  ;BOAS
+                     (/ 30.,  75.,   360.-25.,      30./),\  ;EURO
+                     (/  0.,  30.,        30.,      60./),\  ;AFME
+                     (/ 30.,  50.,        30.,      60./),\  ;CWAS1
+                     (/ 35.,  50.,        60.,      90./),\  ;CWAS2
+                     (/  0.,  30.,   360.-18.,      30./),\  ;NHAF
+                     (/ -36.,  0.,         0.,      55./),\  ;SHAF
+                     (/ 50.,  75.,  360.-170., 360.-53./),\  ;BONA
+                     (/ 27.,  50.,  360.-140., 360.-53./),\  ;TENA
+                     (/  9.,  27.,  360.-120., 360.-40./),\  ;CEAM
+                     (/  0.,   9.,   360.-90., 360.-30./),\  ;NHSA
+                     (/-23.5,  -0.,  360.-90., 360.-30./),\  ;AMAZ
+                     (/-60.,  -23.5, 360.-90., 360.-30./),\  ;SHSA
+                     (/  0.,  90.,      0.,      360./),\    ;NH
+                     (/-90.,   0.,      0.,      360./) /)   ;SH
 
 
    ;region_names := (/"KORE", "JAPN", "BONA","TENA", "AMAZ", "AUST", \
@@ -143,11 +147,11 @@ begin
    ;                  (/-45.,  -9.,      110,      160./),\  ;AUST
    ;                  (/  7.,  28.,       91.,     135.5/),\ ;SEAS
    ;                  (/  7.,  32.,       60.,      90./),\  ;INDI
-   ;                  (/ 29.,  38.,       91.,     124./),\  ;CEAS
+   ;                  (/ 29.,  49.,       91.,     135.5/),\ ;CEAS
    ;                  (/  9.,  27.,      240.,     310./),\  ;CEAM
    ;                  (/ 39.,  49.,       91.,     129.5/),\ ;NEAS
    ;                  (/ 50.,  75.,       40.,     190./),\  ;BOAS
-   ;                  (/ 31.,  75.,      335.,      40./),\  ;EURO
+   ;                  (/ 30.,  75.,      335.,      40./),\  ;EURO
    ;                  \;(/-10.,   8.,       95.,     120./),\  ;Indonesia
    ;                  (/-10.,  6.,       95.,     160./),\  ;EQAS
    ;                  \;(/-45., -10.,      110.,     162./),\  ;Australasia
@@ -374,9 +378,17 @@ begin
           .or.region_names(i).eq."EURO") then 
         dum = gsn_add_text(wks2,map1,region_names(i),10,\
                          (region_select(i,0)+region_select(i,1))/2,txres)
+      else if (region_names(i).eq."CWAS1") then 
+        dum = gsn_add_text(wks2,map1,"CWAS",region_select(i,3),\
+                         (region_select(i,0)+region_select(i,1))/2+2,txres)
+      else if (region_names(i).eq."CWAS2") then 
+        ; do nothing
+        continue
       else 
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
                            (region_select(i,0)+region_select(i,1))/2,txres)
+      end if
+      end if
       end if
     end do
     
@@ -390,6 +402,9 @@ begin
       boxres@gsLineThicknessF = 5
 
       do j=0,n_regions-3
+       if (region_names(j).eq."CWAS1".or.region_names(j).eq."CWAS2") then 
+         continue
+       else
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
                           region_select(j,2)/)
@@ -397,7 +412,7 @@ begin
                           region_select(j,1) , region_select(j,0), \
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
-
+       end if
       end do
 
 
