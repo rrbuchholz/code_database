@@ -428,7 +428,7 @@ end if
       panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopRight"
 
-    ;gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
+    gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
 
   ;draw(plot6)
   ;frame(wks)
@@ -466,7 +466,7 @@ if(MONTHAVG) then
 
    res@tiYAxisString            = "Emissions "+tracer+" ("+emiss_in1@units+")"
 
-   res@xyLineThicknesses := (/10.0, 10.0, 10.0, 10.0/)                ; make second line thicker
+   res@xyLineThicknesses := (/15.0, 15.0, 15.0, 15.0/)                ; make second line thicker
    res@xyLineColors      := (/"blue3", "red4","forestgreen","orange"/)          ; change line color
 
   ;plot6b  = gsn_csm_xy(wks,month_yfrac,emiss6_monthly,res) ; create plot
@@ -481,23 +481,24 @@ if(MONTHAVG) then
   res@xyLineColors      := (/"red3"/)  ; Line color
   res@xyDashPatterns    := (/0/)
   res@xyExplicitLegendLabels   = emiss_in1@region + " " + order
-  res@pmLegendOrthogonalPosF   = -1.43
+  res@pmLegendOrthogonalPosF   = -1.28
+  ;res@pmLegendOrthogonalPosF   = -1.43
   plot1b  = gsn_csm_xy(wks,year_yfrac,emiss1_yearly,res) ; create plot
   res@xyLineColors      := (/"blue3"/)  ; Line color
   res@xyDashPatterns    := (/16/)
   res@xyExplicitLegendLabels   = emiss_in2@region + " " + order
-  res@pmLegendOrthogonalPosF   = -1.37
+  ;res@pmLegendOrthogonalPosF   = -1.37
   plot2b  = gsn_csm_xy(wks,year_yfrac,emiss2_yearly,res) ; create plot
-  ;res@xyLineColors      := (/"forestgreen"/)  ; Line color
-  ;res@xyExplicitLegendLabels   = emiss_in3@region + " " + order
+  res@xyLineColors      := (/"forestgreen"/)  ; Line color
+  res@xyExplicitLegendLabels   = emiss_in3@region + " " + order
   ;res@pmLegendOrthogonalPosF   = -1.41
-  ;plot3b  = gsn_csm_xy(wks,year_yfrac,emiss3_yearly,res) ; create plot
-  ;res@xyLineColors      := (/"orange"/)  ; Line color
-  ;res@xyExplicitLegendLabels   = emiss_in4@region + " " + order
-
-  ;res@trYMaxF          = 20.0
-  ;res@gsnRightString   = "Yearly emissions"
-  ;plot4b  = gsn_csm_xy(wks,year_yfrac,emiss4_yearly,res) ; create plot
+  res@trYMaxF          = 4.0
+  plot3b  = gsn_csm_xy(wks,year_yfrac,emiss3_yearly,res) ; create plot
+  res@xyLineColors      := (/"orange"/)  ; Line color
+  res@xyExplicitLegendLabels   = emiss_in4@region + " " + order
+  res@trYMaxF          = 60.0
+  res@gsnRightString   = "Yearly emissions"
+  plot4b  = gsn_csm_xy(wks,year_yfrac,emiss4_yearly,res) ; create plot
 
   ;***********************************
   ; Different Y-axis for Siberia
@@ -531,12 +532,22 @@ if(MONTHAVG) then
   ;plot5b  = gsn_csm_xy(wks,year_yfrac,emiss5_yearly,res) ; create plot
   ;plot6b  = gsn_csm_xy(wks,year_yfrac,emiss6_yearly,res) ; create plot
 
+  draw(plot1b)
+  frame(wks)
+  draw(plot2b)
+  frame(wks)
+  draw(plot3b)
+  frame(wks)
+  draw(plot4b)
+  frame(wks)
+
   overlay(plot1b,plot2b)
   ;overlay(plot1b,plot3b)
   ;overlay(plot1b,plot4b)
   overlay(plot34b,plot1b)
   draw(plot34b)
   frame(wks)
+
 end if
 
 end if
