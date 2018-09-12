@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "NorthwestCanada" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "Central South America"
+  loc = "Siberia" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "Siberia"
 
   version = "V8"
   retrieval = "T"
@@ -73,7 +73,7 @@ begin
 
 
   
-  CSV            = False
+  CSV            = True
   if (CSV) then
      outname      = data_folder+"/"+version+"/anomalies/"+\
                      loc+"_"+version+retrieval+"MOPITTanomalies.csv"
@@ -81,7 +81,7 @@ begin
 
   NETCDF            = False
   if (NETCDF) then
-     nc_outname      = data_folder+"/V7/anomalies/"+\
+     nc_outname      = data_folder+"/"+version+"/anomalies/"+\
                         loc+"_"+version+"MOPITTanomalies.nc"
   end if
 
@@ -178,6 +178,8 @@ begin
     days = floattointeger(mopitt_date(:,2))
       doy            = day_of_year(years,months,days)
     yyyymmdd         = cd_calendar(mopitt_time, 2)
+
+
 
   ;--------------------------------------------
   ; calculate averages - separate into weeks, 
@@ -298,6 +300,7 @@ print(max(month_err_avg))
 rel_err = month_err_avg/climate_co_ext
 print("Maximum relative error:")
 print(max(rel_err))
+
 
 ;--------------------------------------------
 ; plot
@@ -509,7 +512,7 @@ if (NETCDF) then
   ; File 
   ; Attributes
   ;------------
-  region_def = str_split (month_co_avg@average_op_ncl,":")
+  region_def = str_split (mopitt_tcol@average_op_ncl,":")
   sep_lat_lon = str_split (region_def(1)," ")
 
   setfileoption(fout, "DefineMode",True)
@@ -600,7 +603,7 @@ if (NETCDF) then
   month_co_avg!0                  = "time"
   month_co_avg&time               = time_array
   month_co_avg@_FillValue         = 9.969209968386869e+36
-  delete(month_co_avg@average_op_ncl)
+  ;delete(month_co_avg@average_op_ncl)
 
   month_co_avg@long_name          = "MOPITT_CO_TotalColumn"
   month_co_avg@units              = "mol/cm^2"
@@ -622,7 +625,7 @@ if (NETCDF) then
   month_err_avg!0                 = "time"
   month_err_avg&time              = time_array
   month_err_avg@_FillValue        = 9.96921e+36 
-  delete(month_err_avg@average_op_ncl)
+  ;delete(month_err_avg@average_op_ncl)
 
   new_month_co_avg@long_name      = "MOPITT_CO_TotalColumn_SplineFit"
   new_month_co_avg@units          = "mol/cm^2"

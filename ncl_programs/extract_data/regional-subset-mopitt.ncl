@@ -32,7 +32,7 @@ begin
   ; MOPITT
   ; -------------------------------
   version = "V8T"
-  year = 2017
+  year = 2001
   ; V6 T and N work all files, V7 all versions work
   all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/"+year+"*/*/MOP02T-"+year+"*.he5")
   ; remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
@@ -43,7 +43,7 @@ begin
   ; select location
   ;------------
   outfolder = "~/MOPITT_subset/regions_v8/"
-  location = "NorthwestCanada"
+  location = "Siberia"
 
   ;------------
   ; select daytime 
