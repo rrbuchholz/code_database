@@ -29,22 +29,22 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "MaritimeSEA" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "Siberia" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
-  version = "V7T"
-  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
+  version = "V8T"
+  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V8/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "MaritimeSEA"
+  location_title = "Siberia"
   sub_label = "(a) "
     year_s = 2001
-    year_e = 2017
+    year_e = 2018
 
   ;------------
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
