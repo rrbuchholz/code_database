@@ -30,8 +30,8 @@ begin
 ;***************************************************************
     version = "V7T"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
     sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
    ; -------------------------------
@@ -42,7 +42,7 @@ begin
    if (PLOT) then                            ; Map plot
        mapDir  = "./"                        ; directory for plot output
        mapName = "/net/mopfl/home/buchholz/MOPITT_"+version+"_tcol" ; plot name output
-       mapType = "png"                       ; workstation type
+       mapType = "x11"                       ; workstation type
         mapType@wkWidth = 1800
         mapType@wkHeight = 1800 
    end if
@@ -166,10 +166,16 @@ begin
       ;mapres@mpMaxLonF               = 245
       ;mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      mapres@mpMinLatF               = -85       ; zoom to +/- 80
-      mapres@mpMaxLatF               = 85
-      mapres@mpMinLonF               = -170
-      mapres@mpMaxLonF               = 185
+      mapres@mpMinLatF               = -60       ; zoom to Aus
+      mapres@mpMaxLatF               = -10
+      mapres@mpMinLonF               = 110
+      mapres@mpMaxLonF               = 180
+      ;mapres@mpCenterLonF            = 70
+      ;-------------------------------------
+      ;mapres@mpMinLatF               = -85       ; zoom to +/- 80
+      ;mapres@mpMaxLatF               = 85
+      ;mapres@mpMinLonF               = -170
+      ;mapres@mpMaxLonF               = 185
       ;mapres@mpCenterLonF            = 150
 
     ;-----------------------------------
@@ -361,6 +367,45 @@ begin
         txres@txFontColor    = "white"
         txres@txJust         = "CenterCenter"
         textIII = gsn_add_text(wks,map2,"SAM",51, -55,txres)
+
+    ; ===================
+    ; Location Data
+    ; ===================
+
+      station_name = (/"Darwin", "Wollongong", "Lauder"/)
+      station_lon = (/130.89, 150.88, 169.68/)
+      station_lat = (/-12.42, -34.41, -45.04/)
+
+    ; ===================
+    ; Locations
+    ; ===================
+    ;
+     pmres                    = True
+       pmres@gsMarkerIndex    = 16        ; filled markers
+       pmres@gsMarkerSizeF    = 0.008
+       pmres@gsMarkerColor    = "black"
+
+       gsn_polymarker(wks,map,station_lon,station_lat,pmres)
+
+    ; ===================
+    ; Add locations names
+    ; ===================
+    ;
+     txres = True
+      txres@txFontHeightF  = 0.02
+      txres@txFont         = "helvetica-bold"
+      txres@txJust         = "TopRight"
+      txres@txFontColor    = "black"
+
+      ;text = gsn_add_text(wks,map,station_name(0),station_lon(0),station_lat(0)-2.5,txres)
+
+      txres@txJust         = "BottomLeft"
+
+     do i = 1, dimsizes(station_name)-1 
+        ;text2 = gsn_add_text(wks,map,station_name(1),station_lon(1),station_lat(1),txres)
+        text3 = gsn_add_text(wks,map,station_name(2),station_lon(2),station_lat(2),txres) 
+      end do
+
 
     ; ===================
     ; panel the plots
