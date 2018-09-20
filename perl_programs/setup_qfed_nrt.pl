@@ -30,7 +30,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20180714;
+#$current_date = 20180918;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -142,8 +142,9 @@ else{
 
 #------------------------------
 #send to glade at 8am
-if ($time >= 8 && $min >= 30 && $processed == 1){
+if ($time >= 5 && $min >= 30 && $processed == 1){
 `scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+    print OUT "Sent to cheyenne. \n";
 }
 
 #------------------------------
