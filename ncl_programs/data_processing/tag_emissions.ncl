@@ -10,21 +10,26 @@
 ;       Acronym     Description
 ;     -----------------------------
 ;       AUST         Australasia
+;       NZ           New Zealand
 ;       EQAS         Indonesia and Equatorial Asia
 ;       SEAS         Southeast Asia
 ;       INDI         India
 ;       NEAS         Northeast Asia
 ;       SIBR         Siberia
-;       WRUS         West Russia
+;       BOAS         West Russia and Boreal Asia
 ;       EURO         Europe
 ;       AFME         Northern Africa and Middle East
-;       NHAF         Northern Africa
-;       SHAF         Southern Africa
-;                    South America
-;                    Central America
-;                    North America
-;                    Southern Hemisphere
-;                    Northern Hemisphere
+;       CWAS         Central-West Asia
+;       NHAF         Northern Hemisphere Africa
+;       SHAF         Southern Hemisphere Africa
+;       BONA         Boreal North America
+;       TENA         Temperate North America
+;       CEAM         Central America
+;       NHSA         Northern Hemisphere South America
+;       AMAZ         Amazon
+;       SHSA         Southern Hemisphere South America
+;       SH           Southern Hemisphere
+;       NH           Northern Hemisphere
 ;   
 ;   To run type:
 ;         ncl 'efile_in="<path_to_file>"' tag_emissions.ncl
@@ -62,6 +67,7 @@ begin
   ;------------
   PLOT           = False
   PLOTREGIONS    = True
+     WITHKOPPEN  = True
   netCDF         = False                       ; for netCDF output
 
 ;--------------------------------------------
@@ -92,7 +98,7 @@ begin
   end if ;PLOT
 
   if (PLOTREGIONS) then
-    mapType2 = "pdf"
+    mapType2 = "x11"
     mapName2 = tracer+"_regions"
   end if ;PLOT
 
@@ -116,11 +122,11 @@ begin
                      (/ 50.,  80.,        90.,     190./),\  ;SIBR
                      (/ 50.,  80.,        30.,      90./),\  ;BOAS
                      (/ 30.,  75.,   360.-25.,      30./),\  ;EURO
-                     (/  0.,  30.,        30.,      60./),\  ;AFME
+                     (/  0.,  30.,        35.,      60./),\  ;AFME
                      (/ 30.,  50.,        30.,      60./),\  ;CWAS1
                      (/ 35.,  50.,        60.,      90./),\  ;CWAS2
-                     (/  0.,  30.,   360.-18.,      30./),\  ;NHAF
-                     (/ -36.,  0.,         0.,      55./),\  ;SHAF
+                     (/  0.,  30.,   360.-18.,      35./),\  ;NHAF
+                     (/ -36.,  0.,         0.,      60./),\  ;SHAF
                      (/ 50.,  75.,  360.-170., 360.-53./),\  ;BONA
                      (/ 27.,  50.,  360.-140., 360.-53./),\  ;TENA
                      (/  9.,  27.,  360.-120., 360.-40./),\  ;CEAM
@@ -305,7 +311,6 @@ begin
     mapres@gsnLeftString             = region              ; change left 
     mapres@gsnFrame                  = False               ; do not advance frame
     mapres@gsnDraw		     = False	           ; don't draw it yet
-
     ;-------------------
     ; do the plotting
     ;-------------------
@@ -368,10 +373,102 @@ begin
     ;-------------------
     ; do the plotting
     ;-------------------
+
+   if (WITHKOPPEN) then
+
+    koppen_class = (/"Af", "Am", "As", "Aw", "BWh", "BWk", "BSh", "BSk", "Csa", "Csb", "Csc", \
+                     "Cwa", "Cwb", "Cwc", "Cfa", "Cfb", "Cfc", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa",\
+                     "Dwb", "Dwc", "Dwd", "Dfa", "Dfb", "Dfc", "Dfd", "ET", "EF"/)
+
+    koppen_colors = (/"blue", "dodgerblue1", "steelblue2", "lightskyblue", "red2", "pink1", "orange", "lightgoldenrod2",\
+                      "yellow", "yellow3", "yellow4","seagreen1", "seagreen3", "forestgreen", "darkolivegreen1",\
+                      "green", "limegreen", "maroon1", "maroon3", "maroon4", "mediumorchid", "mediumpurple",\
+                      "royalblue", "darkslateblue", "navy", "cyan", "lightblue2", \
+                      "darkslategray4", "darkslategray", "gray", "dimgray"/)
+
+    koppen_levels = (/0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30/)
+
+    ; ----------------------------------------
+    ; Load data 1
+    ; ----------------------------------------
+    ;---Read the values in as 1D, since we don't know rows and columns yet.
+      lines  = asciiread("/gpfs/u/home/buchholz/data/koppen_30year_1901-2010.tsv",-1,"string")
+      delim  = "	"        ; tab delimeted file
+      ncols  = dimsizes(str_split(lines(0),delim))
+      nlines = dimsizes(lines)-1         ; header
+
+    ;---Reshape as 2D array, and convert to float for ppm/ppb.
+      fields = new((/nlines,ncols/),string)
+       do nf=0,ncols-1                    ;Remember that fields start at 1, not 0.
+         fields(:,nf) = str_get_field(lines(1:),nf+1,delim)
+       end do
+       lon_koppen = tofloat(fields(:,0))
+       lat_koppen = tofloat(fields(:,1))
+       type_koppen = fields(:,dimsizes(fields(0,:))-1)
+       numeric_koppen = new(dimsizes(type_koppen), float)
+       do t=0,dimsizes(koppen_class)-1
+         print(koppen_class(t)+"="+t)
+         numeric_koppen = where(type_koppen.eq.koppen_class(t),t,numeric_koppen)
+       end do
+  ;print("************************************************")     
+  ;print("Min "+min(lon_koppen)+", to Max "+max(lon_koppen))
+  ;print("Min "+min(lat_koppen)+", to Max "+max(lat_koppen))
+
+   newlon  = fspan(-179.75,179.75, 720)
+     newlon@units      = "degrees_east"
+     newlon@long_name  = "longitude"
+     newlon!0          = "lon"
+     newlon&lon        = newlon
+   newlat  = fspan(-89.75,89.75, 360)
+     newlat@units      = "degrees_north"
+     newlat@long_name  = "latitude"
+     newlat!0          = "lat"
+     newlat&lat        = newlat
+
+    gridded_koppen = new((/dimsizes(newlat),dimsizes(newlon)/), float)
+     gridded_koppen!0          = "lat"
+     gridded_koppen&lat        = newlat
+     gridded_koppen!1          = "lon"
+     gridded_koppen&lon        = newlon
+
+
+    do n=0,dimsizes(numeric_koppen)-1
+    ;do n=0,500
+      gridded_koppen({lat_koppen(n)},{lon_koppen(n)})=(/numeric_koppen(n)/)
+    end do
+
+    mapres@cnFillOn                  = True
+    mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
+    mapres@cnLineLabelsOn            = False               ; turn off countour labels
+    mapres@cnLinesOn                 = False
+    mapres@cnLevelSelectionMode      = "Explicit"      ; manually set the contour levels
+      mapres@cnLevels                = koppen_levels   ; set the contour levels
+      mapres@cnFillColors            = koppen_colors
+      mapres@cnLevelSpacingF         = 1         ; set the interval between contours
+   mapres@lbLabelStrings             = koppen_class 
+   mapres@lbLabelFontHeightF         = 0.01
+   mapres@lbLabelPosition            = "Bottom"
+   mapres@lbLabelAlignment           = "BoxCenters"
+   mapres@pmLabelBarWidthF           = 1.  
+   mapres@lbTitleString              = "Koeppen Land Class"
+   mapres@lbTitlePosition            = "Bottom"
+   mapres@lbTitleFontHeightF         = 0.015
+   mapres@lbBoxLinesOn               = False
+
+    map1 = gsn_csm_contour_map_ce(wks2,gridded_koppen,mapres)
+
+
+   else 
     map1 = gsn_csm_map(wks2,mapres)                          ; draw a blank map
+   end if
+
 
     txres = True
       txres@txFontHeightF = 0.01                     ; font smaller. default big
+      txres@txFontThicknessF = 10.
+      txres@txFontColor = "black"
+      txres@txBackgroundFillColor = "white"
+      txres@txPerimSpaceF = 0.2
 
     do i=0,n_regions-3
       if (region_names(i).eq."SHAF".or.region_names(i).eq."NHAF"\
@@ -391,8 +488,8 @@ begin
       end if
       end if
     end do
-    
-    draw(map1)
+
+     draw(map1)
 
     ;-------------------
     ; draw region boxes
