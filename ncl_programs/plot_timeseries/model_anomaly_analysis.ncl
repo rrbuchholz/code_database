@@ -87,7 +87,6 @@ begin
   model_files_dummy = systemfunc ("ls "+folder+"CAM_Chem_DWL*.nc")
   model_filenames = model_files_dummy
 
-
   ;------------
   ; toggles
   ;------------
@@ -98,7 +97,6 @@ begin
     ;plttype@wkHeight = 0.5
     year_e = 2017
 
-  PLOTFTS        = True
   
 ;--------------------------------------------
 ; end user input
@@ -271,7 +269,7 @@ begin
   ; DAILY ANOMALIES
   ; -------------------------------
     model_day_anom = data_collect-model_day_climate_sm
-
+printVarSummary(model_day_anom)
 
 ;--------------------------------------------
 ; GET CAM-chem anomaly dates
@@ -287,6 +285,9 @@ begin
    anomaly_yfrac = yyyymmdd_to_yyyyfrac(event_dates(remove_missing),0.5)
    plot_xvals = ispan(0,dimsizes(anomaly_yfrac)-1,1)
 
+print(event_dates)
+print(model_anomaly)
+print(transpose(model_day_anom(:,model_anomaly)))
  
 ;********************************************
 ;--------------------------------------------
@@ -305,7 +306,7 @@ if (PLOT) then
     res@trYMinF             = -1.0
     ; MAX for Different stations
     if (location.eq."Darwin") then
-       res@trYMaxF             = 0.3
+       res@trYMaxF             = 0.7
        res@trYMinF             = -0.3
     else if (location.eq."Lauder") then
        res@trYMaxF             = 0.85
@@ -318,8 +319,8 @@ if (PLOT) then
     end if
     end if
     end if
-    res@trXMinF             = -0.5
-    res@trXMaxF             = plot_xvals(dimsizes(plot_xvals)-1)+1.5
+    ;res@trXMinF             = -0.5
+    ;res@trXMaxF             = plot_xvals(dimsizes(plot_xvals)-1)+1.5
 
     res@tmYLMode        = "Manual"	
       res@tmYLTickStartF  = -1.0
@@ -379,11 +380,11 @@ if (PLOT) then
       overlay(plot1,plot1b)
     end do
 
-
     res@gsnXYBarChartColors = "black"	
     res@gsnLeftString            := "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
     plot1_final = gsn_csm_xy(wks,plot_xvals,model_day_anom(0,model_anomaly)/1e18,res)
     overlay(plot1,plot1_final)
+
 
   ; -------------------------------
   ; add in model sums
