@@ -69,7 +69,7 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Wollongong"
+  location = "Darwin"
   surface = "land"
   year_s = 2001
   network = "NDACC"
@@ -83,7 +83,8 @@ begin
   ; -------------------------------
   ; CAM-chem files
   ; -------------------------------
-  folder = "~/CAM_chem/stations/"
+  ;folder = "~/CAM_chem/stations/"
+  folder = "~/CAM_chem/stations/constE/"
   model_files_dummy = systemfunc ("ls "+folder+"CAM_Chem_DWL*.nc")
   model_filenames = model_files_dummy
 
