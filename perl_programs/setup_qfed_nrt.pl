@@ -30,7 +30,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20181014;
+#$current_date = 20181020;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
