@@ -55,7 +55,7 @@ begin
       latmin                         =-50               ; zoom to Indonesia
       latmax                         = 30
       lonmin                         = 70
-      lonmax                         = 180
+      lonmax                         = 190
 
     ;  latmin                         = -80               ; World
     ;  latmax                         = 80
@@ -72,10 +72,11 @@ begin
   ; -------------------------------
   ; Define regions
   ; -------------------------------
-   region_names = (/"Buchholz MSEA", "CONTRAIL avg","New MSEA"/)
+   region_names = (/"Buchholz et al. MSEA", "Buchholz et al. N.Aus", "CONTRAIL avg","New MSEA"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/-10.,  10.,        90.,     160./),\  ;MSEA
+                     (/-25., -10.,       110.,     180./),\  ;N Aus
                      (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
                      (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
 
@@ -280,12 +281,13 @@ begin
       else if (region_names(i).eq."AnthChina".or.region_names(i).eq."AnthUSA") then 
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
                            (region_select(i,0)+region_select(i,1))/2,txres)
-      else if (region_names(i).eq."AnthIndi".or.region_names(i).eq."AnthEuro") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
+      else if (region_names(i).eq."AnthIndi".or.region_names(i).eq."AnthEuro".or.\
+               region_names(i).eq."Buchholz et al. N.Aus") then 
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-20,\
                            (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."CONTRAIL avg") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+13,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+                           (region_select(i,0)+region_select(i,1))/2-10,txres)
       else if (region_names(i).eq."New MSEA") then 
       txres@txFontColor = "red"
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
