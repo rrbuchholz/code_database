@@ -24,27 +24,29 @@ begin
 ; USER DEFINED
 ; =========================================
  
-  location = "MaritimeSEA"
-  location_title = "Maritime SEA"
+  location = "CONTRAIL"
+  location_title = "CONTRAIL no 1997"
   
   PLOT = True
-    plottype = "pdf"
+    plottype = "x11"
       ;plottype@wkWidth  = 1500
       ;plottype@wkHeight = 800
       plottype@wkPaperWidthF  = 9 ;for pdf
       plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
 
-  PREDICT = True
+  PREDICT = False
   TOP_THREE = False
 ; =========================================
 ; SET UP
 ; =========================================
-  anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
+  ;anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
+  anom_loc = "~/Dropbox/Work/CONTRAST_CO_Variability/model_output/"
   anom_file = location+"coanom.txt"
 
-  fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  fit_file = location+"fitted.txt"
+  ;fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
+  fit_loc = "~/Dropbox/Work/CONTRAST_CO_Variability/model_output/"
+  fit_file = location+"no97fitted.txt"
   
 ; ----------------------------------------
 ; Load data 1
@@ -63,11 +65,13 @@ begin
    
    meas_anom = fields(:,0)
 
+printVarSummary(meas_anom)
 
 ; ----------------------------------------
 ; Create date array
 ; ----------------------------------------
-  yyyymm = yyyymm_time(2001,2016,"integer")
+  ;yyyymm = yyyymm_time(2001,2016,"integer")
+  yyyymm = yyyymm_time(1994,2016,"integer")
   yyyymm_select = new((dimsizes(yyyymm)/12*4), float)
    yyyymm_select(0:dimsizes(yyyymm_select)-1:4) = yyyymm(7:dimsizes(yyyymm)-1:12)
    yyyymm_select(1:dimsizes(yyyymm_select)-1:4) = yyyymm(8:dimsizes(yyyymm)-1:12)
@@ -93,7 +97,6 @@ begin
    end do
 
    fit_anom = fieldsII(:,0)
-
 
 if (PREDICT) then
   fit_file2 = location+"_2014_fitted.txt"
@@ -153,7 +156,7 @@ if (PLOT) then
    
    res@vpWidthF         = 1
    res@vpHeightF        = 0.25
-   res@trXMinF          = 2001
+   res@trXMinF          = 1992
    res@trXMaxF          = 2017
    
    ;res@tmYRBorderOn     = False                    ; turn off right border
@@ -172,18 +175,21 @@ if (PLOT) then
 
    
    res@tmXBMode         = "Explicit"
-   res@tmXBValues       = (/2005,2010,2015/)
-   res@tmXBLabels       = (/"2005","2010","2015"/)
+   res@tmXBValues       = (/1995,2000,2005,2010,2015/)
+   res@tmXBLabels       = (/"1995","2000","2005","2010","2015"/)
    res@tmXBLabelFontHeightF = 0.032
    res@tmYLLabelFontHeightF = 0.032
    res@tiYAxisFontHeightF   = 0.032
    res@tiXAxisFontHeightF   = 0.032
-   
-   res@trYMinF          = -6.1e17
-   res@trYMaxF          = 12.5e17
-   res@tmYLMode         = "Explicit"
-   res@tmYLValues       = (/-5e17,0,5e17,10e17/)
-   res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
+
+   res@trYMinF          = -30.
+   res@trYMaxF          = 100.  
+
+   ;res@trYMinF          = -6.1e17
+   ;res@trYMaxF          = 12.5e17
+   ;res@tmYLMode         = "Explicit"
+   ;res@tmYLValues       = (/-5e17,0,5e17,10e17/)
+   ;res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
 
 
    res@tiYAxisString   = ""
@@ -205,7 +211,8 @@ if (PLOT) then
     res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2  "             ; Label Bar title
     res2@gsnLeftStringFontHeightF = 0.030
   else
-    res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
+    ;res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
+    res2@xyExplicitLegendLabels   = "Measured anomaly"
     res2@pmLegendOrthogonalPosF   = -1.5
     res2@pmLegendParallelPosF     = 0.83
     res2@gsnLeftString            := ""             ; Label Bar title
@@ -310,7 +317,8 @@ if (PLOT) then
     ; Add in legend for fit
     ;-----------------------------------
      res2@gsnLeftString            := ""             ; Label Bar title
-     res2@xyExplicitLegendLabels   := "Model predicted anomaly (x 10~S2~17   molec cm~S2~-2  )"
+     ;res2@xyExplicitLegendLabels   := "Model predicted anomaly (x 10~S2~17   molec cm~S2~-2  )"
+     res2@xyExplicitLegendLabels   := "Model predicted anomaly"
      res2@pmLegendOrthogonalPosF   = -1.7
      res2@pmLegendParallelPosF     = 0.82
     ;-----------------------------------
@@ -327,7 +335,7 @@ if (PLOT) then
     res2@xyMarkerColor            = "darkorange4"         ; Marker color
     res2@xyMarkerThicknessF       = 4
     res2@xyExplicitLegendLabels   := ""
-     res2@pmLegendParallelPosF     = 0.420
+     res2@pmLegendParallelPosF     = 0.590
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
   end if
@@ -340,7 +348,7 @@ if (PLOT) then
   ;-----------------------------------
     plres = True
       plres@gsLineThicknessF      = 3
-    dum1 = gsn_add_polyline(wks, plot1, (/2000,2019/), (/0,0/), plres)
+    dum1 = gsn_add_polyline(wks, plot1, (/1990,2019/), (/0,0/), plres)
 
   ;-----------------------------------
   ; Residual
@@ -356,10 +364,12 @@ if (PLOT) then
      res2@xyMarkerThicknessF      = 4
      res2@xyExplicitLegendLabels  := ""
      res2@xyMarkerColor           = "grey50"       ; Marker color
-     res2@trYMinF                 = -4.5e17
-     res2@trYMaxF                 = 5e17
-     res2@tmYLValues             := (/-2.5e17,2.5e17/)
-     res2@tmYLLabels             := (/"-2.5","2.5"/)
+     res2@trYMinF          = -10.
+     res2@trYMaxF          = 10. 
+     ;res2@trYMinF                 = -4.5e17
+     ;res2@trYMaxF                 = 5e17
+     ;res2@tmYLValues             := (/-2.5e17,2.5e17/)
+     ;res2@tmYLLabels             := (/"-2.5","2.5"/)
      res2@vpWidthF                = 1
      res2@vpHeightF               = 0.09
    plot4  = gsn_csm_xy (wks,yearfrac,residual,res2) ; create plot
@@ -367,7 +377,7 @@ if (PLOT) then
   ;-----------------------------------
   ; add zero line to residual
   ;-----------------------------------
-    dum2 = gsn_add_polyline(wks, plot4, (/2000,2019/), (/0,0/), plres)
+    dum2 = gsn_add_polyline(wks, plot4, (/1990,2019/), (/0,0/), plres)
 
   ;-----------------------------------
   ; Add in title
@@ -384,7 +394,7 @@ if (PLOT) then
     gsn_text_ndc(wks,location_title,0.190,0.575,txres)
   else
      txres@txFontHeightF    = 0.022                    ; font smaller. default big
-    gsn_text_ndc(wks,location_title,0.175,0.575,txres)
+    gsn_text_ndc(wks,location_title,0.175,0.675,txres)
   end if
             
 ; ----------------------------------------
