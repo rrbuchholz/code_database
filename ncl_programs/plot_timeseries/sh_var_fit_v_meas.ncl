@@ -25,7 +25,7 @@ begin
 ; =========================================
  
   location = "CONTRAIL"
-  location_title = "CONTRAIL no 1997"
+  location_title = "(b) CONTRAIL MEI"
   
   PLOT = True
     plottype = "x11"
@@ -37,16 +37,17 @@ begin
 
   PREDICT = False
   TOP_THREE = False
+  TWO_COMPARE = True
 ; =========================================
 ; SET UP
 ; =========================================
   ;anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  anom_loc = "~/Dropbox/Work/CONTRAST_CO_Variability/model_output/"
+  anom_loc = "~/Dropbox_Work/CONTRAIL_CO_Variability/model_output/"
   anom_file = location+"coanom.txt"
 
   ;fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  fit_loc = "~/Dropbox/Work/CONTRAST_CO_Variability/model_output/"
-  fit_file = location+"no97fitted.txt"
+  fit_loc = "~/Dropbox_Work/CONTRAIL_CO_Variability/model_output/"
+  fit_file = location+"fittedno97MEI.txt"
   
 ; ----------------------------------------
 ; Load data 1
@@ -106,6 +107,10 @@ else if (TOP_THREE) then
   fit_file2 = location+"2fitted.txt"
   fit_file3 = location+"3fitted.txt"
 
+else if (TWO_COMPARE) then
+  fit_file2 = location+"fittedMEI.txt"
+
+end if
 end if
 end if
 
@@ -132,6 +137,20 @@ if (PREDICT.or.TOP_THREE) then
   data(1,:) = fit_anom_2
   data(2,:) = fit_anom_3
 
+else if (TWO_COMPARE) then
+  ;---Read in Fit #2 
+  linesIII  = asciiread(fit_loc+fit_file2,-1,"string")
+  delim  = ""
+  nlinesIII = dimsizes(linesIII)          ; No header
+
+  fit_anom_2 = new((dimsizes(fit_anom)),float)
+  fit_anom_2(0:nlinesIII-1) = tofloat(linesIII)
+
+  data = new((/2,dimsizes(fit_anom)/), float)
+  data(0,:) = fit_anom
+  data(1,:) = fit_anom_2
+
+end if
 end if
 
 
@@ -183,7 +202,7 @@ if (PLOT) then
    res@tiXAxisFontHeightF   = 0.032
 
    res@trYMinF          = -30.
-   res@trYMaxF          = 100.  
+   res@trYMaxF          = 120.  
 
    ;res@trYMinF          = -6.1e17
    ;res@trYMaxF          = 12.5e17
@@ -204,11 +223,11 @@ if (PLOT) then
     res2@lgPerimOn                = False           ; Turn off perimeter
     res2@pmLegendWidthF           = 0.10            ; Change width and
     res2@lgLabelFontHeightF       = 0.030
-  if (PREDICT.or.TOP_THREE) then
+  if (PREDICT.or.TOP_THREE.or.TWO_COMPARE) then
     res2@xyExplicitLegendLabels   = "Measured anomaly"
     res2@pmLegendOrthogonalPosF   = -1.75
-    res2@pmLegendParallelPosF     = 0.60
-    res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2  "             ; Label Bar title
+    res2@pmLegendParallelPosF     = 0.738
+    ;res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2  "             ; Label Bar title
     res2@gsnLeftStringFontHeightF = 0.030
   else
     ;res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
@@ -312,6 +331,46 @@ if (PLOT) then
      res2@xyMarkerSizes           := (/0.014,0.015,0.013/)    ; Marker size (default 0.01)
    plot3  = gsn_csm_xy (wks,yearfrac,data(2:0,:),res2)  ; create plot
 
+  else if (TWO_COMPARE) then
+    ;-----------------------------------
+    ; Remove overplot of legend
+    ;-----------------------------------
+    ;-----------------------------------
+    ; Add in legend for fits
+    ;-----------------------------------
+     res2@pmLegendDisplayMode      = "Always"        ; turn on legend
+     res2@gsnLeftString            := ""             ; Label Bar title
+     res2@xyExplicitLegendLabels   := (/"with 1997","without 1997" /)
+     res2@pmLegendOrthogonalPosF   = -1.98
+     res2@pmLegendParallelPosF     = 0.68
+
+    ;-----------------------------------
+    ; Fit
+    ;-----------------------------------
+     ; new tickmark
+     filled_tri = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 0.0)
+     filled_tri2 = NhlNewMarker(wks, "u", 34, 0.0, 0.0, 1.0, 1.0, 180.0)
+     filled_sq = NhlNewMarker(wks, "y", 35, 0.0, 0.0, 1.0, 1.0, 0.0)
+
+     res2@xyMarkLineModes         := (/"Markers","Markers"/)
+     res2@xyMarkers               :=  (/filled_tri,16/)    ; choose type of marker  
+     res2@xyMarkerColors          := (/"mediumpurple2","darkorange2"/)  ; Marker color
+     res2@xyMarkerOpacityF        := (/0.75,0.75/)
+     res2@xyMarkerSizes           := (/0.019,0.014/)         ; Marker size (default 0.01)
+
+   plot2  = gsn_csm_xy (wks,yearfrac,data(1:0,:),res2) ; create plot
+
+
+    ;-----------------------------------
+    ; Outlines
+    ;-----------------------------------
+    res2@xyMarkers                := (/7,4/)               ; choose type of marker  
+    res2@xyMarkerColors           := (/"mediumpurple4","darkorange4"/)         ; Marker color
+    res2@xyMarkerThicknessF       = 4
+     ;res2@xyMarkerOpacityF        := (/1,1,1/)
+     res2@xyMarkerSizes           := (/0.015,0.013/)    ; Marker size (default 0.01)
+   plot3  = gsn_csm_xy (wks,yearfrac,data(1:0,:),res2)  ; create plot
+
   else
     ;-----------------------------------
     ; Add in legend for fit
@@ -338,6 +397,7 @@ if (PLOT) then
      res2@pmLegendParallelPosF     = 0.590
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
+  end if
   end if
   end if
 
@@ -389,9 +449,9 @@ if (PLOT) then
      txres@txPerimOn        = True
      txres@txPerimSpaceF    = 0.3
      txres@txPerimThicknessF= 2.0
-  if (PREDICT.or.TOP_THREE) then
+  if (PREDICT.or.TOP_THREE.or.TWO_COMPARE) then
      txres@txFontHeightF    = 0.024                  ; font smaller. default big
-    gsn_text_ndc(wks,location_title,0.190,0.575,txres)
+    gsn_text_ndc(wks,location_title,0.190,0.675,txres)
   else
      txres@txFontHeightF    = 0.022                    ; font smaller. default big
     gsn_text_ndc(wks,location_title,0.175,0.675,txres)
@@ -401,7 +461,7 @@ if (PLOT) then
 ;  attach plots
 ; ----------------------------------------
 
-  if (PREDICT.or.TOP_THREE) then
+  if (PREDICT.or.TOP_THREE.or.TWO_COMPARE) then
     ; no residual
   else
   resa                     = True
