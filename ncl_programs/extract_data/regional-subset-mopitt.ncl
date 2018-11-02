@@ -43,7 +43,7 @@ begin
   ; select location
   ;------------
   outfolder = "~/MOPITT_subset/regions_v8/"
-  location = "Siberia"
+  location = "CONTRAIL_NAus"
 
   ;------------
   ; select daytime 
@@ -123,6 +123,11 @@ begin
    bottomboundary  = -25.
    rightboundary   = 181.
    leftboundary    = 112.
+  else if (location.eq."CONTRAIL_NAus") then
+   topboundary     = -10.
+   bottomboundary  = -25.
+   rightboundary   = 151.5
+   leftboundary    = 145.
   else if (location.eq."SouthAustralasia") then
    topboundary     = -25.
    bottomboundary  = -48.
@@ -183,6 +188,11 @@ begin
    bottomboundary  = -10.
    rightboundary   = 165.
    leftboundary    = 91.
+  else if (location.eq."CONTRAIL_MSEA") then
+   topboundary     = 10.
+   bottomboundary  = -10.
+   rightboundary   = 151.5
+   leftboundary    = 141.5
   else if (location.eq."NorthwestCanada") then
    topboundary     = 67.
    bottomboundary  = 54.
@@ -195,6 +205,8 @@ begin
    leftboundary    = 90.
                      ;(/ 40.,  51., 360.-125., 360.-105./),\ ;NWUS
                      ;(/ 30.,  41., 360.-102., 360.-88./),\  ;SEUS
+  end if
+  end if
   end if
   end if
   end if
@@ -281,7 +293,8 @@ begin
     ; select region to bin (daytime retrievals)
     ;--------------------------------------------
     region := ind(sza.le.dayflag.and.\
-                 surf_type.eq.s_id.and.\
+                 (surf_type.eq.1.or.surf_type.eq.0).and.\
+                 ;surf_type.eq.s_id.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\

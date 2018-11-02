@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "Siberia" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "Siberia"
+  loc = "CONTRAIL_NAus" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "CONTRAIL_NAus"
 
   version = "V8"
   retrieval = "T"
