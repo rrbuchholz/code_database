@@ -52,15 +52,15 @@ begin
   ; -------------------------------
   ; plotting parameters
   ; -------------------------------
-      latmin                         =-50               ; zoom to Indonesia
-      latmax                         = 30
-      lonmin                         = 70
-      lonmax                         = 190
+    ;  latmin                         =-50               ; zoom to Indonesia
+    ;  latmax                         = 30
+    ;  lonmin                         = 70
+    ;  lonmax                         = 190
 
-    ;  latmin                         = -80               ; World
-    ;  latmax                         = 80
-    ;  lonmin                         = -170
-    ;  lonmax                         = 185
+      latmin                         = -80               ; World
+      latmax                         = 80
+      lonmin                         = -170
+      lonmax                         = 185
 
   if (PLOTREGIONS) then
     mapType2 = "x11"
@@ -72,37 +72,39 @@ begin
   ; -------------------------------
   ; Define regions
   ; -------------------------------
-   region_names = (/"Buchholz et al. MSEA", "Buchholz et al. N.Aus", "CONTRAIL avg","New MSEA"/)
+   ;region_names = (/"Buchholz et al. MSEA", "Buchholz et al. N.Aus", "CONTRAIL avg","New MSEA"/)
+   ;                   minlat, maxlat, minlon, maxlon
+   ;region_select = (/(/-10.,  10.,        90.,     160./),\  ;MSEA
+   ;                  (/-25., -10.,       110.,     180./),\  ;N Aus
+   ;                  (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
+   ;                  (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
+
+   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10.,  10.,        90.,     160./),\  ;MSEA
-                     (/-25., -10.,       110.,     180./),\  ;N Aus
-                     (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
-                     (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
-
-  ; region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-  ;                  "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-  ;                  "BBCAmerica", "BBSAmerica", "BBCAfrica", "BBSAfrica", \
-  ;                  "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
-
-   ;                   minlat, maxlat, minlon, maxlon
-   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-   ;                  (/ 35.,  40.,    360-95.,  360-75./),\  ;AnthUSA
-   ;                  (/ 40.,  51.,  360.-125.,360.-105./),\  ;BBUSA
-   ;                  (/ 54.,  60.,    360-93.,360.-120./),\  ;BBCanada
-   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-   ;                  (/ 10.,  23.5, 360.-110., 360.-60./),\  ;BBCAmerica
-   ;                  (/-25.,  -5.,   360.-90., 360.-50./),\  ;BBSAmerica
-   ;                  (/  5.,  15.,   360.-20.,      38./),\  ;BBCAfrica
-   ;                  (/-25.,  -5.,        10.,      40./),\  ;BBSAfrica
-   ;                  (/-10.,   8.,        90.,     130./),\  ;BBMSEA
-   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
-   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
-   ;                  (/  0.,  60.,        0.,      360./),\    ;NH
-   ;                  (/-60.,   0.,        0.,      360./) /)   ;SH
+   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+                     (/ 35.,  40.,    360-95.,  360-75./),\  ;AnthUSA
+                     (/ 40.,  51.,  360.-125.,360.-105./),\  ;BBUSA
+                     (/ 54.,  60.,    360-93.,360.-120./),\  ;BBCanada
+                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+                     (/ 10.,  23.5, 360.-110., 360.-60./),\  ;BBCAmerica
+                     (/-25.,  -5.,   360.-75., 360.-50./),\  ;BBSAmerica
+                     (/-25.,  -5.,  360.-100., 360.-75./),\  ;BBSAmericaOcean
+                     (/  5.,  15.,   360.-20.,      38./),\  ;BBCAfrica
+                     (/-25.,  -5.,        10.,      40./),\  ;BBSAfrica
+                     (/-20.,  -5.,   360.-15.,      10./),\  ;BBSAfOcean
+                     (/-10.,   8.,        90.,     130./),\  ;BBMSEA
+                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
+                     (/-45., -10.,       140.,     155./),\  ;BBEAu
+                     (/  0.,  60.,        0.,      360./),\    ;NH
+                     (/-60.,   0.,        0.,      360./) /)   ;SH
 
 
    ; Tagged simulations
@@ -282,12 +284,15 @@ begin
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
                            (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."AnthIndi".or.region_names(i).eq."AnthEuro".or.\
-               region_names(i).eq."Buchholz et al. N.Aus") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-20,\
+               region_names(i).eq."Buchholz et al. N.Aus".or.region_names(i).eq."BBSAmOcean") then 
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
                            (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."CONTRAIL avg") then 
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
                            (region_select(i,0)+region_select(i,1))/2-10,txres)
+      else if (region_names(i).eq."BBSAfOcean") then 
+        dum = gsn_add_text(wks2,map1,region_names(i),0-10,\
+                           (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."New MSEA") then 
       txres@txFontColor = "red"
         dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
@@ -302,12 +307,13 @@ begin
       end if
       end if
       end if
+      end if
     end do
 
       txres@txFontColor = "red"
-    ; gsn_text_ndc(wks2,"Red = Definite region",0.2,0.75,txres)
+     gsn_text_ndc(wks2,"Red = Definite region",0.2,0.75,txres)
       txres@txFontColor = "black"
-    ; gsn_text_ndc(wks2,"Black dashed = To confirm",0.2,0.77,txres)
+     gsn_text_ndc(wks2,"Black dashed = To confirm",0.2,0.77,txres)
 
    draw(map1)
 
