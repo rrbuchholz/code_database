@@ -194,7 +194,7 @@ begin
    ; determine indices for outside regions and set to zero
    if (region.eq."NH") then
      ; Latitudes outside region
-     ind_lat_region_2 := ind(emiss_in&lat.le.latmin)
+     ind_lat_region_2 := ind(emiss_in&lat.lt.latmin)
      ; overwrite outside region with zeros
      emiss_region(:,ind_lat_region_2,:) = 0
 
