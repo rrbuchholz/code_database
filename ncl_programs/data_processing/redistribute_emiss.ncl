@@ -40,7 +40,7 @@ begin
 ; user input
 ;--------------------------------------------
     if (.not. isvar("year")) then      ; is year=<YYYY> from command line?
-       year = 2017
+       year = 2018
     end if
 
     if (.not. isvar("tracer")) then    ; is tracer=<name> from command line?

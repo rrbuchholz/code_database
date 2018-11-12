@@ -61,7 +61,7 @@ begin
     MIN_EF         = False
     MAX_EF         = False
   else
-    year = 2013
+    year = 2018
     qfed_version = "v2.5"
     outres = "0.9x1.25"
     ratio_species = "co2"
