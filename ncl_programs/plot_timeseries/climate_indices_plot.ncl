@@ -28,10 +28,11 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  index = "satl"
+  index = "dmi_2"
 
   if (index.eq."dmi_2") then
-    index_file = "/IASI/home/buchholz/Climate_Indices/dmi_2.nc"
+    index_file = "/gpfs/u/home/buchholz/data/dmi.nc"
+    ;index_file = "/IASI/home/buchholz/Climate_Indices/dmi_2.nc"
   else
     index_file = "/IASI/home/buchholz/Climate_Indices/"+index+".txt"
   end if
