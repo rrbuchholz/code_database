@@ -89,17 +89,17 @@ begin
    region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
                      (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
                      (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-                     (/ 35.,  40.,    360-95.,  360-75./),\  ;AnthUSA
-                     (/ 40.,  51.,  360.-125.,360.-105./),\  ;BBUSA
-                     (/ 54.,  60.,    360-93.,360.-120./),\  ;BBCanada
+                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
                      (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
                      (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5, 360.-110., 360.-60./),\  ;BBCAmerica
-                     (/-25.,  -5.,   360.-75., 360.-50./),\  ;BBSAmerica
-                     (/-25.,  -5.,  360.-100., 360.-75./),\  ;BBSAmericaOcean
-                     (/  5.,  15.,   360.-20.,      38./),\  ;BBCAfrica
-                     (/-25.,  -5.,        10.,      40./),\  ;BBSAfrica
-                     (/-20.,  -5.,   360.-15.,      10./),\  ;BBSAfOcean
+                     (/ 10.,  23.5,    -110.,      -60./),\  ;BBCAmerica
+                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+                     (/-25.,  -5.,     -100.,      -75./),\  ;BBSAmericaOcean
+                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+                     (/-25.,  -5.,       10.,       40./),\  ;BBSAfrica
+                     (/-20.,  -5.,      -15.,       10./),\  ;BBSAfOcean
                      (/-10.,   8.,        90.,     130./),\  ;BBMSEA
                      (/-25., -10.,       115.,     140./),\  ;BBNWAu
                      (/-45., -10.,       140.,     155./),\  ;BBEAu
@@ -311,9 +311,11 @@ begin
     end do
 
       txres@txFontColor = "red"
-     gsn_text_ndc(wks2,"Red = Definite region",0.2,0.75,txres)
-      txres@txFontColor = "black"
-     gsn_text_ndc(wks2,"Black dashed = To confirm",0.2,0.77,txres)
+     gsn_text_ndc(wks2,"Red = Land retrievals only",0.2,0.73,txres)
+      txres@txFontColor = "blue"
+     gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.75,txres)
+      txres@txFontColor = "forestgreen"
+     gsn_text_ndc(wks2,"Green = Land or water retrievals",0.2,0.77,txres)
 
    draw(map1)
 
@@ -338,10 +340,9 @@ begin
          gsn_polyline(wks2,map1,regions_lon2,regions_lat,boxres)
          gsn_polyline(wks2,map1,regions_lon,regions_lat2,boxres)
          gsn_polyline(wks2,map1,regions_lon2,regions_lat2,boxres)
-       else if (region_names(j).eq."AnthChina".or.region_names(j).eq."AnthIndi".or.\
-                region_names(j).eq."AnthEuro".or.region_names(j).eq."AnthUSA".or.\
-                region_names(j).eq."New MSEA") then 
-       boxres@gsLineColor      = "red"
+       else if (region_names(j).eq."BBMSEA".or.\
+                region_names(j).eq."BBCAmerica") then 
+       boxres@gsLineColor      = "forestgreen"
        boxres@gsLineDashPattern  = 0  
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
@@ -361,9 +362,9 @@ begin
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
 
-       else
-         boxres@gsLineColor      = "black"
-         boxres@gsLineDashPattern  = 2  
+       else if (region_names(j).eq."BBSAmOcean".or.\
+                region_names(j).eq."BBSAfOcean") then
+       boxres@gsLineColor      = "blue"
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
                           region_select(j,2)/)
@@ -371,6 +372,17 @@ begin
                           region_select(j,1) , region_select(j,0), \
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
+       else
+       boxres@gsLineColor      = "red"
+       boxres@gsLineDashPattern  = 0 
+         regions_lon := (/region_select(j,2), region_select(j,2), \
+                          region_select(j,3) , region_select(j,3), \
+                          region_select(j,2)/)
+         regions_lat := (/region_select(j,0), region_select(j,1), \
+                          region_select(j,1) , region_select(j,0), \
+                          region_select(j,0)/)
+         gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
+       end if
        end if
        end if
        end if
