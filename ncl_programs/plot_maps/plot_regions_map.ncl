@@ -315,7 +315,7 @@ begin
       txres@txFontColor = "blue"
      gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.75,txres)
       txres@txFontColor = "forestgreen"
-     gsn_text_ndc(wks2,"Green = Land or water retrievals",0.2,0.77,txres)
+     gsn_text_ndc(wks2,"Green = Land, water and mixed retrievals",0.2,0.77,txres)
 
    draw(map1)
 
@@ -330,7 +330,7 @@ begin
        if (region_names(j).eq."CWAS1".or.region_names(j).eq."CWAS2") then 
          continue
        else if (region_names(j).eq."SH".or.region_names(j).eq."NH") then 
-       boxres@gsLineColor      = "red"
+       boxres@gsLineColor      = "forestgreen"
        boxres@gsLineDashPattern  = 0  
          regions_lon := (/360-179,0/)
          regions_lon2 := (/0,180/)
@@ -340,9 +340,11 @@ begin
          gsn_polyline(wks2,map1,regions_lon2,regions_lat,boxres)
          gsn_polyline(wks2,map1,regions_lon,regions_lat2,boxres)
          gsn_polyline(wks2,map1,regions_lon2,regions_lat2,boxres)
-       else if (region_names(j).eq."BBMSEA".or.\
-                region_names(j).eq."BBCAmerica") then 
-       boxres@gsLineColor      = "forestgreen"
+       else if (region_names(j).eq."AnthChina".or.\
+                region_names(j).eq."AnthEuro".or.\
+                region_names(j).eq."AnthUSA".or.\
+                region_names(j).eq."AnthIndi") then 
+       boxres@gsLineColor      = "red"
        boxres@gsLineDashPattern  = 0  
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
@@ -373,7 +375,7 @@ begin
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
        else
-       boxres@gsLineColor      = "red"
+       boxres@gsLineColor      = "forestgreen"
        boxres@gsLineDashPattern  = 0 
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \

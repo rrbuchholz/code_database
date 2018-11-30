@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "BBCanada"
+  location = "NH"
 
   ;------------
   ; select daytime 
@@ -116,8 +116,8 @@ begin
                      (/-10.,   8.,        90.,     130./),\  ;BBMSEA
                      (/-25., -10.,       115.,     140./),\  ;BBNWAu
                      (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,        0.,      360./),\    ;NH
-                     (/-60.,   0.,        0.,      360./) /)   ;SH
+                     (/  0.,  60.,      -180.,     180./),\    ;NH
+                     (/-60.,   0.,      -180.,     180./) /)   ;SH
 
    ind_region = ind(region_names.eq.location)
 

@@ -33,7 +33,9 @@ begin
     mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
-    sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
+    ;sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
+    sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017_sd.nc"
+
    ; -------------------------------
    ; SELECT OUTPUT
    ; -------------------------------
@@ -166,17 +168,17 @@ begin
       ;mapres@mpMaxLonF               = 245
       ;mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      mapres@mpMinLatF               = -60       ; zoom to Aus
-      mapres@mpMaxLatF               = -10
-      mapres@mpMinLonF               = 110
-      mapres@mpMaxLonF               = 180
+      ;mapres@mpMinLatF               = -60       ; zoom to Aus
+      ;mapres@mpMaxLatF               = -10
+      ;mapres@mpMinLonF               = 110
+      ;mapres@mpMaxLonF               = 180
       ;mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      ;mapres@mpMinLatF               = -85       ; zoom to +/- 80
-      ;mapres@mpMaxLatF               = 85
-      ;mapres@mpMinLonF               = -170
-      ;mapres@mpMaxLonF               = 185
-      ;mapres@mpCenterLonF            = 150
+      mapres@mpMinLatF               = -85       ; zoom to +/- 80
+      mapres@mpMaxLatF               = 85
+      mapres@mpMinLonF               = -170
+      mapres@mpMaxLonF               = 185
+      mapres@mpCenterLonF            = 0
 
     ;-----------------------------------
     ; end define resources
@@ -296,7 +298,7 @@ begin
     do j=0,dimsizes(index_name)-1
      region_lon := (/index_lonmin(j), index_lonmin(j), index_lonmax(j), index_lonmax(j), index_lonmin(j)/)
      region_lat := (/index_latmin(j), index_latmax(j), index_latmax(j), index_latmin(j), index_latmin(j)/)
-     dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxresII)
+     ;dum2(j) = gsn_add_polyline(wks,map2,region_lon,region_lat,boxresII)
     end do
 
     ;-------------------
@@ -305,11 +307,11 @@ begin
     aao_lines_up = new(9, graphic)
     aao_lines_down = new(9, graphic)
     arrow_res = True
-      arrow_res@gsLineColor      = "white"
-      arrow_res@gsLineThicknessF = 15.0
+     ; arrow_res@gsLineColor      = "white"
+     ; arrow_res@gsLineThicknessF = 15.0
     do j = 0,dimsizes(aao_lines_up)-1
-      aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
-      aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
+      ;aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
+     ; aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
     end do
 
 
@@ -351,14 +353,14 @@ begin
     textII = new(dimsizes(index_name),graphic)
     do k=0,dimsizes(index_name)-1
       if (k.eq.2) then
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)-2, index_latmin(k)-20,txres)
+       ; textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)-2, index_latmin(k)-20,txres)
         continue;
       else if (k.eq.0)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+50, index_latmin(k)-12,txres)
+       ; textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+50, index_latmin(k)-12,txres)
       else if (k.eq.1)
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-10,txres)
+       ; textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-10,txres)
       else 
-        textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-12,txres)
+       ; textII(k) = gsn_add_text(wks,map2,index_name(k),index_lonmin(k)+35, index_latmin(k)-12,txres)
        end if
        end if
        end if
@@ -366,7 +368,7 @@ begin
 
         txres@txFontColor    = "white"
         txres@txJust         = "CenterCenter"
-        textIII = gsn_add_text(wks,map2,"SAM",51, -55,txres)
+        ;textIII = gsn_add_text(wks,map2,"SAM",51, -55,txres)
 
     ; ===================
     ; Location Data
@@ -403,7 +405,7 @@ begin
 
      do i = 1, dimsizes(station_name)-1 
         ;text2 = gsn_add_text(wks,map,station_name(1),station_lon(1),station_lat(1),txres)
-        text3 = gsn_add_text(wks,map,station_name(2),station_lon(2),station_lat(2),txres) 
+        ;text3 = gsn_add_text(wks,map,station_name(2),station_lon(2),station_lat(2),txres) 
       end do
 
 
