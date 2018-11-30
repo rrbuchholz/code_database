@@ -91,12 +91,12 @@ if ($check_again ne '' && $processed == 0){
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="BC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="OC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="VBS"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SOAG"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl year=$year 'tracer="SO4"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-  print OUT "/usr/local/ncarg/bin/ncl year=$year 'tracer=\"BC\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+     `/usr/local/ncarg/bin/ncl 'tracer="BC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="OC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="VBS"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="SOAG"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="SO4"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "/usr/local/ncarg/bin/ncl 'tracer=\"BC\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
 else{
   print OUT "File still not available . . .\n";
@@ -106,7 +106,7 @@ else{
 #Check Processed and send e-mail
 chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
 #$current_date_check = $current_date+10;
-chomp(@check_file = `/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
+chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
 $proc_file = grep { /True/ } @check_file;
@@ -143,7 +143,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 5 && $min >= 30 && $processed == 1){
-`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*_$year.nc* buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
     print OUT "Sent to cheyenne. \n";
 }
 

@@ -54,6 +54,7 @@ begin
     end if
     splitdate = str_split_by_length(tostring(YYYYMMDD), 4)
     year = toint(splitdate(0))
+    year_range = "2018_2020"
     outres = "0.9x1.25"
     ratio_species = "co2"
     species = "CO2"
@@ -396,7 +397,7 @@ begin
       ; CAM-chem species
       ;-------------------
       if (NRT) then
-        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
+        outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year_range+".nc"
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
@@ -624,7 +625,7 @@ begin
       ; CAM-chem species
       ;-------------------
       if (NRT) then
-        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year_range+".nc"
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
