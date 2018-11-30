@@ -53,16 +53,18 @@ begin
   ; emission files
   ; -------------------------------
 
-  years = "2000_2018"
-  top_dir = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/"
+  years = "2002_2017"
+  base_dir = "/data14b/buchholz/"
+  ;top_dir = base_dir + "qfed/cam_0.9x1.25/from_co2/v2.5/"
+  top_dir = base_dir + "cmip6/cam_0.9x1.25/"
   ;top_dir = "/glade/work/buchholz/emis/qfed2.5_2014_2017_1x1/"
-  if (.not. isvar("efile_in")) then        ; is NRT=<boolean> from command line?
+  if (.not. isvar("efile_in")) then        ; from command line?
        efile_in = top_dir + "allyears/qfed.emis_"+tracer+"_0.9x1.25_mol_"+years+".nc"
   end if
   print("Processing: "+ efile_in)
 
-  outpath = top_dir + "tagged/"
-  outfilepre = "qfed.emis_"+tracer+"_0.9x1.25_mol_"+years
+  outpath = base_dir + "tagged/"
+  outfilepre = "finn.emis_"+tracer+"_0.9x1.25_mol_"+years
   ;------------
   ; toggles
   ;------------
@@ -83,7 +85,7 @@ begin
   if (type.eq."fire") then 
     emiss           = "bb"
   else if (type.eq."anthro") then 
-    emiss           = "anthro"
+    emiss           = "emiss_anthro"
   else if (type.eq."ocean") then 
     emiss            = "ocean"
   end if
@@ -122,18 +124,18 @@ begin
                      (/ 28.,  50.,        90.,     153./),\  ;NEAS
                      (/ 50.,  80.,        90.,     190./),\  ;SIBR
                      (/ 50.,  80.,        30.,      90./),\  ;BOAS
-                     (/ 30.,  75.,   360.-25.,      30./),\  ;EURO
+                     (/ 30.,  75.,       -25.,      30./),\  ;EURO
                      (/  0.,  30.,        35.,      60./),\  ;AFME
                      (/ 30.,  50.,        30.,      60./),\  ;CWAS1
                      (/ 35.,  50.,        60.,      90./),\  ;CWAS2
-                     (/  0.,  30.,   360.-18.,      35./),\  ;NHAF
-                     (/ -36.,  0.,    360.-1.,      60./),\  ;SHAF
-                     (/ 50.,  75.,  360.-170., 360.-53./),\  ;BONA
-                     (/ 27.,  50.,  360.-140., 360.-53./),\  ;TENA
-                     (/  9.,  27.,  360.-120., 360.-40./),\  ;CEAM
-                     (/  0.,   9.,   360.-90., 360.-30./),\  ;NHSA
-                     (/-23.5,  -0.,  360.-90., 360.-30./),\  ;AMAZ
-                     (/-60.,  -23.5, 360.-90., 360.-30./),\  ;SHSA
+                     (/  0.,  30.,       -18.,      35./),\  ;NHAF
+                     (/ -36.,  0.,        -1.,      60./),\  ;SHAF
+                     (/ 50.,  75.,      -170.,     -53./),\  ;BONA
+                     (/ 27.,  50.,      -140.,     -53./),\  ;TENA
+                     (/  9.,  27.,      -120.,     -40./),\  ;CEAM
+                     (/  0.,   9.,       -90.,     -30./),\  ;NHSA
+                     (/-23.5,  -0.,      -90.,     -30./),\  ;AMAZ
+                     (/-60.,  -23.5,     -90.,     -30./),\  ;SHSA
                      (/  0.,  90.,      0.,      360./),\    ;NH
                      (/-90.,   0.,      0.,      360./) /)   ;SH
 
