@@ -28,13 +28,14 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  index = "dmi_2"
+  index = "tna"
 
   if (index.eq."dmi_2") then
-    index_file = "/gpfs/u/home/buchholz/data/dmi.nc"
-    ;index_file = "/IASI/home/buchholz/Climate_Indices/dmi_2.nc"
+    ;index_file = "/gpfs/u/home/buchholz/data/dmi.nc"
+    index_file = "/IASI/home/buchholz/Climate_Indices/dmi.nc"
   else
-    index_file = "/IASI/home/buchholz/Climate_Indices/"+index+".txt"
+    ;index_file = "/IASI/home/buchholz/Climate_Indices/"+index+".txt"
+    index_file = "/IASI/home/buchholz/Climate_Indices/"+index+"_month_avg.csv"
   end if
 
   ;------------
@@ -46,18 +47,18 @@ begin
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
     year_s = 2001
-    year_e = 2017
-    index_name = "TSA"
-    sub_label = "(e) "
-    ymin       = -1.0
-    ymax       = 1.0
-    minlab     = -0.8
-    maxlab     = 0.8
-    ylab_min   = "-0.8"
-    ylab_max   = "0.8"
-    spacing    = 0.8
+    year_e = 2018
+    index_name = "TNA"
+    sub_label = ""
+    ymin       = -1.8
+    ymax       = 1.8
+    minlab     = -1.5
+    maxlab     = 1.5
+    ylab_min   = "-1.5"
+    ylab_max   = "1.5"
+    spacing    = 1.5
     units      = "(~F34~0~F~C)"
-    ;units      = ""
+    ;units      = "(hPa)"
 
 
   CSV            = False
@@ -65,7 +66,7 @@ begin
      outname      = index+"_month_avg.csv"
   end if
 
-  NETCDF            = False
+  NETCDF            = True
   if (NETCDF) then
      nc_outname      = index+"_index_month_avg.nc"
   end if
@@ -107,7 +108,8 @@ begin
   ; -------------------------------
   ;---Read the values in as 1D, since we don't know rows and columns yet.
   lines  = asciiread(index_file,-1,"string")
-  delim  = " "
+  ;delim  = " "
+  delim  = ","
 
   if (index.eq."dmi_2") then
     fin = addfile(index_file, "r")            ; read in
@@ -150,14 +152,16 @@ begin
     end do
 
     if (index.eq."nino34") then
-      index_date    = fields(:,0)*100 +fields(:,1)
-      index_anomaly = fields(:,4)
+      ;index_date    = fields(:,0)*100 +fields(:,1)
+      ;index_anomaly = fields(:,4)
+      index_date    = toint(fields(:,0))+15
+      index_anomaly = tofloat(fields(:,1))
 
     else if (index.eq."satl") then
       index_date    = fields(:,0)*100 +fields(:,1)
       index_anomaly = fields(:,5)
 
-    else if (index.eq."dmi") then
+    else if (index.eq."dmi_dummy") then
       index_anomaly_dummy = fields(:,1)
       fieldsII = new((/nlines,4/),float)
       do nf=0,3                   ;Remember that fields start at 1, not 0.
@@ -186,9 +190,12 @@ begin
         end do
       end do
 
-    else if (index.eq."aao".or.index.eq."amo".or.index.eq."tsa") then
-      index_date    = fields(:,0)*100 +fields(:,1)
-      index_anomaly = fields(:,2)
+    else if (index.eq."aao".or.index.eq."amo".or.index.eq."tsa".or.\
+            index.eq."ao".or.index.eq."tna".or.index.eq."dmi") then
+      ;index_date    = fields(:,0)*100 +fields(:,1)
+      ;index_anomaly = fields(:,2)
+      index_date    = toint(fields(:,0))+15
+      index_anomaly = tofloat(fields(:,1))
       ;index_anomaly_dummy = fields(:,1::)
       ;index_anomaly = ndtooned(index_anomaly_dummy)
       ;index_date = yyyymm_time(toint(fields(0,0)),toint(fields(nlines-1,0)),"float")
@@ -198,7 +205,8 @@ begin
     end if
   end if
 
-  index_time = yyyymm_to_yyyyfrac(index_date,0)
+  ;index_time = yyyymm_to_yyyyfrac(index_date,0)
+  index_time = yyyymmdd_to_yyyyfrac(index_date,0)
 
 ;print(dimsizes(index_time))
 ;print(dimsizes(index_anomaly))
@@ -228,11 +236,12 @@ if (PLOT) then
 
     res@tiXAxisString        = "Year"	
     res@tmXBMode            = "Explicit"
+      res@trXMinF             = 2005
       res@trXMinF             = year_s
       res@trXMaxF             = year_e
-      res@tmXBValues           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
+      res@tmXBValues           = tofloat(ispan(2005,year_e,5))
+      res@tmXBLabels           = tofloat(ispan(2005,year_e,5))
+      ;res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
       res@tmXBLabelsOn         = True
       res@tmYLLabelsOn         = True
       ;res@tmYRLabelsOn        = True
@@ -262,7 +271,7 @@ if (PLOT) then
       res@trYMaxF             = ymax
       res@tmYLValues          := (/minlab, 0.0, maxlab/)
       res@tmYLLabels          := (/ylab_min, "0", ylab_max/)
-      res@tmYLMinorValues     := (/-0.25e18, 0.25e18, 0.75e18/)
+      ;res@tmYLMinorValues     := (/-0.25e18, 0.25e18, 0.75e18/)
 
     res@tiYAxisString       = "Anomaly "+ units
     res@xyLineColor         = "black"

@@ -42,6 +42,7 @@ begin
   ;------------
   PLOTREGIONS    = True
      WITHKOPPEN  = False
+     WITHCO      = True
 
 ;--------------------------------------------
 ; end user input
@@ -52,15 +53,30 @@ begin
   ; -------------------------------
   ; plotting parameters
   ; -------------------------------
+      latmin                         = -80.               ; World
+      latmax                         = 80.
+      lonmin                         = -170.
+      lonmax                         = 185.
+
     ;  latmin                         =-50               ; zoom to Indonesia
     ;  latmax                         = 30
     ;  lonmin                         = 70
     ;  lonmax                         = 190
 
-      latmin                         = -80               ; World
-      latmax                         = 80
-      lonmin                         = -170
-      lonmax                         = 185
+      latmin                         = 30.               ; NH
+      latmax                         = 80.
+      lonmin                         = -170.
+      lonmax                         = 185.
+
+    ;  latmin                         = 35.               ; USA
+    ;  latmax                         = 70.
+    ;  lonmin                         = -130.
+    ;  lonmax                         = -70.
+
+    ;  latmin                         = 30.               ; Boreal Asia
+    ;  latmax                         = 70.
+    ;  lonmin                         = 80.
+    ;  lonmax                         = 150.
 
   if (PLOTREGIONS) then
     mapType2 = "x11"
@@ -79,32 +95,38 @@ begin
    ;                  (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
    ;                  (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
 
-   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
-                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
+   region_names = (/"BBCanada", "BBSiberia"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
-                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
-                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5,    -110.,      -60./),\  ;BBCAmerica
-                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-                     (/-25.,  -5.,     -100.,      -75./),\  ;BBSAmericaOcean
-                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-                     (/-25.,  -5.,       10.,       40./),\  ;BBSAfrica
-                     (/-20.,  -5.,      -15.,       10./),\  ;BBSAfOcean
-                     (/-10.,   8.,        90.,     130./),\  ;BBMSEA
-                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
-                     (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,        0.,      360./),\    ;NH
-                     (/-60.,   0.,        0.,      360./) /)   ;SH
+   region_select = (/(/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+                     (/ 50.,  60.,       90.,      140./) /)   ;SH
+
+   ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+   ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+   ;                 "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+   ;                  "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+   ;                 "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
+
+   ;                   minlat, maxlat, minlon, maxlon
+   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+   ;                  (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+   ;                  (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+   ;                  (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+   ;                  (/ 10.,  23.5,    -110.,      -60./),\  ;BBCAmerica
+   ;                  (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+   ;                  (/-25.,  -5.,     -100.,      -75./),\  ;BBSAmericaOcean
+   ;                  (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+   ;                  (/-25.,  -5.,       10.,       40./),\  ;BBSAfrica
+   ;                  (/-20.,  -5.,      -15.,       10./),\  ;BBSAfOcean
+   ;                  (/-10.,   8.,        90.,     130./),\  ;BBMSEA
+   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
+   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
+   ;                  (/  0.,  60.,        0.,      360./),\    ;NH
+   ;                  (/-60.,   0.,        0.,      360./) /)   ;SH
 
 
    ; Tagged simulations
@@ -168,6 +190,9 @@ begin
       mapres@mpMaxLatF               = latmax
       mapres@mpMinLonF               = lonmin
       mapres@mpMaxLonF               = lonmax
+
+    mapres@vpXF = 0.1
+    mapres@vpYF = 0.8
 
     ;-------------------
     ; do the plotting
@@ -254,11 +279,73 @@ begin
    mapres@lbTitleFontHeightF         = 0.015
    mapres@lbBoxLinesOn               = False
 
+
     map1 = gsn_csm_contour_map_ce(wks2,gridded_koppen,mapres)
 
+   else if (WITHCO) then
+   ; Load Data
+     mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+     fin = addfile(mopitt_file, "r")             ; load
+     data = fin->RetrievedCOTotalColumnDay      ; extract total column data (:,:)
+       data!0 = "lon"
+       data!1 = "lat"
+     lon = fin->Longitude
+       lon@long_name = "longitude"
+       lon@units = "degrees_east"
+       lon!0 = "lon"
+     lat = fin->Latitude
+       lat!0 = "lat"
+       lat@long_name = "latitude"
+       lat@units = "degrees_north"
+
+     mopitt_sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017_sd.nc"
+     fin2 = addfile(mopitt_sd_file, "r")             ; load
+     data2 = fin2->RetrievedCOTotalColumnDay      ; extract total column data (:,:)
+       data2!0 = "lon"
+       data2!1 = "lat"
+    
+    rel_sd = data2/data
+       rel_sd!0 = "lon"
+       rel_sd&lon = lon
+       rel_sd!1 = "lat"
+       rel_sd&lat = lat
+
+  data_flip = rel_sd(lat|:, lon|:)  
+
+
+   ; Base Plot
+    gsn_define_colormap(wks2,"haxby_rrb")        ; change colour map
+    mapres@cnFillOn                  = True
+    mapres@cnLinesOn                 = False
+    mapres@mpGeophysicalLineThicknessF = 3.5
+    mapres@tmXBTickSpacingF            = 60.
+    mapres@tmYLTickSpacingF            = 30.
+    mapres@tmXBLabelFontHeightF        =0.020
+    mapres@tmYLLabelFontHeightF        =0.020
+    mapres@gsnStringFontHeightF        = 0.020
+
+    mapres@lbOrientation              = "vertical"
+    mapres@lbTitleString              = ""             ; Label Bar title
+    mapres@gsnRightString             = "Coefficient of variation"             ; Label Bar title
+    mapres@lbTitlePosition            = "Right"
+    mapres@cnLevelSelectionMode       = "ExplicitLevels"
+    ;mapres@pmLabelBarOrthogonalPosF   = 0.5           ; move whole thing down
+
+    ;labels = fspan(0.9,3.0, 22)
+    ;labels_strings = (/"0.9","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
+    ;                   "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9", "3.0" /);
+    labels = fspan(0.05,0.25, 16)
+    labels_strings = (/"0.04","0.05","0.06","0.07","0.08","0.09",\
+                       "0.1","0.11","0.12","0.13","0.14","0.15","0.16","0.17","0.18","0.19",\
+                       "0.2"/);
+    mapres@cnLevels                  = labels
+    mapres@lbLabelStrings            = labels_strings
+
+    map1 = gsn_csm_contour_map_ce(wks2,data_flip,mapres)
 
    else 
     map1 = gsn_csm_map(wks2,mapres)                          ; draw a blank map
+   end if
    end if
 
     ;-------------------
@@ -275,31 +362,31 @@ begin
       if (region_names(i).eq."SH".or.region_names(i).eq."NH") then 
          continue
       else if (region_names(i).eq."BBCAfrica") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),10,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),10,\
+        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."BBMSEA") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-                           (region_select(i,0)+region_select(i,1))/2+5,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+        ;                   (region_select(i,0)+region_select(i,1))/2+5,txres)
       else if (region_names(i).eq."AnthChina".or.region_names(i).eq."AnthUSA") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
+        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."AnthIndi".or.region_names(i).eq."AnthEuro".or.\
                region_names(i).eq."Buchholz et al. N.Aus".or.region_names(i).eq."BBSAmOcean") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
+         ;                  (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."CONTRAIL avg") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-                           (region_select(i,0)+region_select(i,1))/2-10,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+         ;                  (region_select(i,0)+region_select(i,1))/2-10,txres)
       else if (region_names(i).eq."BBSAfOcean") then 
-        dum = gsn_add_text(wks2,map1,region_names(i),0-10,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),0-10,\
+        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."New MSEA") then 
       txres@txFontColor = "red"
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-                           (region_select(i,0)+region_select(i,1))/2+13,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+         ;                  (region_select(i,0)+region_select(i,1))/2+13,txres)
       else
-        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-                           (region_select(i,0)+region_select(i,1))/2,txres)
+        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+         ;                  (region_select(i,0)+region_select(i,1))/2,txres)
       end if
       end if
       end if
@@ -311,11 +398,11 @@ begin
     end do
 
       txres@txFontColor = "red"
-     gsn_text_ndc(wks2,"Red = Land retrievals only",0.2,0.73,txres)
+     ;gsn_text_ndc(wks2,"Red = Land retrievals only",0.2,0.73,txres)
       txres@txFontColor = "blue"
-     gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.75,txres)
+     ;gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.75,txres)
       txres@txFontColor = "forestgreen"
-     gsn_text_ndc(wks2,"Green = Land, water and mixed retrievals",0.2,0.77,txres)
+     ;gsn_text_ndc(wks2,"Green = Land, water and mixed retrievals",0.2,0.77,txres)
 
    draw(map1)
 

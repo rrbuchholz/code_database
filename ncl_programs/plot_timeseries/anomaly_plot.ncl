@@ -29,7 +29,7 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "Siberia" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "BBSiberia" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
   version = "V8T"
   mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V8/anomalies/"+loc+"_*.nc")
@@ -44,7 +44,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
@@ -167,6 +167,13 @@ if (PLOT) then
     res@tmXBMajorThicknessF = 3
     res@tmYLMajorThicknessF = 3
 
+;---Turn off top, bottom, and right axis.
+    res@tmXTOn       = False
+    res@tmXTBorderOn = False
+    res@tmXBOn       = True
+    res@tmXBBorderOn = False
+    res@tmYRBorderOn = False
+
     res@tmYLMajorOutwardLengthF = 0.0                    ; draw tickmarks inward
     res@tmYLMinorOutwardLengthF = 0.0                    ; draw minor ticsk inward
     res@tmXBMajorOutwardLengthF = 0.0               
@@ -197,8 +204,8 @@ if (PLOT) then
   ; ===================
   ; MOPITT
     res@tmYLMode            = "Explicit"
-      res@trYMinF             = 1e18
-      res@trYMaxF             = 3.6e18
+      res@trYMinF             = 1.5e18
+      res@trYMaxF             = 3.0e18
       res@tmYLValues          = fspan(1e18,3.5e18,6)
       res@tmYLLabels          = fspan(1e18,3.5e18,6)/1e18
       res@tmYLMinorValues     = fspan(1e18,3.5e18,11)
@@ -243,17 +250,26 @@ if (PLOT) then
       res@tmYLMinorValues     := (/-0.25e18, 0.25e18/)
 
     res@tmXBLabelsOn          = True
-    res@tmXBMode              = "Explicit"
-      res@tmXBValues           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
-    res@tiXAxisString          = "Year"
+    ;res@tmXBMode              = "Explicit"
+    ;  res@tmXBValues           = tofloat(ispan(year_s,year_e,3))
+    ;  res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
+    ;  res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
+    ;res@tiXAxisString          = "Year"
+
+    res@tmXBMode            = "Explicit"
+      res@trXMinF             = 2005
+      res@trXMinF             = year_s
+      res@trXMaxF             = year_e
+      res@tmXBValues           = tofloat(ispan(2005,year_e,5))
+      res@tmXBLabels           = tofloat(ispan(2005,year_e,5))
 
     res@gsnRightString       = ""
 
    res@gsnYRefLine      = 0.0
-   res@gsnAboveYRefLineColor = "wheat2"                  ; above ref line fill red
-   res@gsnBelowYRefLineColor = "limegreen"               ; below ref line fill blue
+   ;res@gsnAboveYRefLineColor = "wheat2"                  ; above ref line fill 
+   ;res@gsnBelowYRefLineColor = "limegreen"               ; below ref line fill 
+   res@gsnAboveYRefLineColor = "red"                  ; above ref line fill red
+   res@gsnBelowYRefLineColor = "blue"               ; below ref line fill blue
 
   plot3 = gsn_csm_xy(wks,plottime,mopitt_anom,res)
 
@@ -327,8 +343,8 @@ if (PLOT) then
      txres@txPerimOn        = False
     ;gsn_text_ndc(wks,"(c)",0.17,0.64,txres)
     ;gsn_text_ndc(wks,"(d)",0.17,0.43,txres)
-    gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
-    gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
+    ;gsn_text_ndc(wks,"(a)",0.17,0.60,txres)
+    ;gsn_text_ndc(wks,"(b)",0.17,0.39,txres)
 
   draw(plot1)
   frame(wks)

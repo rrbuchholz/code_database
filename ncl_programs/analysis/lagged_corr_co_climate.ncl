@@ -28,17 +28,19 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  location = "MaritimeSEA"
-  plot_title = "(a) Maritime SEA"
+  location = "BBCanada"
+  plot_title = "(a) Canada"
     ;pltname      = "~/"+location+"_laggedcorr2"
     pltname      = "/net/mopfl/home/buchholz/"+location+"_laggedcorr2"
   maxlag = 12
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-   mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
+  ; mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V7/anomalies/"
+   mopitt_dir = "/IASI/home/buchholz/MOPITT_subset/V8/anomalies/"
   ; mopitt_dir = "/net/mopfl/home/buchholz/MOPITT_subset/V7/anomalies/"
-   mopitt_file = mopitt_dir+location+"_V7TMOPITTanomalies.nc"
+  ; mopitt_file = mopitt_dir+location+"_V7TMOPITTanomalies.nc"
+   mopitt_file = mopitt_dir+location+"_V8TMOPITTanomalies.nc"
 
   ; -------------------------------
   ; CLIMATE INDEX
@@ -51,7 +53,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
@@ -82,7 +84,8 @@ begin
   ; -------------------------------
   m_fin = addfile(mopitt_file, "r")            ; read in
   mopitt_anom    = m_fin->MOPITT_CO_ANOMALY
-  mopitt_time  = m_fin->YYYYMM
+  mopitt_time_dummy  = m_fin->YYYYMM
+  mopitt_time = mopitt_time_dummy * 100 + 15
 
   ; -------------------------------
   ; Indices
@@ -90,13 +93,13 @@ begin
    overlap_index_vals= new((/dimsizes(ci_files),maxlag+1, dimsizes(mopitt_time)/), float)
    index_names = new(dimsizes(ci_files),string)
 
-
   do i = 0,dimsizes(ci_files)-1
     i_fin := addfile(ci_files(i), "r")            ; read in
       var_names := getfilevarnames( i_fin )
       index_names(i) = var_names(0)
       index_anom    := i_fin->$var_names(0)$
       index_time    := index_anom&time
+
     ; -------------------------------
     ; Crop index series to MOPITT size
     ; -------------------------------   
@@ -113,6 +116,7 @@ begin
      end do
 
    end do
+
 
    overlap_index_vals!2 = "time"
    overlap_index_vals&time = mopitt_time
@@ -132,11 +136,13 @@ acr = esccr(overlap_index_vals(:,0,:),mopitt_anom,maxlag)
 ;--------------------------------------------
 ; correlations for only Aug-Nov
 ;--------------------------------------------  
-  split_dates = str_split_by_length(tostring(mopitt_time),4)
-  m_select_ind = ind(split_dates(:,1).eq."09".or.\
-                     split_dates(:,1).eq."10".or.\
-                     split_dates(:,1).eq."11".or.\
-                     split_dates(:,1).eq."12")
+  ;split_dates = str_split_by_length(tostring(mopitt_time),4)
+  split_dates = str_split_by_length(tostring(mopitt_time),2)
+  m_select_ind = ind(split_dates(:,2).eq."05".or.\
+                     split_dates(:,2).eq."06".or.\
+                     split_dates(:,2).eq."07".or.\
+                     split_dates(:,2).eq."08");.or.\
+                     ;split_dates(:,2).eq."09")
   m_select_data = mopitt_anom(m_select_ind)
   i_select_data =  overlap_index_vals(:,:,m_select_ind)
 
@@ -201,7 +207,8 @@ if (PLOT) then
     res@lgLabelFontHeightF       = 0.030
     plot_index_names = str_split_csv(index_names, "_",0)
     ;res@xyExplicitLegendLabels   = plot_index_names(:,0)
-    res@xyExplicitLegendLabels   = (/"SAM", "DMI", "Nino3.4", "TSA"/)
+    ;res@xyExplicitLegendLabels   = (/"SAM", "DMI", "Nino3.4", "TSA"/)
+    res@xyExplicitLegendLabels   = (/"AO", "DMI", "Nino3.4", "TNA"/)
     res@pmLegendOrthogonalPosF   = -1.155
     res@pmLegendParallelPosF     = 0.83
   ; -------------------------------

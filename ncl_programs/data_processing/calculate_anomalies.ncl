@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "CONTRAIL_NAus" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "CONTRAIL_NAus"
+  loc = "BBCanada" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "BBSiberia"
 
   version = "V8"
   retrieval = "T"
@@ -79,10 +79,10 @@ begin
                      loc+"_"+version+retrieval+"MOPITTanomalies.csv"
   end if
 
-  NETCDF            = False
+  NETCDF            = True
   if (NETCDF) then
      nc_outname      = data_folder+"/"+version+"/anomalies/"+\
-                        loc+"_"+version+"MOPITTanomalies.nc"
+                        loc+"_"+version+retrieval+"MOPITTanomalies.nc"
   end if
 
   
@@ -99,11 +99,19 @@ begin
   ; names of data structures
   ; determined from an ncl_filedump
   sat_tcol      = "RetrievedCOTotalColumn"
-  timearray     = "Time"
 
-  sat_err       = "RetrievedCOTotalColumnError"
-  sat_num       = "NumberInAvg"
-  sat_rand      = "RetrievedCOColRandMax"
+   
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia") then
+    timearray     = "time"
+    sat_err       = "AvgError"
+    sat_num       = "RetrievedCOtcolRegionStats"
+    sat_rand      = "AvgRandomError"
+  else
+    timearray     = "Time"
+    sat_err       = "RetrievedCOTotalColumnError"
+    sat_num       = "NumberInAvg"
+    sat_rand      = "RetrievedCOColRandMax"
+  end if
 
   ; -------------------------------
   ; STATION PARAMETERS
@@ -169,16 +177,27 @@ begin
   print("***Reading MOPITT data at " + location)
     mopitt_tcol    = mopitt_in[:]->$sat_tcol$
     mopitt_err     = mopitt_in[:]->$sat_err$
-    mopitt_num     = mopitt_in[:]->$sat_num$
+
     mopitt_rand    = mopitt_in[:]->$sat_rand$
-    mopitt_time    = mopitt_in[:]->$timearray$       ; local time in seconds since 1993-1-1 00:00:00 (TAI93)
-    mopitt_date    = cd_calendar(mopitt_time, 0)
+    mopitt_time    = mopitt_in[:]->$timearray$       
+
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia") then
+    mopitt_num     = mopitt_in[:]->$sat_num$(:,7)
+    mopitt_date    = str_split_by_length(tostring(mopitt_time),4)
+    years = tointeger(mopitt_date(:,0))
+    months = tointeger(mopitt_date(:,1))
+    days = new(dimsizes(months), integer)
+    days = 15
+  else
+    mopitt_num     = mopitt_in[:]->$sat_num$
+    mopitt_date    = cd_calendar(mopitt_time, 0); local time in seconds since 1993-1-1 00:00:00 (TAI93)
     years = floattointeger(mopitt_date(:,0))
     months = floattointeger(mopitt_date(:,1))
     days = floattointeger(mopitt_date(:,2))
-      doy            = day_of_year(years,months,days)
     yyyymmdd         = cd_calendar(mopitt_time, 2)
+  end if
 
+    doy            = day_of_year(years,months,days)
 
 
   ;--------------------------------------------
@@ -601,7 +620,7 @@ if (NETCDF) then
   month_co_avg@units              = "mol/cm^2"
   month_co_avg@description        = "molecules per cm^2"
   month_co_avg!0                  = "time"
-  month_co_avg&time               = time_array
+  month_co_avg&time               := time_array
   month_co_avg@_FillValue         = 9.969209968386869e+36
   ;delete(month_co_avg@average_op_ncl)
 
