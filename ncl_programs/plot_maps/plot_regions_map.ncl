@@ -63,10 +63,11 @@ begin
     ;  lonmin                         = 70
     ;  lonmax                         = 190
 
-      latmin                         = 30.               ; NH
+      latmin                         = -25.               ; NH
       latmax                         = 80.
-      lonmin                         = -170.
-      lonmax                         = 185.
+      lonmin                         = 30.
+      lonmax                         = 360.
+      centerlon                      = 180
 
     ;  latmin                         = 35.               ; USA
     ;  latmax                         = 70.
@@ -95,11 +96,16 @@ begin
    ;                  (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
    ;                  (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
 
-   region_names = (/"BBCanada", "BBSiberia"/)
+   region_names = (/"BBCanada", "BBSiberia", "Nino3.4", "DMI","DMI2", "TNA", "AO"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./) /)   ;SH
+                     (/ 50.,  60.,       90.,      140./),\  ;Siberia
+                     (/ -5.,  5.,       -170.,     -120./),\ ;NINO3.4
+                     (/ -10.,  10.,      50.,      70./),\ ;DMI
+                     (/ -10.,  0.,       90.,      110./),\ ;DMI2
+                     (/ 5.,  25.,       -55.,      -15./), \ ;TNA
+                     (/ 70.,  70.5,     120.,    240./)/) ;AO
 
    ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
    ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
@@ -190,9 +196,11 @@ begin
       mapres@mpMaxLatF               = latmax
       mapres@mpMinLonF               = lonmin
       mapres@mpMaxLonF               = lonmax
+      mapres@mpCenterLonF            = centerlon
 
     mapres@vpXF = 0.1
     mapres@vpYF = 0.8
+    mapres@vpHeightF            = 0.4          ; set height of plot
 
     ;-------------------
     ; do the plotting
@@ -284,19 +292,26 @@ begin
 
    else if (WITHCO) then
    ; Load Data
-     mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+     mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200312_01to12.nc"
+     ;mopitt_file ="/MOPITT/V8T/Archive/L3/200305/month/MOP03TM-200305-L3V95.6.1.he5"
      fin = addfile(mopitt_file, "r")             ; load
      data = fin->RetrievedCOTotalColumnDay      ; extract total column data (:,:)
+     ;data = fin->APrioriCOTotalColumnDay_MOP03
        data!0 = "lon"
        data!1 = "lat"
      lon = fin->Longitude
+     ;lon = fin->Longitude_MOP03
        lon@long_name = "longitude"
        lon@units = "degrees_east"
        lon!0 = "lon"
      lat = fin->Latitude
+     ;lat = fin->Latitude_MOP03
        lat!0 = "lat"
        lat@long_name = "latitude"
        lat@units = "degrees_north"
+       data&lon = lon
+       data&lat = lat
 
      mopitt_sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017_sd.nc"
      fin2 = addfile(mopitt_sd_file, "r")             ; load
@@ -310,7 +325,8 @@ begin
        rel_sd!1 = "lat"
        rel_sd&lat = lat
 
-  data_flip = rel_sd(lat|:, lon|:)  
+  ;data_flip = rel_sd(lat|:, lon|:)  
+  data_flip = data(lat|:, lon|:)/1e18
 
 
    ; Base Plot
@@ -323,23 +339,28 @@ begin
     mapres@tmXBLabelFontHeightF        =0.020
     mapres@tmYLLabelFontHeightF        =0.020
     mapres@gsnStringFontHeightF        = 0.020
+    mapres@mpOceanFillColor = "gray"
+    mapres@mpLandFillColor = "gray" 
 
     mapres@lbOrientation              = "vertical"
-    mapres@lbTitleString              = ""             ; Label Bar title
-    mapres@gsnRightString             = "Coefficient of variation"             ; Label Bar title
+    ;mapres@gsnRightString             = "Coefficient of variation"             ; Label Bar title
+    mapres@gsnRightString             = "~F34~4~F21~10~S2~18   molec. cm~S2~-2"
+    mapres@gsnLeftString             = "MOPITT CO 2003"
     mapres@lbTitlePosition            = "Right"
     mapres@cnLevelSelectionMode       = "ExplicitLevels"
     ;mapres@pmLabelBarOrthogonalPosF   = 0.5           ; move whole thing down
 
-    ;labels = fspan(0.9,3.0, 22)
-    ;labels_strings = (/"0.9","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
-    ;                   "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9", "3.0" /);
-    labels = fspan(0.05,0.25, 16)
-    labels_strings = (/"0.04","0.05","0.06","0.07","0.08","0.09",\
-                       "0.1","0.11","0.12","0.13","0.14","0.15","0.16","0.17","0.18","0.19",\
-                       "0.2"/);
+    labels = fspan(1.0,3.3, 22)
+    labels_strings = (/"1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
+                       "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9", "3.0",\
+                       "3.1"/);
+    ;labels = fspan(0.05,0.25, 16)
+    ;labels_strings = (/"0.04","0.05","0.06","0.07","0.08","0.09",\
+    ;                   "0.1","0.11","0.12","0.13","0.14","0.15","0.16","0.17","0.18","0.19",\
+    ;                   "0.2"/);
     mapres@cnLevels                  = labels
     mapres@lbLabelStrings            = labels_strings
+    mapres@lbTitleString              = ""             ; Label Bar title
 
     map1 = gsn_csm_contour_map_ce(wks2,data_flip,mapres)
 
@@ -411,7 +432,7 @@ begin
     ; draw region boxes
     ;-------------------
     boxres = True
-      boxres@gsLineThicknessF = 5
+      boxres@gsLineThicknessF = 8
 
       do j=0,n_regions-1
        if (region_names(j).eq."CWAS1".or.region_names(j).eq."CWAS2") then 
@@ -461,8 +482,19 @@ begin
                           region_select(j,1) , region_select(j,0), \
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
+       else if (region_names(j).eq."Nino3.4".or.region_names(j).eq."TNA".or.\
+                region_names(j).eq."DMI".or.region_names(j).eq."DMI2".or.\
+                region_names(j).eq."AO") then
+       boxres@gsLineColor      = "white"
+         regions_lon := (/region_select(j,2), region_select(j,2), \
+                          region_select(j,3) , region_select(j,3), \
+                          region_select(j,2)/)
+         regions_lat := (/region_select(j,0), region_select(j,1), \
+                          region_select(j,1) , region_select(j,0), \
+                          region_select(j,0)/)
+         gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
        else
-       boxres@gsLineColor      = "forestgreen"
+       boxres@gsLineColor      = "red"
        boxres@gsLineDashPattern  = 0 
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
@@ -471,6 +503,7 @@ begin
                           region_select(j,1) , region_select(j,0), \
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
+       end if
        end if
        end if
        end if
