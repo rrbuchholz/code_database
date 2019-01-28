@@ -173,6 +173,7 @@ if (PLOT) then
     res@tmXBOn       = True
     res@tmXBBorderOn = False
     res@tmYRBorderOn = False
+    res@tmYROn       = False
 
     res@tmYLMajorOutwardLengthF = 0.0                    ; draw tickmarks inward
     res@tmYLMinorOutwardLengthF = 0.0                    ; draw minor ticsk inward
@@ -236,9 +237,10 @@ if (PLOT) then
   ; Anomaly plot
   ; ===================
     res@pmLegendDisplayMode  = "Never"               ; turn off legend
-    res@vpHeightF            = 0.3                       ; set height of plot
+    ;res@vpHeightF            = 0.3                       ; set height of plot
+    res@vpHeightF            = 0.40                      ; set height of plot
     res@xyLineThicknessF     = 1.5
-    res@tiYAxisString        = "Anomaly"
+    res@tiYAxisString        = "CO Anomaly"
     res@gsnRightString        = "" 
     res@xyLineColor          = "black"
 

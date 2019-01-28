@@ -80,7 +80,7 @@ begin
     ;  lonmax                         = 150.
 
   if (PLOTREGIONS) then
-    mapType2 = "x11"
+    mapType2 = "png"
     mapName2 = tracer+"_regions"
   end if ;PLOT
 
@@ -105,7 +105,7 @@ begin
                      (/ -10.,  10.,      50.,      70./),\ ;DMI
                      (/ -10.,  0.,       90.,      110./),\ ;DMI2
                      (/ 5.,  25.,       -55.,      -15./), \ ;TNA
-                     (/ 70.,  70.5,     120.,    240./)/) ;AO
+                     (/ 70.,  70.25,     120.,    240./)/) ;AO
 
    ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
    ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
@@ -341,6 +341,11 @@ begin
     mapres@gsnStringFontHeightF        = 0.020
     mapres@mpOceanFillColor = "gray"
     mapres@mpLandFillColor = "gray" 
+    mapres@tmBorderThicknessF = 6
+    mapres@tmXBMajorThicknessF = 6
+    mapres@tmXBMinorThicknessF = 6
+    mapres@tmXBLabelFontThicknessF = 3
+    mapres@tmYLLabelFontThicknessF = 3
 
     mapres@lbOrientation              = "vertical"
     ;mapres@gsnRightString             = "Coefficient of variation"             ; Label Bar title
