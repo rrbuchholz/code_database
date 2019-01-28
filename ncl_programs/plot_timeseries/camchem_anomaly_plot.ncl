@@ -53,10 +53,10 @@
 ;                                  RRB May 11, 2016
 ;=======================================================;
 ; load the libraries
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
 begin
 
@@ -66,36 +66,41 @@ begin
   ;------------
   ; define location
   ;------------
-  location = "Indonesia"
-  location_name = "Maritime SEA"
+  location = "Canada"
+  location_name = "NW Canada"
   emissions = "variable"
 
   ; -------------------------------
   ; CAM-chem files
   ; -------------------------------
    if (emissions.eq."variable") then
-     folder = "/glade/p/work/buchholz/data_processing/CAM-chem/CAMchem_extracted/"
+     folder = "/glade/work/buchholz/data_processing/CAM-chem/CAMchem_extracted/"
+     ;folder = "/glade/work/buchholz/data_processing/CAM-chem/"
    else if (emissions.eq."constant") then
-     folder = "/glade/p/work/buchholz/data_processing/CAM-chem/constE/"
-  ;folder = "/glade/u/home/buchholz/NCL_programs/CAMchem_constE_extracted/"
+     folder = "/glade/work/buchholz/data_processing/CAM-chem/constE/"
+  ;folder = "/glade/home/buchholz/NCL_programs/CAMchem_constE_extracted/"
    end if
    end if
 
   files_dummy = systemfunc ("ls "+folder+location+"CAM_Chem_avg*.nc")
+  ;files_dummy = systemfunc ("ls "+folder+"QFED"+location+"CAM_Chem_avg*.nc")
   filenames = files_dummy
 
   ;------------
   ; toggles
   ;------------
   PLOT         = True
-    plttype      = "x11"           ; pdf or png if want to save
+    plttype      = "png"           ; pdf or png if want to save
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
      year_s = 2001
-     year_e = 2015
+     year_e = 2016
 
-  CSV       = False
-  outname = "CAM_chem_"+location+"_anomaly.csv"
+  CSV       = True
+  outname = "CAM_chem_"+location+"_anomaly_FINN.csv"
+
+  GAUBERT_TAGS = True
+  CALC_TAGS = True
 
 ;--------------------------------------------
 ; end user input
@@ -122,7 +127,9 @@ begin
   ; determined from a ncl_filedump
     fin = addfiles(filenames, "r")           ; read in
     ListSetType (fin, "cat")                 ; concatenate
-      time           = fin[:]->time
+      time_dummy           = fin[:]->time
+      time = time_dummy-15
+      copy_VarMeta(time_dummy,time)
         yyyymmdd     = cd_calendar(time,2)
         yrfrac       = cd_calendar(time, 4)
         model_date   = cd_calendar(time,0)
@@ -132,9 +139,14 @@ begin
   ; -------------------------------
   ; loop over extracting tracers
   ; -------------------------------
+if (CALC_TAGS) then
   tracer = (/"CO", "CO01", "CO02", "CO03", "CO04", "CO05", "CO06", "CO07", "CO08", "CO09", "CO10",\
             "CO11", "CO12", "CO13", "CO14", "CO15", "CO16", "CO17", "CO18", "CO19", "CO20",\
-            "CO21", "CO22", "CO23", "CO24", "CO25", "CO26", "CO27", "CO28", "CO29", "CO30"/)
+            "CO21", "CO22", "CO23", "CO24", "CO25", "CO26", "CO27"/)
+;            "CO21", "CO22", "CO23", "CO24", "CO25", "CO26", "CO27", "CO28", "CO29", "CO30"/)
+else
+  tracer = (/"CO"/)
+end if
 
   ; set-up tcol collection array
     tcol_arr   = new((/dimsizes(time),dimsizes(tracer)/), float)
@@ -200,6 +212,39 @@ begin
 
 month_avg_yfrac = yyyymm_to_yyyyfrac(climate_time,0)
 
+if (CALC_TAGS) then
+if (GAUBERT_TAGS) then
+
+methox_anomaly = month_anomaly_a(:,26)
+biog_anomaly = month_anomaly_a(:,3)
+ocean_anomaly = month_anomaly_a(:,4)
+anth_anomaly = month_anomaly_a(:,1)
+  anth_aus = month_anomaly_a(:,0)-month_anomaly_a(:,0)
+  anth_SAm = month_anomaly_a(:,0)-month_anomaly_a(:,0)
+  anth_SAf = month_anomaly_a(:,0)-month_anomaly_a(:,0)
+  anth_Indo = month_anomaly_a(:,0)-month_anomaly_a(:,0)
+  other_anth = anth_anomaly-(anth_aus+anth_SAm+anth_SAf+anth_Indo)
+  anth_India = month_anomaly_a(:,18)
+  anth_NEA = month_anomaly_a(:,21)
+bb_anomaly = month_anomaly_a(:,2)
+  bb_aus = month_anomaly_a(:,8)
+  bb_SAm = month_anomaly_a(:,5)
+  bb_SAf = month_anomaly_a(:,6)
+  bb_Indo = month_anomaly_a(:,10)
+  other_bb = bb_anomaly-(bb_aus+bb_SAm+bb_SAf+bb_Indo)
+  bb_Sib = month_anomaly_a(:,17)
+  bb_SNAm = month_anomaly_a(:,16)
+  bb_NHrest = month_anomaly_a(:,15) ; Temperate NAM
+  bb_SH = dim_sum_n(month_anomaly_a(:,11:13),1)     ;Asia
+
+methox_co = month_co_avg_a(:,26)
+biog_co = month_co_avg_a(:,3)
+anth_co = month_co_avg_a(:,1)
+bb_co = month_co_avg_a(:,2)
+residual_co = month_co_avg_a(:,0)-bb_co-anth_co-biog_co-methox_co
+residual = month_anomaly_a(:,0)-bb_anomaly-anth_anomaly-biog_anomaly-methox_anomaly-ocean_anomaly
+
+else
 
 methox_anomaly = month_anomaly_a(:,1)
 biog_anomaly = month_anomaly_a(:,2)
@@ -217,6 +262,10 @@ bb_anomaly = dim_sum_n(month_anomaly_a(:,15:16),1)
   bb_SAf = month_anomaly_a(:,9)
   bb_Indo = month_anomaly_a(:,4)
   other_bb = bb_anomaly-(bb_aus+bb_SAm+bb_SAf+bb_Indo)
+  bb_Sib = month_anomaly_a(:,6)
+  bb_SNAm = month_anomaly_a(:,14)
+  bb_NHrest = month_anomaly_a(:,16)
+  bb_SH = month_anomaly_a(:,15)
 
 methox_co = month_co_avg_a(:,1)
 biog_co = month_co_avg_a(:,2)
@@ -224,9 +273,13 @@ anth_co = dim_sum_n(month_co_avg_a(:,29:30),1)
 bb_co = dim_sum_n(month_co_avg_a(:,15:16),1)
 residual_co = month_co_avg_a(:,0)-bb_co-anth_co-biog_co-methox_co
 
+residual = month_anomaly_a(:,0)-bb_anomaly-anth_anomaly-biog_anomaly-methox_anomaly
+
+end if
+
 ;print(dim_sum_n(month_co_avg_a(:,15:16),1))
 
-residual = month_anomaly_a(:,0)-bb_anomaly-anth_anomaly-biog_anomaly-methox_anomaly
+
 all_tags = bb_anomaly+anth_anomaly+biog_anomaly+methox_anomaly+residual
 
 
@@ -236,7 +289,8 @@ all_tags = bb_anomaly+anth_anomaly+biog_anomaly+methox_anomaly+residual
 yyyy  = climate_time/100
 mm = climate_time - yyyy*100
 ind_SOND = ind(mm.eq.9.or.mm.eq.10.or.mm.eq.11.or.mm.eq.12)
-month_anomaly=month_anomaly_a(:,0)
+ind_MJJA = ind(mm.eq.5.or.mm.eq.6.or.mm.eq.7.or.mm.eq.8)
+month_anomaly=(month_anomaly_a(:,0))
 ;print(yyyy(0:20))
 ;print(mm(0:20))
 ;print(mm(ind_SOND))
@@ -256,25 +310,46 @@ bb_poa = (bb_anomaly/month_anomaly)*100
   bb_Indo_poa = (bb_Indo/month_anomaly)*100
   bb_other_poa = (other_bb/month_anomaly)*100
 residual_poa = (residual/month_anomaly)*100
+  bb_Sib_poa = (bb_Sib/month_anomaly)*100
+  bb_SNAm_poa = (bb_SNAm/month_anomaly)*100
+  bb_NHrest_poa = (bb_NHrest/month_anomaly)*100
+  bb_SH_poa  = (bb_SH/month_anomaly)*100
+
+bb_poa = where(bb_poa.gt.200.or.bb_poa.le.-200,bb_poa@_FillValue, bb_poa)
+bb_Sib_poa = where(bb_Sib_poa.gt.200.or.bb_Sib_poa.le.-200,bb_Sib_poa@_FillValue, bb_Sib_poa)
+bb_SNAm_poa = where(bb_SNAm_poa.gt.200.or.bb_SNAm_poa.le.-200,bb_SNAm_poa@_FillValue, bb_SNAm_poa)
+bb_NHrest_poa = where(bb_NHrest_poa.gt.200.or.bb_NHrest_poa.le.-200,bb_NHrest_poa@_FillValue, bb_NHrest_poa)
+bb_SH_poa = where(bb_SH_poa.gt.200.or.bb_SH_poa.le.-200,bb_SH_poa@_FillValue, bb_SH_poa)
+anth_poa = where(anth_poa.gt.200.or.anth_poa.le.-200,anth_poa@_FillValue, anth_poa)
+residual_poa = where(residual_poa.gt.200.or.residual_poa.le.-200,residual_poa@_FillValue, residual_poa)
+methox_poa = where(methox_poa.gt.200.or.methox_poa.le.-200,methox_poa@_FillValue, methox_poa)
+biog_poa = where(biog_poa.gt.200.or.biog_poa.le.-200,biog_poa@_FillValue, biog_poa)
+
+print(month_anomaly)
 
 print("**********************") 
 print("BB         : "+avg(bb_poa)) 
-print("  Aus BB   : "+avg(bb_aus_poa))
-print("  Transp BB: "+avg(bb_transported_poa)) 
-print("  MSEA BB  : "+avg(bb_Indo_poa)) 
-print("  Other BB : "+avg(bb_other_poa)) 
+;print("  Aus BB   : "+avg(bb_aus_poa))
+;print("  Transp BB: "+avg(bb_transported_poa)) 
+;print("  MSEA BB  : "+avg(bb_Indo_poa)) 
+print("    Sib BB  : "+avg(bb_Sib_poa)) 
+print("  B NAm BB  : "+avg(bb_SNAm_poa)) 
+print("   T NAM BB : "+avg(bb_NHrest_poa)) 
+print("  Asia BB   : "+avg(bb_SH_poa)) 
+;print("  Other BB : "+avg(bb_other_poa)) 
  
 print("Anth       : "+avg(anth_poa)) 
-print("  Aus Anth : "+avg(anth_aus_poa))
-print("  Tra. Anth: "+avg(anth_transported_poa)) 
-print("  MSEA Anth: "+avg(anth_Indo_poa)) 
-print(" Other Anth: "+avg(anth_other_poa)) 
+;print("  Aus Anth : "+avg(anth_aus_poa))
+;print("  Tra. Anth: "+avg(anth_transported_poa)) 
+;print("  MSEA Anth: "+avg(anth_Indo_poa)) 
+;print(" Other Anth: "+avg(anth_other_poa)) 
 ;print(" India Anth: "+avg(anth_India_poa)) 
 ;print("  NEA Anth : "+avg(anth_NEA_poa)) 
 print("Biogenic   : "+avg(biog_poa)) 
 print("Methane Ox : "+avg(methox_poa)) 
 print("VOC ox     : "+avg(residual_poa)) 
 
+end if ; TAGS or not
 
 ;--------------------------------------------
 ; plot
@@ -295,11 +370,13 @@ if (PLOT) then
     res@xyMarkerSizeF       = 0.08
     res@gsnDraw		    = False	                ; don't draw it yet
     res@gsnFrame            = False                     ; don't advance frame
+    res@gsnMaximize	    = True	                ; don't draw it yet
 
     res@trYMinF             = -0.2e18
     res@trYMaxF             = 1.75e18
     res@trXMinF             = year_s-0.1
-    res@trXMaxF             = year_e
+    ;res@trXMaxF             = year_e
+    res@trXMaxF             = 2018
 
     res@tmYLMajorOutwardLengthF = 0.0               ; draw tickmarks inward
     res@tmYLMinorOutwardLengthF = 0.0               ; draw minor ticsk inward
@@ -308,11 +385,13 @@ if (PLOT) then
 
     res@tmXBLabelFontHeightF  = 0.030
     res@tmYLLabelFontHeightF  = 0.030
-    res@tiYAxisFontHeightF    = 0.038
-    res@tiXAxisFontHeightF    = 0.038          
+    res@tiYAxisFontHeightF    = 0.034
+    res@tiXAxisFontHeightF    = 0.034        
 
-    res@vpWidthF             = 0.9
-    res@vpHeightF            = 0.25          ; set height of plot
+    ;res@vpWidthF             = 0.9
+    ;res@vpHeightF            = 0.25          ; set height of plot
+    res@vpWidthF             = 0.85
+    res@vpHeightF            = 0.4
 
     res@tiMainString        = ""
     res@tiYAxisString       = "CO Column"
@@ -321,7 +400,8 @@ if (PLOT) then
    
   base_res = True
   base_res = res
-  
+ 
+
   ; -------------------------------
   ; timeseries - weekly averages and climatology
   ; -------------------------------
@@ -339,6 +419,7 @@ if (PLOT) then
   ; All CO
   plot1 = gsn_csm_xy(wks,plottime,month_co_avg_a(:,n),res)
 
+if (CALC_TAGS) then 
     res@xyMarkLineMode      = "Lines"
     res@xyLineThicknessF    = 8.
     res@xyDashPattern       = (/1/) 
@@ -377,28 +458,46 @@ if (PLOT) then
   ;overlay(plot1a, plot2)
   overlay(plot1, plot1a)
 
+
   ; -------------------------------
   ; Anomaly plot MOPITT
   ; -------------------------------
     res@gsnRightString      = ""
-    res@tiYAxisString       = "Anomaly"
+    res@gsnLeftString      = "~F34~4~F21~10~S2~17   molec. cm~S2~-2" 
+    res@tiYAxisString       = "CO Anomaly"
     res@tmYLTickSpacingF    = 0.2e18
 
-    res@tmXBBorderOn        = True
+;---Turn off top, bottom, and right axis.
+    res@tmXTOn       = False
+    res@tmXTBorderOn = False
+    res@tmXBOn       = True
+    res@tmXBBorderOn = False
+    res@tmYRBorderOn = False
+    res@tmYROn       = False
+
+    ;res@tmXBBorderOn        = True
     res@tmXBLabelsOn        = True
-    res@tmXBMode              = "Explicit"
-      res@tmXBValues           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
-      res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
+    ;res@tmXBMode              = "Explicit"
+    ;  res@tmXBValues           = tofloat(ispan(year_s,year_e,3))
+    ;  res@tmXBLabels           = tofloat(ispan(year_s,year_e,3))
+    ;  res@tmXBMinorValues      = tofloat(ispan(year_s,year_e,1))
+    res@tmXBMode            = "Explicit"
+      res@trXMinF             = 2005
+      res@trXMinF             = year_s
+      res@trXMaxF             = year_e
+      res@tmXBValues           = tofloat(ispan(2005,year_e,5))
+      res@tmXBLabels           = tofloat(ispan(2005,year_e,5))
+
+    res@gsnMaximize             = True
     res@tiXAxisString          = "Year"
-    res@vpHeightF           = 0.25          ; set height of plot
+    res@vpHeightF           = 0.2          ; set height of plot
 
     res@tmYLMode             = "Explicit"
-      res@trYMinF             := -0.28e18
-      res@trYMaxF             := 0.20e18
-      res@tmYLValues          := (/-0.15e18, 0.0, 0.15e18/)
-      res@tmYLLabels          := (/-0.15, 0, 0.15/)
-      res@tmYLMinorValues     := (/-0.05e18, 0.05e18/)
+      res@trYMinF             := -0.51e18
+      res@trYMaxF             := 0.51e18
+      res@tmYLValues          := (/-5.00e17, 0.0, 5.00e17/)
+      res@tmYLLabels          := (/"-5.0", "0", "5.0"/)
+      res@tmYLMinorValues     := (/-1.05e18, 1.05e18/)
 
    data2      = new((/6,dimsizes(plottime)/),float)
    data2(0,:) = plottime*0
@@ -419,7 +518,14 @@ if (PLOT) then
     res@xyExplicitLegendLabels   = (/"VOC oxidation",  "anthropogenic", "methane ox", "biogenic",\
                                      "biomass burning","total"/)
 
+    res@gsnMaximize	    = True	                ; don't draw it yet
   plot4 = gsn_csm_xy(wks,plottime,data2,res)
+    res@xyLineThicknessF    = 6.
+    res@xyLineColors := "black"
+  plot4a = gsn_csm_xy(wks,plottime,month_anomaly_a(:,0),res)
+overlay(plot4,plot4a)
+
+end if
 
   ;-----------------------------------
   ; Add in text
@@ -431,7 +537,8 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-   gsn_text_ndc(wks,location_name,0.197,0.89,txres)
+   ;gsn_text_ndc(wks,location_name,0.197,0.89,txres)
+   gsn_text_ndc(wks,location_name,0.19,0.68,txres)
 
   ; -------------------------------
   ; panel the plots
@@ -446,11 +553,11 @@ if (PLOT) then
     res2@tiYAxisFontHeightF  = 0.028
 
   ; plot1 will be the base plot.
-  amid = gsn_attach_plots(plot1,plot4,res1,res2)
-  draw(plot1)    ; All three plots will be drawn.
-  frame(wks)
-  ;draw(plot4)    ; All three plots will be drawn.
+  ;amid = gsn_attach_plots(plot1,plot4,res1,res2)
+  ;draw(plot1)    ; All three plots will be drawn.
   ;frame(wks)
+  draw(plot4)    ; All three plots will be drawn.
+  frame(wks)
 
 end if ; PLOT
 

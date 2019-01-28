@@ -99,7 +99,7 @@ begin
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./) /)   ;SH
+                     (/ 50.,  60.,       90.,      140./) /) ;BBSiberia
 
    ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
    ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
