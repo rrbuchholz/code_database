@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "AnthUSA"
+  location = "AnthEuro"
 
   ;------------
   ; select daytime 
