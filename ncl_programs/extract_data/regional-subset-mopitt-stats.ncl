@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "BBSiberia"
+  location = "AnthEuro"
 
   ;------------
   ; select daytime 
