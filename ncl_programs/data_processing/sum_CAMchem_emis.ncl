@@ -25,11 +25,11 @@ begin
 ; user input
 ;--------------------------------------------
   ystart = 2000
-  yend = 2018
+  yend = 2015
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
@@ -80,6 +80,10 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/regridded/"
      e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+    else if (repository.eq."CMIP6") then
+     emis_dir = top_dir+ "cmip6/"
+     e_file_in = "emissions-cmip6_"+tracer+"_bb_surface_1750-2015_0.9x1.25_c20170322.nc"
+    end if
     end if
     end if
     end if
@@ -92,6 +96,14 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED_native") then
      outpath = top_dir+ "qfed/cam_"+reso+"/regridded/region_sums/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+ystart+"*.nc4")
+    else if (repository.eq."FINN") then
+     indir = emis_dir+"finn1.5/"
+     outpath = emis_dir+"region_sums/"
+    else if (repository.eq."CMIP6") then
+     indir = emis_dir+"cam_0.9x1.25/"
+     outpath = emis_dir+"region_sums/"
+    end if
+    end if
     end if
     end if
 
@@ -410,15 +422,21 @@ do t = 0, dimsizes(tracers)-1
   ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
   ;                   (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
 
-   region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
-                    "Siberia", "North America", "India" /)
+   ;region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
+   ;                 "Siberia", "North America", "India" /)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 54.,  67., 360.-120., 360.-93./),\  ;NWCan
-                     (/ 40.,  51., 360.-125., 360.-105./),\ ;NWUS
-                     (/ 30.,  41., 360.-102., 360.-88./),\  ;SEUS
-                     (/ 50.,  85.,      91.,     190./),\   ;Siberia
-                     (/ 25.,  70., 360.-160., 360.-53./),\  ;NAmerica
-                     (/ 20.,  40.,      65.,     90./) /)   ;India
+   ;region_select = (/(/ 54.,  67., 360.-120., 360.-93./),\  ;NWCan
+   ;                  (/ 40.,  51., 360.-125., 360.-105./),\ ;NWUS
+   ;                  (/ 30.,  41., 360.-102., 360.-88./),\  ;SEUS
+   ;                  (/ 50.,  85.,      91.,     190./),\   ;Siberia
+   ;                  (/ 25.,  70., 360.-160., 360.-53./),\  ;NAmerica
+   ;                  (/ 20.,  40.,      65.,     90./) /)   ;India
+
+   region_names = (/"BBCanada", "BBSiberia"/)
+
+   ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/ 50.,  60., 360.-125.,  360.-90./),\  ;BBCanada
+                     (/ 50.,  60.,       90.,      140./)/)  ;BBSiberia
 
 
      ; -------------------------------

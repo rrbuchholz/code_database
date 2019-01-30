@@ -47,7 +47,7 @@ begin
 ; user input
 ;--------------------------------------------
   tracer = "CO"
-  type = "fire"
+  type = "fire" ; anthro, fire, ocean
 
   ; -------------------------------
   ; emission files
@@ -83,7 +83,8 @@ begin
   ; names of data structures
   ; -------------------------------
   if (type.eq."fire") then 
-    emiss           = "bb"
+    ;emiss           = "bb"
+    emiss           = "fire"
   else if (type.eq."anthro") then 
     emiss           = "emiss_anthro"
   else if (type.eq."ocean") then 
@@ -124,18 +125,18 @@ begin
                      (/ 28.,  50.,        90.,     153./),\  ;NEAS
                      (/ 50.,  80.,        90.,     190./),\  ;SIBR
                      (/ 50.,  80.,        30.,      90./),\  ;BOAS
-                     (/ 30.,  75.,       -25.,      30./),\  ;EURO
+                     (/ 30.,  75.,   360.-25.,      30./),\  ;EURO
                      (/  0.,  30.,        35.,      60./),\  ;AFME
                      (/ 30.,  50.,        30.,      60./),\  ;CWAS1
                      (/ 35.,  50.,        60.,      90./),\  ;CWAS2
-                     (/  0.,  30.,       -18.,      35./),\  ;NHAF
-                     (/ -36.,  0.,        -1.,      60./),\  ;SHAF
-                     (/ 50.,  75.,      -170.,     -53./),\  ;BONA
-                     (/ 27.,  50.,      -140.,     -53./),\  ;TENA
-                     (/  9.,  27.,      -120.,     -40./),\  ;CEAM
-                     (/  0.,   9.,       -90.,     -30./),\  ;NHSA
-                     (/-23.5,  -0.,      -90.,     -30./),\  ;AMAZ
-                     (/-60.,  -23.5,     -90.,     -30./),\  ;SHSA
+                     (/  0.,  30.,   360.-18.,      35./),\  ;NHAF
+                     (/ -36.,  0.,    360.-1.,      60./),\  ;SHAF
+                     (/ 50.,  75.,  360.-170., 360.-53./),\  ;BONA
+                     (/ 27.,  50.,  360.-140., 360.-53./),\  ;TENA
+                     (/  9.,  27.,  360.-120., 360.-40./),\  ;CEAM
+                     (/  0.,   9.,   360.-90., 360.-30./),\  ;NHSA
+                     (/-23.5,  -0.,  360.-90., 360.-30./),\  ;AMAZ
+                     (/-60.,  -23.5, 360.-90., 360.-30./),\  ;SHSA
                      (/  0.,  90.,      0.,      360./),\    ;NH
                      (/-90.,   0.,      0.,      360./) /)   ;SH
 
@@ -236,12 +237,12 @@ begin
      ind_lon_region_1 := ind(emiss_in&lon.lt.lonmin)
      ind_lon_region_2 := ind(emiss_in&lon.ge.lonmax)
      ; issues spanning 360 if not in 360-lon format
-     ;if (region.eq."NHAF".or.\
-     ;    region.eq."SHAF".or.\
-     ;    region.eq."EURO") then
-     ;  ind_lon_region_1 := ind(emiss_in&lon.lt.lonmin.and.emiss_in&lon.ge.lonmax)
-     ;  ind_lon_region_2 := ind(emiss_in&lon.ge.lonmax.and.emiss_in&lon.lt.lonmin)
-     ;end if
+     if (region.eq."NHAF".or.\
+         region.eq."SHAF".or.\
+         region.eq."EURO") then
+       ind_lon_region_1 := ind(emiss_in&lon.lt.lonmin.and.emiss_in&lon.ge.lonmax)
+       ind_lon_region_2 := ind(emiss_in&lon.ge.lonmax.and.emiss_in&lon.lt.lonmin)
+     end if
 
      ; overwrite outside region with zeros
      emiss_region(:,ind_lat_region_1,:) = 0
