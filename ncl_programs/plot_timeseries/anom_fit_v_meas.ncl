@@ -24,30 +24,31 @@ begin
 ; USER DEFINED
 ; =========================================
  
-  location = "CONTRAIL"
-  location_title = "(b) CONTRAIL MEI"
+  location = "Siberia"
+  location_title = "Siberia"
   
   PLOT = True
-    plottype = "x11"
-      ;plottype@wkWidth  = 1500
-      ;plottype@wkHeight = 800
-      plottype@wkPaperWidthF  = 9 ;for pdf
-      plottype@wkPaperHeightF = 20  ;for pdf
+    plottype = "png"
+      plottype@wkWidth  = 3000
+      plottype@wkHeight = 1600
+      ;plottype@wkPaperWidthF  = 9 ;for pdf
+      ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
 
   PREDICT = False
   TOP_THREE = False
-  TWO_COMPARE = True
+  TWO_COMPARE = False
+  FULL_ANOMALY = True
 ; =========================================
 ; SET UP
 ; =========================================
   ;anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  anom_loc = "~/Dropbox_Work/CONTRAIL_CO_Variability/model_output/"
+  anom_loc = "~/Dropbox_Work/NH_CO_Variability/model_output/"
   anom_file = location+"coanom.txt"
 
   ;fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  fit_loc = "~/Dropbox_Work/CONTRAIL_CO_Variability/model_output/"
-  fit_file = location+"fittedno97MEI.txt"
+  fit_loc = "~/Dropbox_Work/NH_CO_Variability/model_output/"
+  fit_file = location+"fitted.txt"
   
 ; ----------------------------------------
 ; Load data 1
@@ -71,13 +72,17 @@ printVarSummary(meas_anom)
 ; ----------------------------------------
 ; Create date array
 ; ----------------------------------------
-  ;yyyymm = yyyymm_time(2001,2016,"integer")
-  yyyymm = yyyymm_time(1994,2016,"integer")
+  yyyymm = yyyymm_time(2001,2017,"integer")
+  ;yyyymm = yyyymm_time(1994,2016,"integer")
   yyyymm_select = new((dimsizes(yyyymm)/12*4), float)
-   yyyymm_select(0:dimsizes(yyyymm_select)-1:4) = yyyymm(7:dimsizes(yyyymm)-1:12)
-   yyyymm_select(1:dimsizes(yyyymm_select)-1:4) = yyyymm(8:dimsizes(yyyymm)-1:12)
-   yyyymm_select(2:dimsizes(yyyymm_select)-1:4) = yyyymm(9:dimsizes(yyyymm)-1:12)
-   yyyymm_select(3:dimsizes(yyyymm_select)-1:4) = yyyymm(10:dimsizes(yyyymm)-1:12)
+   ;yyyymm_select(0:dimsizes(yyyymm_select)-1:4) = yyyymm(7:dimsizes(yyyymm)-1:12)
+   ;yyyymm_select(1:dimsizes(yyyymm_select)-1:4) = yyyymm(8:dimsizes(yyyymm)-1:12)
+   ;yyyymm_select(2:dimsizes(yyyymm_select)-1:4) = yyyymm(9:dimsizes(yyyymm)-1:12)
+   ;yyyymm_select(3:dimsizes(yyyymm_select)-1:4) = yyyymm(10:dimsizes(yyyymm)-1:12)
+   yyyymm_select(0:dimsizes(yyyymm_select)-1:4) = yyyymm(5:dimsizes(yyyymm)-1:12)
+   yyyymm_select(1:dimsizes(yyyymm_select)-1:4) = yyyymm(6:dimsizes(yyyymm)-1:12)
+   yyyymm_select(2:dimsizes(yyyymm_select)-1:4) = yyyymm(7:dimsizes(yyyymm)-1:12)
+   yyyymm_select(3:dimsizes(yyyymm_select)-1:4) = yyyymm(8:dimsizes(yyyymm)-1:12)
   yearfrac = yyyymm_to_yyyyfrac(yyyymm_select,0)
 
 ;print(yyyymm_select)
@@ -108,7 +113,7 @@ else if (TOP_THREE) then
   fit_file3 = location+"3fitted.txt"
 
 else if (TWO_COMPARE) then
-  fit_file2 = location+"fittedMEI.txt"
+  fit_file2 = location+"fitted.txt"
 
 end if
 end if
@@ -173,16 +178,23 @@ if (PLOT) then
    res@xyMarkLineModes  = "Markers"                ; choose which have markers
    res@gsnMaximize      = True
    
-   res@vpWidthF         = 1
-   res@vpHeightF        = 0.25
-   res@trXMinF          = 1992
-   res@trXMaxF          = 2017
+   ;res@vpWidthF         = 1
+   ;res@vpHeightF        = 0.25
+    res@vpWidthF             = 0.9
+    res@vpHeightF            = 0.225                      ; set height of plot
+   res@trXMinF          = 2001
+   res@trXMaxF          = 2018
    
-   ;res@tmYRBorderOn     = False                    ; turn off right border
-   ;res@tmYROn           = False                    ; no YR tick marks
-   ;res@tmXTBorderOn     = False                    ; turn off top border
-   ;res@tmXTOn           = False                    ; no XT tick marks
-   ;res@tmXBBorderOn     = False                    ; turn off bottom border
+;---Turn off top, bottom, and right axis.
+  if (FULL_ANOMALY) then
+    res@tmXTOn       = False
+    res@tmXTBorderOn = False
+    res@tmXBOn       = True
+    res@tmXBBorderOn = False
+    res@tmYROn       = False                    
+    res@tmYRBorderOn = False
+  end if
+
    res@tmBorderThicknessF  = 4
    res@tmXBMajorThicknessF = 4
    res@tmYLMajorThicknessF = 4
@@ -201,14 +213,14 @@ if (PLOT) then
    res@tiYAxisFontHeightF   = 0.032
    res@tiXAxisFontHeightF   = 0.032
 
-   res@trYMinF          = -30.
-   res@trYMaxF          = 120.  
+   ;res@trYMinF          = -30.
+   ;res@trYMaxF          = 120.  
 
-   ;res@trYMinF          = -6.1e17
-   ;res@trYMaxF          = 12.5e17
-   ;res@tmYLMode         = "Explicit"
-   ;res@tmYLValues       = (/-5e17,0,5e17,10e17/)
-   ;res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
+   res@trYMinF          = -6.0e17
+   res@trYMaxF          = 8.5e17
+   res@tmYLMode         = "Explicit"
+   res@tmYLValues       = (/-5e17,0,5e17,10e17/)
+   res@tmYLLabels       = (/"-5.0","0","5.0","10.0"/)
 
 
    res@tiYAxisString   = ""
@@ -232,22 +244,60 @@ if (PLOT) then
   else
     ;res2@xyExplicitLegendLabels   = "Measured anomaly (x 10~S2~17   molec cm~S2~-2  )"
     res2@xyExplicitLegendLabels   = "Measured anomaly"
-    res2@pmLegendOrthogonalPosF   = -1.5
-    res2@pmLegendParallelPosF     = 0.83
+    res2@pmLegendOrthogonalPosF   = -1.80
+    res2@pmLegendParallelPosF     = 0.80
     res2@gsnLeftString            := ""             ; Label Bar title
    end if
 
   ;-----------------------------------
   ; Measured
   ;-----------------------------------
-    ;res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
+    res2@gsnLeftString            := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
     res2@xyMarkers                = 16               ; choose type of marker  
     res2@xyMarkerColor            = "gray70"         ; Marker color
     res2@xyMarkerOpacityF         = 0.85
-    res2@xyMarkerSizeF            = 0.02             ; Marker size (default 0.01)
+      res2@xyMarkerSizeF          = 0.014             ; Marker size (default 0.01)
+    if (FULL_ANOMALY) then
+    else 
+      res2@xyMarkerSizeF          = 0.02             ; Marker size (default 0.01)
+    end if
     res2@tiYAxisString            = "CO Anomaly"
     res2@tiXAxisString            = "Year"
+
+    res2@vpWidthF             = 1.0
+    res2@vpHeightF            = 0.15                      ; set height of plot
   plot1  = gsn_csm_xy (wks,yearfrac,meas_anom,res2)  ; create plot
+
+    if (FULL_ANOMALY) then
+
+
+     res2@pmLegendDisplayMode      = "Never"        ; turn on legend
+     res2@gsnLeftString            := ""             ; Label Bar title
+     res3 = res2
+      res3@xyMarkerColor            = "red"         ; Marker color
+      ind_pos = ind(meas_anom.ge.0)
+      plot_split  = gsn_csm_xy (wks,yearfrac(ind_pos),meas_anom(ind_pos),res3)  ; create plot
+      res3@xyMarkerColor            = "blue"         ; Marker color
+      ind_neg = ind(meas_anom.lt.0)
+      plot_split_b  = gsn_csm_xy (wks,yearfrac(ind_neg),meas_anom(ind_neg),res3)  ; create plot
+     overlay(plot1,plot_split)
+     overlay(plot1,plot_split_b)
+
+     fin = addfile("/home/buchholz/Dropbox_Work/NH_CO_Variability/CO_spline_fit_filled/BB"+\
+                    location+"_V8TMOPITTanomalies.nc", "r")            ; read in
+     print("***Reading MOPITT data at " + location)
+     mopitt_anom    = fin->MOPITT_CO_ANOMALY
+     mopitt_time    = fin->YYYYMM        ;  YYYYMM
+      plottime = yyyymm_to_yyyyfrac(mopitt_time,0.5)
+
+     res3@xyMarkLineModes  = "Lines"                ; choose which have markers
+     res3@gsnYRefLine      = 0.0
+     res3@gsnAboveYRefLineColor = "red"                  ; above ref line fill red
+     res3@gsnBelowYRefLineColor = "blue"               ; below ref line fill blue
+      plot_split_c  = gsn_csm_xy (wks,plottime,mopitt_anom,res3)  ; create plot
+     ;overlay(plot1,plot_split_c)
+     res2@pmLegendDisplayMode      = "Always"        ; turn on legend
+    end if
 
 
   if (PREDICT) then
@@ -378,13 +428,18 @@ if (PLOT) then
      res2@gsnLeftString            := ""             ; Label Bar title
      ;res2@xyExplicitLegendLabels   := "Model predicted anomaly (x 10~S2~17   molec cm~S2~-2  )"
      res2@xyExplicitLegendLabels   := "Model predicted anomaly"
-     res2@pmLegendOrthogonalPosF   = -1.7
-     res2@pmLegendParallelPosF     = 0.82
+     ;res2@pmLegendOrthogonalPosF   = -1.7
+     res2@pmLegendParallelPosF     = 0.69
+     res2@pmLegendOrthogonalPosF   = -1.99
+
     ;-----------------------------------
     ; Fit
     ;-----------------------------------
      res2@xyMarkers               =  16            ; choose type of marker  
      res2@xyMarkerColor           = "darkorange2"  ; Marker color
+    if (FULL_ANOMALY) then
+     res2@xyMarkerColor           = "black"  ; Marker color
+    end if
      res2@xyMarkerOpacityF        = 0.75
      res2@xyMarkerSizeF           = 0.013          ; Marker size (default 0.01)
 
@@ -392,9 +447,13 @@ if (PLOT) then
 
     res2@xyMarkers                = 4               ; choose type of marker  
     res2@xyMarkerColor            = "darkorange4"         ; Marker color
+    if (FULL_ANOMALY) then
+     res2@xyMarkerColor           = "black"  ; Marker color
+    end if
+
     res2@xyMarkerThicknessF       = 4
     res2@xyExplicitLegendLabels   := ""
-     res2@pmLegendParallelPosF     = 0.590
+     res2@pmLegendParallelPosF     = 0.420
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
   end if
@@ -472,7 +531,7 @@ if (PLOT) then
   ;resa@gsnMaximize         = True    
   ;resb@gsnMaximize         = True
   resb@gsnAttachPlotsXAxis = True
-  newplot = gsn_attach_plots(plot1,(/plot4/),resa,resb)
+  ;newplot = gsn_attach_plots(plot1,(/plot4/),resa,resb)
   end if
 
  draw(plot1)
