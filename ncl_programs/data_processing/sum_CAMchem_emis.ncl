@@ -24,17 +24,17 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2000
-  yend = 2015
+  ystart = 2002
+  yend = 2017
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
-  tracers = (/"CO"/)
-  sm_tracers = (/"co"/)
+  tracers = (/"HCN"/)
+  sm_tracers = (/"hcm"/)
   ;tracers = (/"BC", "OC", "NO", "NH3", "CO", \
   ;            "C2H6", "C3H6", "C3H8", "CH2O", "CH3CHO",\
   ;            "CH3COCH3", "SO2"/)
@@ -75,6 +75,7 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
      e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+     ;e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+"_newEF.nc"
     else if (repository.eq."QFED_native") then
      emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
     else if (repository.eq."QFED") then
@@ -411,16 +412,16 @@ do t = 0, dimsizes(tracers)-1
 
   ;********************************************
   ; Extract regional timeseries
-  ; region_names = (/"Maritime SEA", "Australasia", \
-  ;                  "Southern Africa", "South America",\
-  ;                  "Siberia", "North America" /)
+   region_names = (/"Maritime SEA", "Australasia", \
+                    "Southern Africa", "South America",\
+                    "Siberia", "North America"/)
   ;                   minlat, maxlat, minlon, maxlon
-  ; region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
-  ;                   (/-50., -10.,     110.,     180./),\ ;Australasia
-  ;                   (/-40.,   5.,       0.,      60./),\ ;SAfrica
-  ;                   (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
-  ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
-  ;                   (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+                     (/-50., -10.,     110.,     180./),\ ;Australasia
+                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
+                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
+                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
+                     (/ 25.,  70.,360.-170.,360. -53./)/) ;NAmerica
 
    ;region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
    ;                 "Siberia", "North America", "India" /)
@@ -432,11 +433,11 @@ do t = 0, dimsizes(tracers)-1
    ;                  (/ 25.,  70., 360.-160., 360.-53./),\  ;NAmerica
    ;                  (/ 20.,  40.,      65.,     90./) /)   ;India
 
-   region_names = (/"BBCanada", "BBSiberia"/)
+   ;region_names = (/"BBCanada", "BBSiberia"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 50.,  60., 360.-125.,  360.-90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./)/)  ;BBSiberia
+   ;region_select = (/(/ 50.,  60., 360.-125.,  360.-90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./)/)  ;BBSiberia
 
 
      ; -------------------------------
