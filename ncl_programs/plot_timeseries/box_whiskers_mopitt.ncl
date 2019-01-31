@@ -29,9 +29,10 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "AnthChina"
+  loc = "AnthIndi"
   version = "V8T"
-  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/"+loc+"_*2002.nc")
+  ;mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/"+loc+"_*2002.nc")
+  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/"+loc+"_*monthavg.nc")
   mopitt_file_2 = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/"+loc+"_*monthavg.nc")
 
   location_title = "China"
@@ -64,7 +65,8 @@ begin
   ; names of data structures
   ; determined from an ncl_filedump
   sat_tcol      = "RetrievedCOtcolRegionStats"
-  timearray     = "Time"
+  ;timearray     = "Time"
+  timearray     = "time"
 
   ; -------------------------------
   ; OUTPUT RELATED SETUP
@@ -161,7 +163,7 @@ if (PLOT) then
     res@trXMinF             = 2002.0
     res@trXMaxF             = 2018.0
     res@trYMinF             = 1.5
-    res@trYMaxF             = 5.5
+    res@trYMaxF             = 3.0
 
     res@tmXBMode        = "Manual"
      res@tmXBTickStartF  = 2002.0

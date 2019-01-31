@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "AnthEuro"
+  location = "BBNWAu"
 
   ;------------
   ; select daytime 
@@ -216,7 +216,7 @@ do y = ystart,yend ; loop through years
       ;--------------------------------------------
       region := ind(sza.le.dayflag.and.\
                  ;(surf_type.eq.1.or.surf_type.eq.0).and.\ 
-                 surf_type.eq.s_id.and.\
+                 ;surf_type.eq.s_id.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\
