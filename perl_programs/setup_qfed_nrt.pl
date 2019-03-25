@@ -30,7 +30,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20181110;
+#$current_date = 20190324;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -38,10 +38,12 @@ print OUT "Assessing emission file for $current_date\n";  #DEBUG
 #------------------------------
 # set up locations
 $dir = "$topdir/co2_nrt/";
-$fname = "*co2.*$current_date*.nc4";
-$ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$month/";
+$fname = "qfed2.emis_co2.006.$current_date.nc4";
+#$ftp_address = "ftp://ftp.nccs.nasa.gov/qfed/0.25_deg/Y$year/M$month/";
+$http_address = "https://portal.nccs.nasa.gov/datashare/gmao_ops/qfed/0.25_deg/Y$year/M$month/";
 
-print OUT "$ftp_address\n";                               #DEBUG
+#print OUT "$ftp_address\n";                               #DEBUG
+print OUT "$http_address\n";                               #DEBUG
 
 #------------------------------
 # open log to see last time processed
@@ -70,8 +72,10 @@ else{
   # download not there
   print OUT "$now : Emissions neither downloaded or processed\n";
   print OUT "Downloading . . . \n";
-  print OUT  "wget --user=gmao_ops --password= -N -q -P $dir $ftp_address$fname\n";
-     `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
+  #print OUT  "wget --user=gmao_ops --password= -N -q -P $dir $ftp_address$fname\n";
+  #   `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
+  print OUT  "wget -nd -r --no-parent -N -q -P $dir -A $fname $http_address\n";
+             `wget -nd -r --no-parent -N -q -P $dir -A $fname $http_address`;
 }
 
 #------------------------------
