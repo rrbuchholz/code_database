@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "BBNWAu"
+  location = "CONTRAIL"
 
   ;------------
   ; select daytime 
@@ -56,6 +56,7 @@ begin
   ; toggles
   ;------------
   netCDF         = True
+  COLAVG_VMR     = True
 
 
 ;--------------------------------------------
@@ -107,17 +108,23 @@ begin
                      (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
                      (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
                      (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5,    -110.,      -60./),\  ;BBCAmerica
+                     (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
                      (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-                     (/-25.,  -5.,     -100.,      -75./),\  ;BBSAmericaOcean
+                     (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
                      (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-                     (/-25.,  -5.,       10.,       40./),\  ;BBSAfrica
-                     (/-20.,  -5.,      -15.,       10./),\  ;BBSAfOcean
-                     (/-10.,   8.,        90.,     130./),\  ;BBMSEA
+                     (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
+                     (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
+                     (/-10.,   8.,        95.,     125./),\  ;BBMSEA
                      (/-25., -10.,       115.,     140./),\  ;BBNWAu
                      (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,      -180.,     180./),\    ;NH
-                     (/-60.,   0.,      -180.,     180./) /)   ;SH
+                     (/  0.,  60.,      -180.,     180./),\  ;NH
+                     (/-60.,   0.,      -180.,     180./) /) ;SH
+
+   region_names := (/"CONTRAIL","TEST"/)
+
+   ;                   minlat, maxlat, minlon, maxlon
+   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+                      (/-60.,   0.,      -180.,     180./) /)   ; TEST
 
    ind_region = ind(region_names.eq.location)
 
@@ -147,6 +154,9 @@ do y = ystart,yend ; loop through years
   if (netCDF) then
      outfolder = "~/MOPITT_subset/regions_v8/"
      outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg.nc"
+     if (COLAVG_VMR) then
+        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
+     end if
   end if
 
   ; -------------------------------
@@ -257,6 +267,14 @@ do y = ystart,yend ; loop through years
         region_apriori    := fin->$tcol_apriori$(region)
         region_psurf      := fin->$pressure_surf$(region)
         region_dryair     := fin->$dryair$(region)
+     if (COLAVG_VMR) then
+       col_vmr      := region_tcol/region_dryair
+       col_vmr_err  := region_err/region_dryair
+       ap_vmr       := region_apriori/region_dryair
+       region_tcol  := col_vmr
+       region_err   := col_vmr_err
+       region_apriori := ap_vmr
+     end if 
 
       ; a priori and retrieved profile have surface layer separate to rest
       vmr_dummy    := fin->$vmr_aprior$(region,:,0)
@@ -478,26 +496,61 @@ if (netCDF) then
                                     topboundary+" to "+bottomboundary+ " Lat, "+\
                                     leftboundary+" to "+rightboundary+" Lon"
 
-   ;--- total column
-     fout->RetrievedCOTotalColumn        = month_tcol
-   ;--- stats
-     fout->RetrievedCOtcolRegionStats    = month_stats
-     fout->RetrievedCOtcolRegion5th95th  = month_5_95
+   month_apriori!0               = "time"
+   month_apriori&time            = yearmonth
+
+   if (COLAVG_VMR) then
+     ;--- total column
+       fout->RetrievedX_CO       = month_tcol
+     ;--- stats
+       fout->RetrievedX_CORegionStats    = month_stats
+       fout->RetrievedX_CORegion5th95th  = month_5_95
+       fout->AvgAPrioriX_CO              = month_apriori
+   else
+     ;--- total column
+       fout->RetrievedCOTotalColumn        = month_tcol
+     ;--- stats
+       fout->RetrievedCOtcolRegionStats    = month_stats
+       fout->RetrievedCOtcolRegion5th95th  = month_5_95
+       fout->AvgAPrioriCOTotalColumn      = month_apriori
+   end if
    ;--- 1D vars
+   month_dofs!0               = "time"
+   month_dofs&time            = yearmonth
      fout->AvgDegreesofFreedomforSignal = month_dofs
-     fout->AvgAPrioriCOTotalColumn      = month_apriori
+   month_psurf!0               = "time"
+   month_psurf&time            = yearmonth
      fout->AvgSurfacePressure           = month_psurf
+   month_dryair!0               = "time"
+   month_dryair&time            = yearmonth
      fout->AvgDryAirColumn              = month_dryair
+   month_err!0               = "time"
+   month_err&time            = yearmonth
      fout->AvgError                     = month_err
+   month_rande!0               = "time"
+   month_rande&time            = yearmonth
      fout->AvgRandomError               = month_rande
+   month_smoothe!0               = "time"
+   month_smoothe&time            = yearmonth
      fout->AvgSmoothingError            = month_smoothe
 
    ;--- 2D vars
+   month_prior!0               = "time"
+   month_prior&time            = yearmonth
+   month_prior!1               = "lev"
      fout->AvgAPrioriCOMixingRatioProfile = month_prior
+   month_prof!0               = "time"
+   month_prof&time            = yearmonth
+   month_prof!1               = "lev"
      fout->AvgRetrievedCOMixingRatioProfile = month_prof
+   month_colak!0               = "time"
+   month_colak&time            = yearmonth
+   month_colak!1               = "lev"
      fout->AvgTotalColumnAveragingKernel = month_colak
 
    ;--- 3D vars
+   month_vmrak!0               = "time"
+   month_vmrak&time            = yearmonth
      fout->AvgRetrievalAveragingKernelMatrix = month_vmrak
 
 

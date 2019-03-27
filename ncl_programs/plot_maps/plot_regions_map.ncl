@@ -42,7 +42,7 @@ begin
   ;------------
   PLOTREGIONS    = True
      WITHKOPPEN  = False
-     WITHCO      = True
+     WITHCO      = False
 
 ;--------------------------------------------
 ; end user input
@@ -57,17 +57,18 @@ begin
       latmax                         = 80.
       lonmin                         = -170.
       lonmax                         = 185.
+      ;centerlon                      = 0
 
     ;  latmin                         =-50               ; zoom to Indonesia
     ;  latmax                         = 30
     ;  lonmin                         = 70
     ;  lonmax                         = 190
 
-      latmin                         = -25.               ; NH
-      latmax                         = 80.
-      lonmin                         = 30.
-      lonmax                         = 360.
-      centerlon                      = 180
+    ;  latmin                         = -25.               ; NH
+    ;  latmax                         = 80.
+    ;  lonmin                         = 30.
+    ;  lonmax                         = 360.
+    ;  centerlon                      = 180
 
     ;  latmin                         = 35.               ; USA
     ;  latmax                         = 70.
@@ -80,7 +81,7 @@ begin
     ;  lonmax                         = 150.
 
   if (PLOTREGIONS) then
-    mapType2 = "png"
+    mapType2 = "x11"
     mapName2 = tracer+"_regions"
   end if ;PLOT
 
@@ -96,43 +97,43 @@ begin
    ;                  (/-25., -10.,       145.,     151.5/),\  ;CONTRAIL avg
    ;                  (/-10.,  10.,       141.5,     151.5/)/)  ;New MSEA
 
-   region_names = (/"BBCanada", "BBSiberia", "Nino3.4", "DMI","DMI2", "TNA", "AO"/)
+   ;region_names = (/"BBCanada", "BBSiberia", "Nino3.4", "DMI","DMI2", "TNA", "AO"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./),\  ;Siberia
-                     (/ -5.,  5.,       -170.,     -120./),\ ;NINO3.4
-                     (/ -10.,  10.,      50.,      70./),\ ;DMI
-                     (/ -10.,  0.,       90.,      110./),\ ;DMI2
-                     (/ 5.,  25.,       -55.,      -15./), \ ;TNA
-                     (/ 70.,  70.25,     120.,    240./)/) ;AO
+   ;region_select = (/(/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./),\  ;Siberia
+   ;                  (/ -5.,  5.,       -170.,     -120./),\ ;NINO3.4
+   ;                  (/ -10.,  10.,      50.,      70./),\ ;DMI
+   ;                  (/ -10.,  0.,       90.,      110./),\ ;DMI2
+   ;                  (/ 5.,  25.,       -55.,      -15./), \ ;TNA
+   ;                  (/ 70.,  70.25,     120.,    240./)/) ;AO
 
-   ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-   ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-   ;                 "BBCAmerica", "BBSAmerica","BBSAmOcean",\
-   ;                  "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-   ;                 "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
+   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-   ;                  (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
-   ;                  (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
-   ;                  (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-   ;                  (/ 10.,  23.5,    -110.,      -60./),\  ;BBCAmerica
-   ;                  (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-   ;                  (/-25.,  -5.,     -100.,      -75./),\  ;BBSAmericaOcean
-   ;                  (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-   ;                  (/-25.,  -5.,       10.,       40./),\  ;BBSAfrica
-   ;                  (/-20.,  -5.,      -15.,       10./),\  ;BBSAfOcean
-   ;                  (/-10.,   8.,        90.,     130./),\  ;BBMSEA
-   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
-   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
-   ;                  (/  0.,  60.,        0.,      360./),\    ;NH
-   ;                  (/-60.,   0.,        0.,      360./) /)   ;SH
+   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+                     (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
+                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+                     (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
+                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+                     (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
+                     (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
+                     (/-10.,   8.,        95.,     125./),\  ;BBMSEA
+                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
+                     (/-45., -10.,       140.,     155./),\  ;BBEAu
+                     (/  0.,  60.,      -180.,     180./),\  ;NH
+                     (/-60.,   0.,      -180.,     180./) /) ;SH
 
 
    ; Tagged simulations
@@ -196,7 +197,7 @@ begin
       mapres@mpMaxLatF               = latmax
       mapres@mpMinLonF               = lonmin
       mapres@mpMaxLonF               = lonmax
-      mapres@mpCenterLonF            = centerlon
+    ;  mapres@mpCenterLonF            = centerlon
 
     mapres@vpXF = 0.1
     mapres@vpYF = 0.8
@@ -388,31 +389,31 @@ begin
       if (region_names(i).eq."SH".or.region_names(i).eq."NH") then 
          continue
       else if (region_names(i).eq."BBCAfrica") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),10,\
-        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),10,\
+                           (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."BBMSEA") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-        ;                   (region_select(i,0)+region_select(i,1))/2+5,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+                           (region_select(i,0)+region_select(i,1))/2+5,txres)
       else if (region_names(i).eq."AnthChina".or.region_names(i).eq."AnthUSA") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
-        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2+24,\
+                           (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."AnthIndi".or.region_names(i).eq."AnthEuro".or.\
-               region_names(i).eq."Buchholz et al. N.Aus".or.region_names(i).eq."BBSAmOcean") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
-         ;                  (region_select(i,0)+region_select(i,1))/2,txres)
+               region_names(i).eq."Buchholz et al. N.Aus") then 
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2-25,\
+                           (region_select(i,0)+region_select(i,1))/2,txres)
       else if (region_names(i).eq."CONTRAIL avg") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-         ;                  (region_select(i,0)+region_select(i,1))/2-10,txres)
-      else if (region_names(i).eq."BBSAfOcean") then 
-        ;dum = gsn_add_text(wks2,map1,region_names(i),0-10,\
-        ;                   (region_select(i,0)+region_select(i,1))/2,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+                           (region_select(i,0)+region_select(i,1))/2-10,txres)
+      else if (region_names(i).eq."BBSAfOcean".or.region_names(i).eq."BBSAmOcean") then 
+        dum = gsn_add_text(wks2,map1,region_names(i),region_select(i,2)+5,\
+                           region_select(i,0)-5,txres)
       else if (region_names(i).eq."New MSEA") then 
       txres@txFontColor = "red"
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-         ;                  (region_select(i,0)+region_select(i,1))/2+13,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+                           (region_select(i,0)+region_select(i,1))/2+13,txres)
       else
-        ;dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
-         ;                  (region_select(i,0)+region_select(i,1))/2,txres)
+        dum = gsn_add_text(wks2,map1,region_names(i),(region_select(i,2)+region_select(i,3))/2,\
+                           (region_select(i,0)+region_select(i,1))/2,txres)
       end if
       end if
       end if
@@ -424,11 +425,11 @@ begin
     end do
 
       txres@txFontColor = "red"
-     ;gsn_text_ndc(wks2,"Red = Land retrievals only",0.2,0.73,txres)
+     gsn_text_ndc(wks2,"Red = Land retrievals only",0.2,0.83,txres)
       txres@txFontColor = "blue"
-     ;gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.75,txres)
+     gsn_text_ndc(wks2,"Blue = Water retrievals only",0.2,0.85,txres)
       txres@txFontColor = "forestgreen"
-     ;gsn_text_ndc(wks2,"Green = Land, water and mixed retrievals",0.2,0.77,txres)
+     gsn_text_ndc(wks2,"Green = Land, water and mixed retrievals",0.2,0.87,txres)
 
    draw(map1)
 
@@ -499,7 +500,7 @@ begin
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
        else
-       boxres@gsLineColor      = "red"
+       boxres@gsLineColor      = "forestgreen"
        boxres@gsLineDashPattern  = 0 
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
