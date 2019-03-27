@@ -35,8 +35,8 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "BBCanada" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "BBSiberia"
+  loc = "CONTRAIL" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "CONTRAIL"
 
   version = "V8"
   retrieval = "T"
@@ -51,6 +51,8 @@ begin
   location_title = loc
     year_s = 2001
     year_e = 2017
+
+
 
   ;------------
   ; scale of outside sd
@@ -67,11 +69,11 @@ begin
     ;plttype@wkPaperSize = "A4"
      plttype@wkWidth = 1200
      plttype@wkHeight = 1200 
-      ymin       =-5e17
-      ymax       =10e17
-      spacing    =5e17
+      ;ymin       =-5e17
+      ;ymax       =10e17
+      ;spacing    =5e17
 
-
+  scale_factor = 1e-09
   
   CSV            = True
   if (CSV) then
@@ -98,13 +100,15 @@ begin
   ; -------------------------------
   ; names of data structures
   ; determined from an ncl_filedump
-  sat_tcol      = "RetrievedCOTotalColumn"
+  ;sat_tcol      = "RetrievedCOTotalColumn"
+  sat_tcol      = "RetrievedX_CO"
 
    
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
     timearray     = "time"
     sat_err       = "AvgError"
-    sat_num       = "RetrievedCOtcolRegionStats"
+    ;sat_num       = "RetrievedCOtcolRegionStats"
+    sat_num       = "RetrievedX_CORegionStats"
     sat_rand      = "AvgRandomError"
   else
     timearray     = "Time"
@@ -181,7 +185,7 @@ begin
     mopitt_rand    = mopitt_in[:]->$sat_rand$
     mopitt_time    = mopitt_in[:]->$timearray$       
 
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
     mopitt_num     = mopitt_in[:]->$sat_num$(:,7)
     mopitt_date    = str_split_by_length(tostring(mopitt_time),4)
     years = tointeger(mopitt_date(:,0))
@@ -337,14 +341,17 @@ if (PLOT) then
     res@gsnFrame            = False                 ; don't advance frame
     res@gsnMaximize         = True
 
-    res@trYMinF             = 1e18
-    res@trYMaxF             = 3.2e18
+    res@trYMinF             = 55
+    res@trYMaxF             = 110
+
+    ;res@trYMinF             = 1e18
+    ;res@trYMaxF             = 3.2e18
     res@trXMinF             = year_s
     res@trXMaxF             = year_e
 
-    res@tmYLMode            = "Explicit"	
-      res@tmYLValues            = (/1e18, 2e18, 3e18/)
-      res@tmYLLabels            = (/"1.0", "2.0", "3.0"/)
+    ;res@tmYLMode            = "Explicit"	
+    ;  res@tmYLValues            = (/1e18, 2e18, 3e18/)
+    ;  res@tmYLLabels            = (/"1.0", "2.0", "3.0"/)
 
     res@tmXBMode            = "Explicit"
       res@tmXBValues            = (/2005,2010,2015/)
@@ -357,14 +364,16 @@ if (PLOT) then
     res@tmXBMajorOutwardLengthF = 0.0               
     res@tmXBMinorOutwardLengthF = 0.0              
 
-    res@vpWidthF             = 1.8
+    res@vpWidthF             = 1.6
     res@vpHeightF            = 0.45                 ; set height of plot
 
     res@tiMainString         = ""
     res@tiXAxisString        = ""
-    res@tiYAxisString        = "CO Column"
-    res@gsnLeftString        = "molec. cm~S2~-2"
-    res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
+    ;res@tiYAxisString        = "CO Column"
+    ;res@gsnLeftString        = "molec. cm~S2~-2"
+    res@tiYAxisString        = "CO"
+    res@gsnLeftString        = "column average VMR (ppb)"
+    ;res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
  
     res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@lgPerimOn                = False           ; Turn off perimeter
@@ -382,7 +391,7 @@ if (PLOT) then
     res@pmLegendParallelPosF     = 0.615
     res@xyMarkLineMode           = "Markers"
     res@xyMarkerColor            = "grey34"
-  plot1 = gsn_csm_xy(wks,plottime,new_month_co_avg,res)
+  plot1 = gsn_csm_xy(wks,plottime,new_month_co_avg/scale_factor,res)
 
     res@xyMarkerSizeF            = 0.05
     res@xyMarkerColor            = "skyblue"
@@ -396,7 +405,7 @@ if (PLOT) then
     res@xyMarkLineMode            = "Lines"
     res@xyLineThicknessF          = 7.0
     res@xyLineColor               = "black"
-  plot2 = gsn_csm_xy(wks,plottime,climate_co_ext,res)
+  plot2 = gsn_csm_xy(wks,plottime,climate_co_ext/scale_factor,res)
   overlay(plot1, plot2)
 
   ; -------------------------------
@@ -409,21 +418,23 @@ if (PLOT) then
     res@gsnRightString            = "" 
     res@xyLineThicknessF          = 1.5
     res@xyLineColor               = "black"
-    res@trYMinF                   = -0.55e18
-    res@trYMaxF                   = 1.0e18
+    ;res@trYMinF                   = -0.55e18
+    ;res@trYMaxF                   = 1.0e18
     res@tiYAxisString             = "CO Anomaly"
     res@tmXBLabelsOn              = True
       res@tmXBLabelFontHeightF    = 0.10
 
-    res@trYMinF                  = ymin-0.05e18
-    res@trYMaxF                  = ymax+0.05e18
-    res@tmYLValues               = (/-0.5e18, 0e18, 0.5e18/)
-    res@tmYLLabels               = (/"-0.5", "0", "0.5"/)
+    res@trYMinF             = -15
+    res@trYMaxF             = 25
+    ;res@trYMinF                  = ymin-0.05e18
+    ;res@trYMaxF                  = ymax+0.05e18
+    ;res@tmYLValues               = (/-0.5e18, 0e18, 0.5e18/)
+    ;res@tmYLLabels               = (/"-0.5", "0", "0.5"/)
 
     res@gsnYRefLine      = 0.0
       res@gsnAboveYRefLineColor = "red"          ; above ref line fill red
       res@gsnBelowYRefLineColor = "blue"         ; below ref line fill blue
-  plot5 = gsn_csm_xy(wks,plottime,month_anomaly,res)
+  plot5 = gsn_csm_xy(wks,plottime,month_anomaly/scale_factor,res)
 
  ; add zero line
   res_lines                   = True              ; polyline mods desired
@@ -481,7 +492,7 @@ if (PLOT) then
      txres@txJust           = "CenterLeft"         ; font smaller. default big
      txres@txPerimOn        = True
      txres@txPerimThicknessF= 2.0
-    gsn_text_ndc(wks,location_title,0.16,0.84,txres)
+    gsn_text_ndc(wks,location_title,0.76,0.84,txres)
 
   draw(plot1)
   frame(wks)
@@ -503,7 +514,7 @@ if (CSV) then
 
   month_co_avg@_FillValue         = -999.99
 
-  alist  = [/toint(climate_time),new_month_co_avg,month_anomaly/]   ; List of variables to write.
+  alist  = [/toint(climate_time),new_month_co_avg/scale_factor,month_anomaly/scale_factor/]   ; List of variables to write.
 ;; Note: if you don't want spaces in CSV file, use the following format string.
  format = "%d,%g,%g"
 
