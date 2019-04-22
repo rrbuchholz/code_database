@@ -30,7 +30,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2001
+  ystart = 2005
   yend = 2017
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "CONTRAIL"
+  location = "BBNWAu"
 
   ;------------
   ; select daytime 
@@ -92,6 +92,7 @@ begin
   solarza        = "SolarZenithAngle"+suff
   surface_index  = "SurfaceIndex"+suff
   diag_2         = "RetrievalAnomalyDiagnostic"+suff
+  swath_index    = "SwathIndex"+suff
 
    region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
                     "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
@@ -120,11 +121,11 @@ begin
                      (/  0.,  60.,      -180.,     180./),\  ;NH
                      (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   region_names := (/"CONTRAIL","TEST"/)
+   ;region_names := (/"CONTRAIL","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
-                      (/-60.,   0.,      -180.,     180./) /)   ; TEST
+   ;region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+   ;                   (/-60.,   0.,      -180.,     180./) /)   ; TEST
 
    ind_region = ind(region_names.eq.location)
 
@@ -214,6 +215,7 @@ do y = ystart,yend ; loop through years
       fin = addfile(all_files(i), "r")            ; read in
       sza          := fin->$solarza$
       surf_type    := fin->$surface_index$
+      pixel_num    := fin->$swath_index$
       lat          := fin->$latitude$
       lon          := fin->$longitude$
       diag_anom    := fin->$diag_2$
@@ -226,7 +228,8 @@ do y = ystart,yend ; loop through years
       ;--------------------------------------------
       region := ind(sza.le.dayflag.and.\
                  ;(surf_type.eq.1.or.surf_type.eq.0).and.\ 
-                 ;surf_type.eq.s_id.and.\
+                 surf_type.eq.s_id.and.\
+                 pixel_num.ne.3.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\

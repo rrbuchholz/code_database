@@ -30,7 +30,7 @@ begin
 ;***************************************************************
     version = "V7T"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_SOND_2001_2016.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_Jan_2002_2017.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
     ;sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
@@ -48,6 +48,10 @@ begin
         mapType@wkWidth = 1800
         mapType@wkHeight = 1800 
    end if
+
+   DIFF = True
+     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201601_Jandiff.nc"
+     diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201701_Jandiff.nc"
 
 ;***************************************************************
 ; End User Input
@@ -102,6 +106,27 @@ begin
   rel_sd&lat = latitude
   rel_sd!1 = "lon"
   rel_sd&lon = longitude
+
+;--------------------------------------------
+; Extract MOPITT diffs
+;--------------------------------------------
+ if (DIFF) then
+  diff_fin = addfile(diff_file1, "r")             ; load
+  diff_data = diff_fin->$mopitt_tracer$      ; extract total column data (:,:)
+
+  diff_data!0 = "lon"
+  diff_data!1 = "lat"
+  diff_tracer = diff_data(lat|:, lon|:)             ; reorder - NCL needs lon as rightmost coordinate
+
+  diff2_fin = addfile(diff_file2, "r")             ; load
+  diff2_data = diff2_fin->$mopitt_tracer$      ; extract total column data (:,:)
+
+  diff2_data!0 = "lon"
+  diff2_data!1 = "lat"
+  diff2_tracer = diff2_data(lat|:, lon|:)             ; reorder - NCL needs lon as rightmost coordinate
+
+
+end if
 
 
 ;--------------------------------------------
@@ -162,23 +187,29 @@ begin
     ;  mapres@mpMinLonF               = -180
     ;  mapres@mpMaxLonF               = -50
       ;-------------------------------------
-      ;mapres@mpMinLatF               = -70       ; zoom to SH
-      ;mapres@mpMaxLatF               = 15
-      ;mapres@mpMinLonF               = -120
-      ;mapres@mpMaxLonF               = 245
-      ;mapres@mpCenterLonF            = 70
+      mapres@mpMinLatF               = -70       ; zoom to SH
+      mapres@mpMaxLatF               = 15
+      mapres@mpMinLonF               = -180
+      mapres@mpMaxLonF               = 180
+      mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      ;mapres@mpMinLatF               = -60       ; zoom to Aus
-      ;mapres@mpMaxLatF               = -10
-      ;mapres@mpMinLonF               = 110
-      ;mapres@mpMaxLonF               = 180
-      ;mapres@mpCenterLonF            = 70
+      mapres@mpMinLatF               = -60       ; zoom to Aus
+      mapres@mpMaxLatF               = -10
+      mapres@mpMinLonF               = 110
+      mapres@mpMaxLonF               = 220
+      mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      mapres@mpMinLatF               = -85       ; zoom to +/- 80
-      mapres@mpMaxLatF               = 85
-      mapres@mpMinLonF               = -170
-      mapres@mpMaxLonF               = 185
-      mapres@mpCenterLonF            = 0
+      ;mapres@mpMinLatF               = -85       ; zoom to +/- 80
+      ;mapres@mpMaxLatF               = 85
+      ;mapres@mpMinLonF               = -170
+      ;mapres@mpMaxLonF               = 185
+      ;mapres@mpCenterLonF            = 0
+      ;-------------------------------------
+      ;mapres@mpMinLatF               = -60       ; zoom to MSEA
+      ;mapres@mpMaxLatF               = 40
+      ;mapres@mpMinLonF               = 60
+      ;mapres@mpMaxLonF               = 230
+      ;mapres@mpCenterLonF            = 70
 
     ;-----------------------------------
     ; end define resources
@@ -190,9 +221,12 @@ begin
     mapres@lbTitleString             = "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
     mapres@gsnRightString            = ""               ; change right title
     mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    labels = fspan(0.5e18,2.8e18, 20)
-    labels_strings = (/"0.5","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9",\
-                       "2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8" /); ,"2.8","2.9",\
+    labels = fspan(0.9e18,2.5e18, 33)
+    print(labels)
+    labels_strings = (/"0.9","0.95","1.0","1.05","1.1","1.15","1.2","1.25","1.3","1.35",\
+                       "1.4","1.45","1.5","1.55","1.6","1.65","1.7","1.75","1.8","1.85",\
+                       "1.9","1.95","2.0","2.05","2.1","2.15","2.2","2.25","2.3","2.35",\
+                       "2.4","2.45","2.5" /); "2.6","2.7","2.8","2.9",\
     ;                   "3.0"/)
     mapres@cnLevels                  = labels
     mapres@lbLabelStrings            = labels_strings
@@ -238,6 +272,45 @@ begin
 
   ;  map2 = gsn_csm_contour_map_ce(wks,rel_sd(::-1,:),mapres)
     map2 = gsn_csm_contour_map_ce(wks,sd_tracer(::-1,:),mapres)
+
+    if (DIFF) then
+    ; ===================
+    ; Difference plot
+    ; ===================
+    cmap = read_colormap_file("BlWhRe")
+printVarSummary(cmap)
+    colour_arr := (/cmap(40,:),cmap(48,:),cmap(50,:),cmap(50,:),cmap(51,:),cmap(52,:),\
+                 cmap(54,:), cmap(56,:),cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
+                 cmap(85,:),cmap(90,:),cmap(95,:),cmap(100,:)/)
+    mapres@cnFillPalette       = colour_arr
+    mapres@cnLevelSelectionMode      = "ExplicitLevels"
+    mapres@lbTitleString             = "SD"             ; Label Bar title
+    mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
+    labels := fspan(-2.0e17,8e17, 16)
+    labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
+                       "3.0","4.0","5.0","6.0","7.0","8.0",\
+                       "9.0","10.0","11.0","12.0","13.0"/)
+
+    ;labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
+    ;                   "3.0","4.0","5.0","6.0","7.0","8.0",\
+    ;                   "9.0","10.0","11.0","12.0","13.0"/)
+    print(labels)
+    mapres@cnLevels                  := labels
+    mapres@lbLabelStrings            := labels_strings
+     ;tcol
+    ;mapres@cnLevelSelectionMode      = "ManualLevels"
+     ; mapres@cnMinLevelValF          = 0.2e17   ; set the minimum contour level
+     ; mapres@cnMaxLevelValF          = 3.2e17    ; set the maximum contour level
+     ; mapres@cnLevelSpacingF         = 0.25e17    ; set the interval between contours
+      ;vmr
+    ;  mapres@cnMinLevelValF          = 5.          ; set the minimum contour level
+    ;  mapres@cnMaxLevelValF          = 30.         ; set the maximum contour level
+    ;  mapres@cnLevelSpacingF         = 0.5          ; set the interval between contours
+
+    map2 = gsn_csm_contour_map_ce(wks,diff_tracer(::-1,:),mapres)
+    map3 = gsn_csm_contour_map_ce(wks,diff2_tracer(::-1,:),mapres)
+
+    end if
 
     ;-------------------
     ; draw region boxes
@@ -313,7 +386,6 @@ begin
       ;aao_lines_up(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-62,-45/),arrow_res)
      ; aao_lines_down(j)=add_arrow(wks, map2,(/-8+40*j,-8+40*j/),(/-45,-62/),arrow_res)
     end do
-
 
     ;-------------------
     ; add text for regions
@@ -428,17 +500,23 @@ begin
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) CO Std. Dev."/)
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
-  panel_res@gsnPanelFigureStringsFontHeightF = 0.014
+  panel_res@gsnPanelFigureStringsFontHeightF = 0.010
   panel_res@gsnPanelFigureStringsPerimOn = True
   panel_res@gsnPanelMainString    = "MOPITT Total column, SOND, 2001-2016"
-  panel_res@gsnPanelMainFontHeightF = 0.028 
-  ;gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
-  ;frame(wks)
+  panel_res@gsnPanelMainFontHeightF = 0.024 
 
-  draw(map)    ; All plots will be drawn.
+  if (DIFF) then
+    panel_res@gsnPanelFigureStrings = (/"(a) Average January CO 2002-2017","(b) Jan 2003 difference to average","(b) Nov 2015 difference to average"/)
+    gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
+  else 
+    panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) CO Std. Dev."/)
+    gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
+  end if 
   frame(wks)
+
+  ;draw(map)    ; All plots will be drawn.
+  ;frame(wks)
 
   end if    ; PLOT
 
