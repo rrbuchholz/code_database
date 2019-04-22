@@ -25,11 +25,11 @@ begin
 ; user input
 ;--------------------------------------------
   ystart = 2000
-  yend = 2019
+  yend = 2015
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
@@ -477,8 +477,24 @@ do t = 0, dimsizes(tracers)-1
        regsum!0 = "region"
        regsum&region = region_names
        regsum!1 = "time"
-       regsum&time = time
+       regsum&time = yyyymmdd
 
+    ;------------------
+    ; Regional year sums
+    ;------------------
+    region_year_sum_array = new((/dimsizes(year_array),dimsizes(region_names)/), float)
+    do i = 0, dimsizes(year_array)-1
+      year_ind := ind(regsum&time.gt.year_array(i)*10000.and.\
+                 regsum&time.lt.(year_array(i)+1)*10000)
+      region_year_sum_array(i,:) = dim_sum_n(regsum(:,year_ind),1)
+    end do
+
+     print("Year, regiobnal emissions of "+tracer+" (Tg)")
+    do j = 0, dimsizes(region_names)-1
+     print(year_array+" "+region_names(j)+" "+region_year_sum_array(:,j))
+    end do
+
+     regsum&time := time
        ;printVarSummary(regsum)
 
 ;********************************************
