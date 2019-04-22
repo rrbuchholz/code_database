@@ -44,7 +44,8 @@ for x in $arr ; do
          ${workdir}2016/${x}2016.nc \
          ${workdir}2017/${x}2017.nc \
          ${workdir}2018/${x}2018.nc \
-         ${workdir}allyears/${x}2000_2018_newEF.nc       # Concatenate along
+         ${workdir}2019/${x}2019.nc \
+         ${workdir}allyears/${x}2000_2019.nc       # Concatenate along
 #ncrcat    ${x}2018.nc \
 #          ${x}2019.nc \
 #          ${x}2020.nc \

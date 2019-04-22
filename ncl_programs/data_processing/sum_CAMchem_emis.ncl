@@ -24,17 +24,17 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2002
-  yend = 2017
+  ystart = 2000
+  yend = 2019
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
-  tracers = (/"HCN"/)
-  sm_tracers = (/"hcm"/)
+  ;tracers = (/"HCN"/)
+  ;sm_tracers = (/"hcn"/)
   ;tracers = (/"BC", "OC", "NO", "NH3", "CO", \
   ;            "C2H6", "C3H6", "C3H8", "CH2O", "CH3CHO",\
   ;            "CH3COCH3", "SO2"/)
@@ -48,11 +48,22 @@ begin
   ;            "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
   ; no MW data: XYLENE, BENZ
 
+ ; tracers = (/"bc_a4","BENZENE","BIGALK","BIGENE","C2H2","C2H4","C2H5OH","C2H6","C3H6","C3H8","BC","CH2O","CH3CHO",\
+              ;"CH3CN","CH3COCH3","CH3COCHO","CH3COOH","CH3OH","CH4","CO","CO2","CRESOL","DMS","GLYALD","HCN",\
+;              "HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","NH3","NO","NO2","num_bc_a4","num_pom_a4",\
+;              "num_so4_a1","OC","pom_a4","SO2","so4_a1","SOAG","SVOC","TERPENES","TOLUENE","XYLENES"/)
+ ; tracers = (/"SVOC","MTERP","TOLUENE","XYLENES"/)
+  tracers = (/"CO"/)
+
+
+  sm_tracers = tracers
+
+
 
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   NETCDF = True
+   NETCDF = False
 
   ; -------------------------------
   ; begin a tracer loop
@@ -75,6 +86,8 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."QFED/FINN") then
      emis_dir = top_dir+ "qfed/cam_"+reso+"/from_co2/v2.5/"
      e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
+     ;emis_dir = top_dir+ "qfed/cam_0.9x1.25/from_co2/v2.4/"
+     ;e_file_in = "qfedfinn.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
      ;e_file_in = "qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+"_newEF.nc"
     else if (repository.eq."QFED_native") then
      emis_dir = top_dir+ "qfed/orig_0.25/"+sm_tracer+"_"+ystart+"/"
@@ -200,6 +213,7 @@ do t = 0, dimsizes(tracers)-1
   if (repository.eq."FINN".or.repository.eq."FINN1.5"\
       .or.repository.eq."FINN1.6") then
     emiss           = "fire"
+    ;emiss           = "bb"
   else if (repository.eq."QFED_native") then
     emiss           = "biomass"
   else if (repository.eq."CMIP6") then
@@ -286,16 +300,21 @@ do t = 0, dimsizes(tracers)-1
     ; molec. cm-2 s-1 to g per day per gridbox
     ; -------------------------------
      ; not in MW file: XYLENE, HCOOH, HCN, CO2, CH3CN, C2H2, BENZ
-     if (tracer.eq."C2H2") then
-       mw = 26.036
+     if (tracer.eq."TERPENES".or.\
+         tracer.eq."C10H16".or.\
+         tracer.eq."MTERP") then
+       mw = 136.228
      else if (tracer.eq."CH3CN") then
        mw = 41.054
-     else if (tracer.eq."CO2") then
-       mw = 44.008
-     else if (tracer.eq."HCN") then
-       mw = 27.028
-     else if (tracer.eq."HCOOH") then
-       mw = 46.024
+     else if (tracer.eq."BENZ") then
+       mw = 78.1134
+     else if (tracer.eq."XYLENE".or.\
+              tracer.eq."XYLENES") then
+       mw = 106.167
+     else if (tracer.eq."IVOC".or.\
+              tracer.eq."SVOC".or.\
+              tracer.eq."SOAG") then
+       mw = 12.011
      else
        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
      end if
@@ -371,7 +390,7 @@ do t = 0, dimsizes(tracers)-1
      end if
 
     ;------------------
-    ; Year averages
+    ; Year sums
     ;------------------
     year_array = ispan(ystart,yend,1)
     year_sum_array = new((/dimsizes(year_array)/), float)
@@ -385,7 +404,7 @@ do t = 0, dimsizes(tracers)-1
      print(year_array+" "+year_sum_array)
 
     ;------------------
-    ; Month averages
+    ; Month sums
     ;------------------
     month_array = new(dimsizes(year_array)*12, integer)
     month_sum_array = new(dimsizes(month_array), float)
@@ -399,8 +418,8 @@ do t = 0, dimsizes(tracers)-1
       end do
     end do
 
-     print("Month, emissions of "+tracer+" (Tg)")
-     print(month_array+" "+month_sum_array)
+     ;print("Month, emissions of "+tracer+" (Tg)")
+     ;print(month_array+" "+month_sum_array)
 
     ;------------------
     ; Total average

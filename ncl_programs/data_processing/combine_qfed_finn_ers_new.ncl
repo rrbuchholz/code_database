@@ -49,7 +49,7 @@ begin
 
   if (NRT) then
     if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD=<value> from command line?
-       YYYYMMDD = 20171101
+       YYYYMMDD = 20190401
     end if
     splitdate = str_split_by_length(tostring(YYYYMMDD), 4)
     year = toint(splitdate(0))
@@ -104,9 +104,11 @@ begin
     finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_min_jun2017.csv"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"_min/"
   else
-    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_jan2019.csv"
+    finn_emiss = "/net/modeling1/home/buchholz/data/BASEEmissionFactors_20190318.csv"
   end if
   end if
+
+  finn_VOC = "/net/modeling1/home/buchholz/data/VOC_EmissionSpeciation_20190318.csv"
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -223,7 +225,7 @@ begin
   dummy_var2 = dummy_var(0,1:)
   var_names = str_upper(dummy_var2)
   ;--- replace names to be consistent with MOZART
-  var_names = where(var_names.eq."NOX AS NO","ignore",var_names)   ; ignore NOx - use NO and NO2
+  var_names = where(var_names.eq."NOXASNO","ignore",var_names)   ; ignore NOx - use NO and NO2
   var_names = where(var_names.eq."SO2","SO2_orig",var_names)   ; split up SO2
 
   ;---reshape data to 2D array, and convert to float
@@ -311,8 +313,9 @@ begin
   do tracer = 0,dimsizes(var_names)-1
   ;do tracer = 2,4
     if (var_names(tracer).eq."NMOC".or.\
+        var_names(tracer).eq."NMHC".or.\
         var_names(tracer).eq."ignore".or.\
-        var_names(tracer).eq."PM2.5".or.\
+        var_names(tracer).eq."PM25".or.\
         var_names(tracer).eq."PM10") then
       continue
     else
@@ -371,13 +374,8 @@ begin
      PercDiff = (SumDiff/SumOrigGrid)*100
    end if
 
-     ;PercDiff = (SumDiff/SumOrigGrid)*100
      MaxDiff = max(PercDiff)
      max_ind := ind(PercDiff.eq.MaxDiff)
-   ;print("Maximum diff: lowres: "+sprintf("%2.2e",SumOrigGrid(max_ind))+\
-   ;      "  highres: "+sprintf("%2.2e",Sum_Regrid(max_ind))+   \
-   ;      "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+  \
-   ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
 
    print("Maximum percent diff in "+var_names(tracer)+\
          " from regridding: "+sprintf("%2.2f",PercDiff(max_ind))+"%"+\
@@ -463,9 +461,9 @@ begin
         fAtt@creation_date      = systemfunc ("date")
         fAtt@source             = "QFED Level3b v2.5_r1 Gridded Emission Estimates:"+\
                                   " NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
-                                  " FINN v1.6: C. Wiedinmyer 2015"
+                                  " FINN v1.5: C. Wiedinmyer 2015"
         fAtt@title              = "Emissions of "+ var_names(tracer)+\
-                                  " from FINN v1.6 x QFED " +\
+                                  " from FINN v1.5 x QFED " +\
                                    species+", daily"
 
        fileattdef(fout, fAtt)
@@ -499,6 +497,233 @@ begin
   tracername := var_names(tracer)
 
   end do ; g/kg emission factors
+
+
+  ;********************************************
+  ; VOCs
+  ; -------------------------------
+  ; load FINN VOC speciation
+  ; -------------------------------
+  ;---read the values in as 1D lines
+  voc_in  = asciiread(finn_VOC,-1,"string")
+
+  ;--- collect data
+  delim  = ","
+  header2 = voc_in(0)
+  data2 = voc_in(1:)
+  nlines2 = dimsizes(data2)
+  ncols2  = dimsizes(str_split(data2(0),delim))
+  print("columns = " + ncols2)
+
+  ;--- separate header for landtype
+  dummy_var3 = str_split_csv(header2,delim,0)
+  voc_vtype = dummy_var3(0,1:)
+
+  ;---reshape data as 2D array, and convert to float
+  ;---account for missing values
+  strs2 = str_split_csv(data2, delim, 0)  
+  ;--- read in species types
+  dummy_var4 = strs2(:,0) 
+  voc_spec = str_upper(dummy_var4) 
+  print(voc_spec)
+
+  speciate = tofloat(strs2(:,1:))  
+    ;--- define attributes
+    speciate!0 = "tracer"
+    speciate&tracer = voc_spec
+    speciate!1 = "vegtype"
+    speciate&vegtype = voc_vtype
+    speciate@units = ""
+    speciate@_FillValue = -9999.99
+
+  ;print(speciate)
+
+   ; -------------------------------
+   ; apply VOC speciation
+   ; -------------------------------
+   nmoc_ind = ind(var_names.eq."NMOC")    ; get index of nmoc
+
+   do voctype = 0,dimsizes(voc_spec)-1
+   ;do voctype = 0,0
+    if (voc_spec(voctype).eq."NO".or.\
+        voc_spec(voctype).eq."IGNORE".or.\
+        voc_spec(voctype).eq."ONIT") then
+      ; ignore NO in VOC table,
+      ; ONIT is all zeros
+      continue
+    else
+      print("Calculating VOC speciation...")
+      voc_tracer_emiss:= co2_grass * e_factors(0,nmoc_ind)*speciate(voctype,0) +\
+                        co2_savan * e_factors(1,nmoc_ind)*speciate(voctype,1) +\
+                        co2_trop * e_factors(2,nmoc_ind)*speciate(voctype,2) +\
+                        co2_xtrop * e_factors(3,nmoc_ind)*speciate(voctype,3)
+    end if
+     copy_VarAtts(co2_all,voc_tracer_emiss)
+     copy_VarCoords(co2_all,voc_tracer_emiss)
+
+   ; -------------------------------
+   ; convert to CAM-Chem units
+   ; moles s-1 m-2 to molec. cm-2 s-1
+   ;
+   ; VOC factors convert from kg to moles
+   ; so no need to do mw weight step
+   ; -------------------------------
+     print("No need for MW, emission factor to NMOC converts kg/s -> moles/s")
+     print(voc_spec(voctype))
+     voc_tracer_emiss = voc_tracer_emiss/(10000)     ; m-2 -> cm-2
+     voc_tracer_emiss = voc_tracer_emiss*NAv         ; moles -> molec
+       voc_tracer_emiss@units = "molecules/cm2/s"
+
+    ; -------------------------------
+    ; regrid to CAM-chem structure
+    ; 1.9 x 2.5 or 0.94 x 1.25
+    ; -------------------------------
+     opt    = False
+     voc_emiss_regrid  := area_conserve_remap_Wrap(voc_tracer_emiss&lon,voc_tracer_emiss&lat, \
+                                         voc_tracer_emiss , \
+                                         newlon, newlat, opt)  ; (ntim,96,144)
+    ; printVarSummary(voc_emiss_regrid)
+
+     ;--- sanity check
+     SumOrigGrid_voc = wgt_areasum2 (voc_tracer_emiss , wgt_QFED, 0) 
+     Sum_Regrid_voc = wgt_areasum2 (voc_emiss_regrid, wgt_CAM, 0) 
+     SumDiff_voc = SumOrigGrid_voc-Sum_Regrid_voc
+
+   if (any(SumOrigGrid_voc.eq.0)) then
+     print("No emissions for "+voc_spec(voctype)+" in some entries of " + year)
+     nonzero_ind = ind(SumOrigGrid_voc.ne.0)
+     PercDiff_voc = (SumDiff_voc(nonzero_ind)/SumOrigGrid_voc(nonzero_ind))*100
+     print("-------------------------------------------------")
+     print("lowres: "+SumOrigGrid_voc+", highres: "+Sum_Regrid_voc)
+   else
+     PercDiff_voc = (SumDiff_voc/SumOrigGrid_voc)*100
+   end if
+
+     MaxDiff_voc = max(PercDiff_voc)
+     max_ind_voc := ind(PercDiff_voc.eq.MaxDiff_voc)
+     ;print("Maximum diff: lowres: "+sprintf("%2.2e",SumOrigGrid(max_ind))+\
+     ;      "  highres: "+sprintf("%2.2e",Sum_Regrid(max_ind))+   \
+     ;      "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+\
+     ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
+     print("Maximum percent diff in "+voc_spec(voctype)+\
+        " from regridding: "+sprintf("%2.2f",PercDiff(max_ind_voc))+"%"+\
+         " on date: " + cd_calendar(co2_all&time(max_ind_voc),2))
+     print("-------------------------------------------------")
+
+
+    ;--------------------------------------------
+    ; Write out to an netCDF file
+    ;--------------------------------------------
+    if (netCDF) then
+      ;-------------------
+      ; create file for each 
+      ; CAM-chem species
+      ;-------------------
+      if (NRT) then
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year_range+".nc"
+        template = addfile(outpath+outfilename, "r")            ; read in
+           date_template = template->date
+           bb_template = template->bb
+           bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
+           ;bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
+           delete(bb_template@_FillValue)
+           delete(bb_template@missing_value)
+           delete(bb_template@fmissing_value)
+           bb_template@_FillValue := 0.0
+           bb_template@missing_value := 0.0
+           bb_template@fmissing_value := 0.0
+        fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
+      else if (MIN_EF)
+        outfilename = "qfed.emis.min_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else if (MAX_EF)
+        outfilename = "qfed.emis.max_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      else 
+        outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
+        fout = addfile(outpath+outfilename, "c")
+      end if
+      end if
+      end if
+
+
+      if (NRT) then
+         ind_overwrite = ind(date_template.eq.date)
+           delete(voc_emiss_regrid@missing_value)
+           delete(voc_emiss_regrid@fmissing_value)
+           voc_emiss_regrid = where(ismissing(voc_emiss_regrid),0,voc_emiss_regrid) ; replace missing with zeros for calculations
+           voc_emiss_regrid@_FillValue := 0.0
+           voc_emiss_regrid@missing_value := 0.0
+           voc_emiss_regrid@fmissing_value := 0.0
+           voc_emiss_regrid@vmax   := tofloat(max(voc_emiss_regrid))
+           voc_emiss_regrid@vmin   := tofloat(min(voc_emiss_regrid))
+
+         emiss_overwrite = bb_template
+         ten_forward = ind_overwrite+10
+         xnew = rm_single_dims(voc_emiss_regrid)
+         emiss_conform = conform(emiss_overwrite(ind_overwrite:ten_forward,:,:),xnew, (/1,2/))
+         emiss_overwrite(ind_overwrite:ten_forward,:,:) = (/emiss_conform/)
+
+           emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
+           emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
+           emiss_overwrite@long_name := voc_spec(voctype)+" QFED/FINN fire emissions"
+
+       ;--- emissions
+         fout->bb               = emiss_overwrite
+
+      else
+      ;------------
+      ; File 
+      ; Attributes
+      ;------------
+      setfileoption(fout, "DefineMode",True)
+      fAtt                      = True
+        fAtt@molecular_weight   = mw
+        fAtt@conventions        = "CF"
+        fAtt@history            = species+" is from QFED, Level3b v2.5 "+\
+                                  "(qfed-2.5_r1) Gridded Emission Estimates, with "+\
+                                  "FINN emission ratios applied"
+        fAtt@author             = "R. R. Buchholz (buchholz@ucar.edu)"
+        fAtt@creation_date      = systemfunc ("date")
+        fAtt@source             = "QFED: NASA/GSFC/GMAO GEOS-5 Aerosol Group;"+\
+                                  " FINN v1.5: C. Wiedinmyer 2017"
+        fAtt@title              = "Emissions of "+ voc_spec(voctype)+\
+                                  " from FINN v1.5 x QFED" +\
+                                   species+", daily"
+
+
+
+       fileattdef(fout, fAtt)
+       setfileoption(fout, "DefineMode",False)
+
+      ;------------
+      ; Coordinate Variables
+      ;------------
+        dimNames = (/"time", "lat", "lon"/)  
+	dim_Sizes = (/ -1   ,  dimsizes(emiss_regrid&lat),  dimsizes(emiss_regrid&lon)/) 
+	dimUnlim = (/ True , False, False/)   
+	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
+
+      ;------------
+      ; Variables
+      ;------------
+      voc_emiss_regrid@long_name = voc_spec(voctype)+" QFED/FINN fire emissions"
+      emiss_regrid@_FillValue   := 0.0
+      voc_emiss_regrid@vmax      = max(voc_emiss_regrid)
+      voc_emiss_regrid@vmin      = min(voc_emiss_regrid)
+      delete(voc_emiss_regrid@missing_value)
+      delete(voc_emiss_regrid@fmissing_value)
+
+       ;--- date
+         fout->date             = date
+       ;--- emissions
+         fout->bb               = voc_emiss_regrid
+      end if ;NRT or Reanalysis
+
+    end if ;NetCDF
+
+   end do ; VOC loop
+
 
 
   ;********************************************
