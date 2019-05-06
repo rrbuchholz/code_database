@@ -30,10 +30,11 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20190412;
+$current_date = 20190503;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
+
 
 #------------------------------
 # set up locations
@@ -45,6 +46,7 @@ $http_address = "https://portal.nccs.nasa.gov/datashare/gmao_ops/qfed/0.25_deg/Y
 #print OUT "$ftp_address\n";                               #DEBUG
 print OUT "$http_address\n";                               #DEBUG
 
+
 #------------------------------
 # open log to see last time processed
 $proclog = "$topdir/.emission_processlog";
@@ -54,6 +56,7 @@ $processed = grep { /$current_date/ } @lines;
 close(IN);
 
 print OUT "Is current date processed: $processed\n";      #DEBUG
+
 
 #------------------------------
 # Data download
@@ -78,6 +81,7 @@ else{
              `wget -nd -r --no-parent -N -q -P $dir -A $fname $http_address`;
 }
 
+
 #------------------------------
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
@@ -88,10 +92,11 @@ $codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing
 if ($check_again ne '' && $processed == 0){
   # download there and not done
   print OUT "Processing still needed, performing . . .\n";
-     # --- call to NCL processing script ---#
-     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
-  print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";            #DEBUG
+     # --- call to NCL processing script ---#
+     print OUT "/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date  NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat\n";            #DEBUG
+
+     `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date NRT=True $codehome/combine_qfed_finn_ers.ncl > $topdir/out.dat`;
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
@@ -106,10 +111,12 @@ else{
   print OUT "File still not available . . .\n";
 }
 
+
+
 #------------------------------
 #Check Processed and send e-mail
-chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
-#$current_date_check = $current_date+10;
+#chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
+$current_date_check = $current_date+10;
 chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
