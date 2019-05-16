@@ -3,7 +3,7 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - For use with MOPITT CO version 6 or 7, level 2 product
+;   - For use with MOPITT CO version 6, 7 or 8, level 2 product
 ;   - Choose from stations:
 ;       Arrival Heights, Ascension, Boulder, Bremen, Darwin, Eureka, Izana,
 ;       Jungfraujoch, Kiruna, Lauder, La Reunion, Mauna Loa, Ny Alesund, 
@@ -33,23 +33,18 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7T"
-  ret = "T"
-  location_name = "Paramaribo"
-  if (version.eq."V6J") then
+  ystart = 2001
+  yend = 2019
+  version = "V8"
+  ret = "J"
+  location_name = "Eureka"
+  if (version.eq."V6".and.ret.eq."J") then
    ;remove 200003/0303 for V6J - nTime is defined too large for NCL (unlimited)
-    dummy = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02"+ret+"-*.he5")
+    dummy = systemfunc ("ls /MOPITT/"+version+ret+"/Archive/L2/*/*/MOP02"+ret+"-*.he5")
     all_files = dummy(235:dimsizes(dummy)-1)
   else 
-    all_files = systemfunc ("ls /MOPITT/"+version+"/Archive/L2/*/*/MOP02"+ret+"-*.he5")
+    infolder = "/MOPITT/"+version+ret+"/Archive/L2/"
   end if
-
-  ; -------------------------------
-  ; Start and truncation dates
-  ; (beta files when prelim calibration)
-  ; -------------------------------
-   start_date = 20010101
-   truncation_date = 20170101
 
   ;------------
   ; distance around 
@@ -68,7 +63,7 @@ begin
   ; toggles
   ;------------
   netCDF         = True
-    outdir = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"
+    outdir = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/"
 
 ;--------------------------------------------
 ; end user input
@@ -101,7 +96,7 @@ begin
 
 
     ; New parameters in MOPITT files from V7 onwards
-    if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
+    if (version.eq."V7".or.version.eq."V8") then
       diag_1       = "RetrievalAnomalyDiagnostic"+suff
       diag_2       = "RetrievedCOTotalColumnDiagnostics"+suff
       col_avker    = "TotalColumnAveragingKernel"+suff
@@ -109,149 +104,85 @@ begin
       dry_air_col    = "DryAirColumn"+suff
     end if   
 
-    location = location_name
+   ; set up station coordinate parameters
+   station_names = (/"Altzomoni","Arrival Heights", "Ascension", "Boulder", "Bremen", "Darwin",\
+                     "Eureka", "Izana", "Jungfraujoch", "Kiruna", "Lauder", "La Reunion",\
+                     "Mauna Loa", "Ny Alesund", "Paris", "Paramibo", "Rikubetsu", "St Petersburg",\
+                     "Thule", "Toronto", "Tsukuba", "Wollongong", "Zugspitze"/)
 
-  if (location_name.eq."Altzomoni") then
-    location_lat = 19.12
-    location_lon = -98.66
-  else if (location_name.eq."Arrival Heights") then
-    location_lat = -77.82
-    location_lon = 166.65
-    location = "ArrivalHeights"
-  else if (location_name.eq."Ascension") then
-    location_lat = -7.91
-    location_lon = -14.33
-  else if (location_name.eq."Boulder") then
-    location_lat = 39.99
-    location_lon = -105.26
-  else if (location_name.eq."Bremen") then
-    location_lat = 53.10
-    location_lon = 8.85
-  else if (location_name.eq."Darwin") then ; TCCON
-    location_lat = -12.424
-    location_lon = 130.892
-  else if (location_name.eq."Eureka") then
-    location_lat = 80.05
-    location_lon = -82.42
-  else if (location_name.eq."Izana") then
-    location_lat = 28.30
-    location_lon = -16.48
-  else if (location_name.eq."Jungfraujoch") then
-    location_lat = 46.55
-    location_lon = 7.98
-    location = "Jungfrau"
-  else if (location_name.eq."Kiruna") then
-    location_lat = 67.84
-    location_lon = 20.41
-  else if (location_name.eq."Lauder") then
-    location_lat = -45.038
-    location_lon = 169.684
-  else if (location_name.eq."La Reunion") then
-    location_lat = -20.901
-    location_lon = 55.485
-    location = "Reunion"
-  else if (location_name.eq."Mauna Loa") then
-    location_lat = 19.54
-    location_lon = -155.58
-    location = "MaunaLoa"
-  else if (location_name.eq."Ny Alesund") then
-    location_lat = 78.923
-    location_lon = 11.923
-    location = "NyAlesund"
-  else if (location_name.eq."Paris") then
-    location_lat = 48.97
-    location_lon = 2.366
-  else if (location_name.eq."Paramaribo") then
-    location_lat = 5.75
-    location_lon = -55.2
-  else if (location_name.eq."Rikubetsu") then
-    location_lat = 43.46
-    location_lon = 143.8
-  else if (location_name.eq."St Petersburg") then
-    location_lat = 59.88
-    location_lon = 29.83
-    location = "StPete"
-  else if (location_name.eq."Thule") then
-    location_lat = 76.53
-    location_lon = -68.74
-  else if (location_name.eq."Toronto") then
-    location_lat = 43.66
-    location_lon = -79.40
-  else if (location_name.eq."Tsukuba") then
-    location_lat = 36.05
-    location_lon = 140.13
-  else if (location_name.eq."Wollongong") then
-    location_lat = -34.406
-    location_lon = 150.879
-  else if (location_name.eq."Zugspitze") then
-    location_lat = 47.42
-    location_lon = 10.98
-  else
-    print("Valid location not defined... exiting")
-    exit
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
+   station_name_comp = (/"Altzomoni","ArrivalHeights", "Ascension", "Boulder", "Bremen", "Darwin",\
+                     "Eureka", "Izana", "Jungfrau", "Kiruna", "Lauder", "Reunion",\
+                     "MaunaLoa", "NyAlesund", "Paris", "Paramibo", "Rikubetsu", "StPete",\
+                     "Thule", "Toronto", "Tsukuba", "Wollongong", "Zugspitze"/)
 
-  if (netCDF) then
-     outname      = outdir+location+"_"+delta_deg+"deg_"+version+"_"+\
-                    start_date+"-"+truncation_date+".nc"
-  end if
+   ;                   minlat, maxlat, minlon, maxlon
+   station_select = (/(/  19.12,  -98.66 /),\  ;Altzomoni
+                      (/ -77.82,  166.65 /),\  ;ArrivalHeights
+                      (/  -7.91,  -14.33 /),\  ;Ascension
+                      (/  39.99, -105.26 /),\  ;Boulder
+                      (/  53.10,    8.85 /),\  ;Bremen
+                      (/ -12.424, 130.892/),\  ;Darwin
+                      (/  80.05,  -82.42 /),\  ;Eureka
+                      (/  28.30,  -16.48 /),\  ;Izana
+                      (/  46.55,    7.98 /),\  ;Jungfrau
+                      (/  67.84,   20.41 /),\  ;Kiruna
+                      (/ -45.038, 169.684/),\  ;Lauder
+                      (/ -20.901,  55.485/),\  ;Reunion
+                      (/  19.54, -155.58 /),\  ;MaunaLoa
+                      (/  78.923,  11.923/),\  ;NyAlesund
+                      (/  48.97,    2.366/),\  ;Paris
+                      (/   5.75,  -55.2  /),\  ;Paramibo
+                      (/  43.46,  143.8  /),\  ;Rikubetsu
+                      (/  59.88,   29.83 /),\  ;StPete
+                      (/  76.53,  -68.74 /),\  ;Thule
+                      (/  43.66,  -79.40 /),\  ;Toronto
+                      (/  36.05,  140.13 /),\  ;Tsukuba
+                      (/ -34.406, 150.879/),\  ;Wollongong
+                      (/  47.42,   10.98 /) /) ;Zugspitze
+
+
+   ind_station = ind(station_names.eq.location_name)
+
+   location_lat    = station_select(ind_station,0)
+   location_lon    = station_select(ind_station,1)
+   location        = station_name_comp(ind_station)
+
+  print(location +" Lat: " +location_lat+", Lon: " + location_lon)
 
    topboundary     = location_lat+delta_deg
    bottomboundary  = location_lat-delta_deg
    rightboundary   = location_lon+delta_deg
    leftboundary    = location_lon-delta_deg
-  
+
+; begin year loop
+do y = ystart,yend ; loop through years
+  year = y
+
+  if (netCDF) then
+     outname      = outdir+location+"_"+delta_deg+"deg_"+version+ret+"_"+\
+                    year+".nc"
+  end if
+
   ; counter for number of measurements
   dcount = 0
-
-  ; -------------------------------
-  ; Truncation to extend record or
-  ; ignore beta files
-  ; (prelim calibration applied)
-  ; -------------------------------
-   file_date = str_split_csv(all_files, "-" ,0)
-   select_dates_ind = ind(file_date(:,1).ge.start_date.and.\
-                          file_date(:,1).lt.truncation_date)
-   selected_files = all_files(select_dates_ind)
-   all_files := selected_files
-
-  ; number of files to be read
-  ndates = dimsizes(all_files)
-
-   print("Collecting:")
-   print(all_files(0:5))
-   print("to...")
-   print(all_files(dimsizes(all_files)-1))
 
 
 ;--------------------------------------------
 ; load file and extract
 ;--------------------------------------------
+  print("==================================")
+  print("Collecting: "+ year)
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
+   all_files := systemfunc ("ls "+infolder+year+"*/*/MOP02"+ret+"-*.he5")
+
+   print("from:" + all_files(0))
+   print("to..."+ all_files(dimsizes(all_files)-1))
+  ; number of files to be read in year
+   ndates := dimsizes(all_files)
+   print("#files = " + ndates)
+
   ;------------
   ; loop over
   ; files
@@ -323,7 +254,7 @@ begin
       region_profile_err := new((/dimsizes(region),10/),float,-9999)
          region_profile_err (:,0)    = (/ret_err_surf(:)/)
          region_profile_err (:,1:9)  = ret_err_dummy(:,:)
-      if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
+      if (version.eq."V7".or.version.eq."V8") then
         region_anom_diag    := fin->$diag_1$(region,:)
         region_col_diag     := fin->$diag_2$(region,:)
         region_ak_col       := fin->$col_avker$(region,:)
@@ -444,7 +375,7 @@ begin
             m_ak_selected := array_append_record(temp12,dummy3,0)
           end if 
 
-            if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
+            if (version.eq."V7".or.version.eq."V8") then
               if (dimsizes(region_ap).eq.1) then
               ;accounting for loss of 1st dim if only 1 pixel around station
                 d=region_anom_diag(:) 
@@ -515,7 +446,7 @@ begin
 
   records = num(mopitt_selected)
   print("******************************")
-  print(version)
+  print(version+ret)
   print("Number of files checked = " + ndates)
   print("Number of files with " +location+" info = " + dcount)
   print("Number of pixels = " + records)
@@ -526,7 +457,7 @@ begin
 ;--------------------------------------------
 if (netCDF) then
   ; saves MOPITT subset
-  print("Writing out to file...")
+  print("Writing out to file..."+ outname)
   fout = addfile(outname, "c")
   ;------------
   ; File 
@@ -536,7 +467,7 @@ if (netCDF) then
     fAtt                      = True
       fAtt@title              = "Subset of MOPITT CO at " + delta_deg + \
                                 " degrees radius around " +location_name+ " station"
-      fAtt@source             = "MOPITT level 2, " + version
+      fAtt@source             = "MOPITT level 2, " + version+ret
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
 
@@ -595,7 +526,7 @@ if (netCDF) then
    ;--- averaging kernel
      fout->RetrievalAvKerMatrix          = m_ak_selected
 
-   if (version.eq."V7T".or.version.eq."V7J".or.version.eq."V7N") then
+   if (version.eq."V7".or.version.eq."V8") then
      anom_diag_selected!0        = "time"
      col_diag_selected!0         = "time"
      ak_col_selected!0           = "time"
@@ -617,7 +548,7 @@ if (netCDF) then
    print("Created file: "+outname)
 
 end if ;NETCDF
-
+end do ; year loop
 
 end
 
