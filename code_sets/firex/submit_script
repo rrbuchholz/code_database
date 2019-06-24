@@ -1,0 +1,83 @@
+#!/bin/tcsh
+#
+#BSUB -a poe 
+#BSUB -P P19010000            # project code
+#BSUB -W 02:00                # wall-clock time (hrs:mins)
+#BSUB -n 14                   # number of tasks in job         
+#BSUB -R "span[ptile=2]"      # tasks per node 
+#BSUB -J korus_plot           # job name
+#BSUB -o korus_plot.%J.out    # output file name in which %J is replaced by the job ID
+#BSUB -e korus_plot.%J.err    # error file name in which %J is replaced by the job ID
+#BSUB -q geyser               # queue
+#BSUB -N                      # email when done
+
+umask 002
+cd /glade/u/home/buchholz/NCL_programs/korus
+
+#---------------------------------------
+# load NCL
+source /glade/u/apps/opt/lmod/4.2.1/init/tcsh
+module load ncl
+module list
+
+# link the updated colormap
+setenv NCARG_COLORMAPS /glade/u/home/buchholz/NCL_programs/korus/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
+
+#---------------------------------------
+  set run_folder = "/glade/u/home/buchholz/NCL_programs/korus"
+
+# determine dates of run
+# Jerome's forecast
+  set folder = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/"
+  set files = "KORUS_forecast_3inst.cam_0001.h1."
+  set current_date = `date +%Y-%m-%d` 
+  set forecast_date = `date +%Y%m%d`
+#  set current_date = "2016-04-25"
+#  set forecast_date = 20160425
+
+# Louisa's run
+#  set folder = "/glade/scratch/emmons/archive/cesm122_fsdssoa_f09_2015a/atm/hist/"
+#  set files = "cesm122_fsdssoa_f09_2015a.cam.h1."
+#  set current_date = "2015-06-01"
+#  set forecast_date = 20150601
+
+#---------------------------------------
+# set up a command file
+set j = 0
+# while ( $j <= 0 )
+ while ( $j <= 5 )
+   echo "Submitting: `date --date='$current_date +$j day' +%Y-%m-%d`"
+   set date_run = `date --date="$current_date +$j day" +%Y-%m-%d`
+
+   if ($j == 0) then
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' \'file_prefix=\"$folder$files\"\' STATION=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+   else
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+   endif
+
+   @ j++
+ end
+
+#---------------------------------------
+# load parallel
+setenv MP_PGMMODEL mpmd
+# run the NCL plotting in parallel
+mpirun.lsf -cmdfile /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+
+#---------------------------------------
+# clean up
+# delete command file
+rm -f /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+
+  echo "Successfully plotted all tracers"
+  echo "END OF PLOT ROUTINES"
+
+
+#---------------------------------------
