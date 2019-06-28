@@ -1,13 +1,14 @@
 ;=======================================================;
 ;  curtain_plot.ncl
 ;=======================================================;
-; 22 June 2019, Siyuan Wang
 ;   - curtain procedures generalized (previously hard-wired)
 ;   - now the curtains can be in any directions
 ;     (previously t)
+;                             Siyuan Wang 22 June 2019 
 ; ------------------------------------------------------
 ; Concepts illustrated:
-;   - developed for the KORUS 2016 campaign
+;   - developed for the FIREX 2019 campaign
+;     from the KORUS 2016 code base
 ;   - open CAM-chem output
 ;   - read in species
 ;   - plot 2D field over zoomed region
@@ -22,8 +23,10 @@
 ;         curtain_plot(file, tracer, station(s) lat, station(s) lon,\
 ;                          station(s) name(s)) 
 ;
-;                                  RRB February 08, 2016
+;                                  RRB June 17, 2019
 ;=======================================================;
+load "read_in_species.ncl"
+
 undef("curtain_plot")
 procedure curtain_plot(fileIN:string, tracer:string, contour_levels:numeric, forecast_date:numeric)
 
@@ -52,13 +55,13 @@ begin
    bottomboundary  = 15.0
    leftboundary    = -140.0
    rightboundary   = -70.0
-
-   
+  
   ;------------
   ; toggles
   ;------------
     plttype      = "png"           ; pdf or png if want to save
     pltname      = "CAM-chem_"+tracer+"_forecast_curtain"
+    outfolder = "forecast_plots/"
 ;--------------------------------------------
 ; interpolate to unusual paths #3 and #4
 ;--------------------------------------------
@@ -76,43 +79,6 @@ begin
                                              ; CONSTANTS
    H = (8.314*240)/(0.0289751*9.8)           ;--- scale height
 
- if (tracer.eq."CO01") then
-   tracername = "CO: S.Korea - anthro"
- else if (tracer.eq."CO02") then
-   tracername = "CO: Japan - anthro"
- else if (tracer.eq."CO03") then
-   tracername = "CO: NE China  - anthro"
- else if (tracer.eq."CO04") then
-   tracername = "CO: N. China  - anthro"
- else if (tracer.eq."CO05") then
-   tracername = "CO: S. China - anthro"
- else if (tracer.eq."CO06") then
-   tracername = "CO: S. Asia  - anthro"
- else if (tracer.eq."CO07") then
-   tracername = "CO: N. Asia -fires"
- else if (tracer.eq."CO08") then
-   tracername = "CO: Central Asia - fires"
- else if (tracer.eq."CO09") then
-   tracername = "CO: S. Asia - fires" 
- else if (tracer.eq."ISOP_etc") then
-   tracername = "ISOP + MACR + MVK"
- else if (tracer.eq."CO_var") then
-   tracername = "CO variability [0.5*(max-min)/avg]"
- else
-   tracername = tracer
- end if
- end if
- end if
- end if
- end if
- end if
- end if
- end if
- end if
- end if
- end if
-
-
    
 ;*******************************************
 ;--------------------------------------------
@@ -123,69 +89,10 @@ begin
   ; CAM-chem load
   ; -------------------------------
     fin = addfile(filename, "r")           ; read in
-     if (tracer.eq."ISOP_etc") then
-        tracer_dummy1 = fin->ISOP          ; mol/mol
-        tracer_dummy2 = fin->MACR          ; mol/mol
-        tracer_dummy3 = fin->MVK           ; mol/mol
-        tracer_dummy = tracer_dummy1 +tracer_dummy2 + tracer_dummy3
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "ISOP + MACR + MVK concentration"
-      else if (tracer.eq."NOx") then
-        tracer_dummy1 = fin->NO2          ; mol/mol
-        tracer_dummy2 = fin->NO          ; mol/mol
-        tracer_dummy = tracer_dummy1 +tracer_dummy2
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "NO + NO2 concentration"
-      else if (tracer.eq."BC") then
-        tracer_dummy1 = fin->CB1          ; kg/kg
-        tracer_dummy2 = fin->CB2          ; kg/kg
-        tracer_dummy = tracer_dummy1 +tracer_dummy2
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "BC concentration"
-      else if (tracer.eq."OC") then
-        tracer_dummy1 = fin->OC1          ; kg/kg
-        tracer_dummy2 = fin->OC2          ; kg/kg
-        tracer_dummy = tracer_dummy1 +tracer_dummy2
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "OC concentration"
-      else if (tracer.eq."SOA") then
-        tracer_dummy1 = fin->SOAB          ; kg/kg
-        tracer_dummy2 = fin->SOAI          ; kg/kg
-        tracer_dummy3 = fin->SOAM          ; kg/kg
-        tracer_dummy4 = fin->SOAT          ; kg/kg
-        tracer_dummy5 = fin->SOAX          ; kg/kg
-        tracer_dummy = tracer_dummy1+tracer_dummy2+tracer_dummy3+tracer_dummy4+tracer_dummy5
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "SOA concentration"
-      else if (tracer.eq."CO_var") then
-        tracer_dummy1 = fin->CO          ; mol/mol
-        match_str   = "cam_0001.h1"
-        min_str     = "cam_0002.h1"
-        max_str     = "cam_0003.h1"
-        filemin = str_sub_str(filename,match_str,min_str)
-        filemax = str_sub_str(filename,match_str,max_str)
-        fin2 = addfile(filemin, "r")           ; read in
-        fin3 = addfile(filemax, "r")           ; read in
-        tracer_dummy_min = fin2->CO          ; mol/mol
-        tracer_dummy_max = fin3->CO          ; mol/mol
-        tracer_dummy = 0.5*((tracer_dummy_max - tracer_dummy_min)/tracer_dummy1)
-          copy_VarCoords(tracer_dummy1,tracer_dummy)
-          copy_VarAtts(tracer_dummy1,tracer_dummy)
-          tracer_dummy@long_name = "CO variability"
-          tracer_dummy@units = "ppb/ppb"
-      else 
-        tracer_dummy = fin->$tracer$         ; mol/mol or kg/kg
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
+
+     tracer_all = read_in_species(filename, tracer)
+     tracername = tracer_all@tracername
+
       date         = fin->date
       datesec      = fin->datesec
       lev         = fin->lev
@@ -196,24 +103,8 @@ begin
       lat          = fin->lat 
       lon          = fin->lon
 
-
-     if (tracer.eq."BC".or.tracer.eq."OC".or.\
-         tracer.eq."SO4".or.tracer.eq."SOA") then
-       tracer_all = tracer_dummy              ; kg/kg
-         copy_VarCoords(tracer_dummy,tracer_all)
-         copy_VarAtts(tracer_dummy,tracer_all)
-     else if (tracer.eq."CO_var") then
-       tracer_all = tracer_dummy
-     else
-       tracer_all = tracer_dummy/1e-9         ; mol/mol -> ppb
-         copy_VarCoords(tracer_dummy,tracer_all)
-         copy_VarAtts(tracer_dummy,tracer_all)
-         tracer_all@units = "ppb"
-     end if
-     end if
-       tracer_all&lev@units = "hybrid_sigma_pressure"
 	   
-	   dim_tracer_all = dimsizes(tracer_all)
+	dim_tracer_all = dimsizes(tracer_all)
 
   ; -------------------------------
   ; Hybrid levels to pressure levels
@@ -243,16 +134,16 @@ begin
   ;    Boise:  43.6150N, 116.2023W
   ;    Salina: 38.8403N, 97.6114W
   ; ==============================
-    curtain_defs_lon = (/(/-116.2023,-116.2023/),\    			;0
-                         (/-130.0,-100.0/),\					;1
-                         (/-110, -90/),\						;2
-                         (/-97.6114,-97.6114/),\				;3
-                         (/-90, -120/)/)						;4
-    curtain_defs_lat = (/(/35, 50/),\							;0
-                         (/43.6150,43.6150/),\					;1
-                         (/38.8403,38.8403/),\					;2
-                         (/35, 45/),\							;3
-                         (/36.8855, 44.5904/)/)					;4
+    curtain_defs_lon = (/(/-116.2023,-116.2023/),\	;0
+                         (/-130.0,-100.0/),\		;1
+                         (/-110, -90/),\		;2
+                         (/-97.6114,-97.6114/),\	;3
+                         (/-90, -120/)/)		;4
+    curtain_defs_lat = (/(/35, 50/),\			;0
+                         (/43.6150,43.6150/),\		;1
+                         (/38.8403,38.8403/),\		;2
+                         (/35, 45/),\			;3
+                         (/36.8855, 44.5904/)/)		;4
 	curtain_defs_lon = where(curtain_defs_lon.lt.0.0, 360.0+curtain_defs_lon, curtain_defs_lon)
 	
 	dim_curtain_defs = dimsizes(curtain_defs_lat)
@@ -335,7 +226,7 @@ begin
 ; loop over dates in file
 do j= 0,dimsizes(date)-1
   ; plot_name = pltname+"_"+date(j)+"_"+sprintf("%02g",datesec(j)/3600)+"_old"
-  plot_name = pltname+"_"+date(j)+"_"+sprintf("%02g",datesec(j)/3600)
+  plot_name = outfolder + pltname+"_"+date(j)+"_"+sprintf("%02g",datesec(j)/3600)
    plttype@wkWidth = 2500
    plttype@wkHeight = 2500
   wksII = gsn_open_wks(plttype,plot_name)        
