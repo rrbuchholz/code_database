@@ -4,14 +4,14 @@
 ;
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 campaign
-;   - open CAM-chem output
+;   - open model output
 ;   - read in species
 ;   - plot 2D field over zoomed region
 ;   - overplot flight-leg paths
 ;   - create curtain plots for each flight leg
 ;
 ;   Files needed:
-;         -CAM-chem output in netCDF format
+;         -modeloutput in netCDF format
 ;
 ;   Called in as:
 ;         lat_lon_plot(file, tracer, max lat, min lat, min lon, max lon, \
@@ -42,7 +42,7 @@ outfolder = "forecast_plots/"
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem file
+  ; model file
   ; -------------------------------
   filename = fileIN
 
@@ -50,7 +50,7 @@ outfolder = "forecast_plots/"
   ; plot definitions
   ;------------
     plttype      = "png"           ; pdf or png if want to save
-    pltname      = "CAM-chem_"+tracer+"_latlon_"+region_name
+    pltname      = "WACCM_"+tracer+"_latlon_"+region_name
 
 ;--------------------------------------------
 ; end user input
@@ -63,7 +63,7 @@ outfolder = "forecast_plots/"
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem load
+  ; model load
   ; -------------------------------
     fin = addfile(filename, "r")           ; read in
      tracer_all = read_in_species(filename, tracer)

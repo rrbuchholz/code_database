@@ -4,12 +4,12 @@
 ;
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 campaign
-;   - open CAM-chem output
+;   - open model output
 ;   - read in species
 ;   - plot concentrations at altitude versus time
 
 ;   Files needed:
-;         -CAM-chem output in netCDF format
+;         -model output in netCDF format
 ;
 ;   Called in as:
 ;
@@ -44,7 +44,7 @@ begin
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem files
+  ; model files
   ; -------------------------------
   filenames = filesIN
 
@@ -52,7 +52,7 @@ begin
   ; plot definitions
   ;------------
     plttype      = "png"           ; pdf or png if want to save
-    pltname      = "CAM-chem_"+tracer+"_"
+    pltname      = "WACCM_"+tracer+"_"
     outfolder = "forecast_plots/"
 
 ;--------------------------------------------
@@ -70,7 +70,7 @@ begin
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem load
+  ; model load
   ; -------------------------------
     fin = addfiles(filenames, "r")         ; read in
     ListSetType (fin, "cat")               ; concatenate
@@ -129,7 +129,7 @@ do i=0, dimsizes(lat_array)-1
     res@cnLevelSelectionMode ="ExplicitLevels"
     res@cnLevels             = contour_levels
 
-    res@tiMainString        = "FIREX CAM-chem 5-day forecast at~C~"+ \
+    res@tiMainString        = "FIREX WACCM 5-day forecast at~C~"+ \
                              station_names(i) +", "+ date(0)+" to "+date(dimsizes(date)-1) +" (UTC)"
     ;res@gsnLeftString      = "Forecast made on: "               ; add the gsn titles
     res@gsnLeftString       = ""

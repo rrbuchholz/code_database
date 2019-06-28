@@ -9,7 +9,7 @@
 ;   - mainly need to alter this file to alter output plots
 ;
 ;   Files needed:
-;         -CAM-chem output in netCDF format
+;         -model output in netCDF format
 ;         -NCL code of sub-routines that are called:
 ;                 lat_lon_plot.ncl
 ;                 altitude_plot.ncl
@@ -69,7 +69,7 @@ begin
     ;------------
     ; tracers to plot
     ; (note: needs to be 
-    ; name in CAM-chem file)
+    ; name in model file)
     ;------------
     if (.not. isvar("tracer_array")) then       ; is tracer_array from command line?
         ;tracer_array = (/"O3","ISOP","MACR_MVK","MTERP","NOx","NO","NO2","AROMATICS","CRESOL","HCN","CH3CN", \
@@ -196,7 +196,7 @@ begin
     ; Lat/Lon plots
     ;------------
     ; pressure levels to plot
-    pnew = (/ 850., 700., 600., 500., 300./)
+    pnew = (/ 850., 700., 600., 500., 300., 200./)
 
     if (LATLON) then
     print("plotting lat/lon for ..."+ filename)
@@ -257,7 +257,7 @@ begin
          continue   ; no curtain for 2D variable
        end if
 
-       print("plotting curtains")
+       print("plotting curtains for "+ tracer)
          curtain_plot(filename, tracer, contour_levels, forecast_date)
 
      ;system("rsync --remove-source-files -pI *"+tracer+"*curtain*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/curtains")

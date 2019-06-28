@@ -9,14 +9,14 @@
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 campaign
 ;     from the KORUS 2016 code base
-;   - open CAM-chem output
+;   - open model output
 ;   - read in species
 ;   - plot 2D field over zoomed region
 ;   - overplot flight-leg paths
 ;   - create curtain plots for each flight leg
 ;
 ;   Files needed:
-;         -CAM-chem output in netCDF format
+;         -model output in netCDF format
 ;
 ;   Called in as:
 ;
@@ -43,7 +43,7 @@ begin
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem files
+  ; model files
   ; -------------------------------
   filename = fileIN
 
@@ -60,7 +60,7 @@ begin
   ; toggles
   ;------------
     plttype      = "png"           ; pdf or png if want to save
-    pltname      = "CAM-chem_"+tracer+"_forecast_curtain"
+    pltname      = "WACCM_"+tracer+"_forecast_curtain"
     outfolder = "forecast_plots/"
 ;--------------------------------------------
 ; interpolate to unusual paths #3 and #4
@@ -86,7 +86,7 @@ begin
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem load
+  ; model load
   ; -------------------------------
     fin = addfile(filename, "r")           ; read in
 
@@ -472,7 +472,7 @@ do j= 0,dimsizes(date)-1
   ; Panel plot the curtains
   ; -------------------------------
   panel_res                       = True
-  panel_res@txString              = "FIREX-AQ CAM-chem forecast " + date(j)+\
+  panel_res@txString              = "FIREX-AQ WACCM forecast " + date(j)+\
                                     " "+sprintf("%02g",datesec(j)/3600) +"Z, "+\
                                     sprintf("%02g",mod((datesec(j)/3600),24)) +"UTC"
   panel_res@txPosYF               = 0.98

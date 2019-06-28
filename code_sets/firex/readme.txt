@@ -12,7 +12,7 @@ firex_wrapper.ncl        : calls other plotting routines
                          : loops over tracers, chooses regions etc
 
 example calls:
-> ncl 'filename="/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-29-00000.nc"' STATION=True forecast_date=20190621 firex_wrapper.ncl
+> ncl 'filename="/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-29-00000.nc"' 'file_prefix="/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3."' STATION=True forecast_date=20190621 firex_wrapper.ncl
 > ncl 'filename="/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-29-00000.nc"' CURTAIN=True forecast_date=20190621 firex_wrapper.ncl
 > ncl 'filename="/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-29-00000.nc"' LATLON=True forecast_date=20190621 firex_wrapper.ncl
 ---------------------------------------------------------------------

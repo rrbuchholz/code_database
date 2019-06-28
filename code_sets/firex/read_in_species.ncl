@@ -4,12 +4,12 @@
 ;
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 campaign
-;   - open CAM-chem output
+;   - open model output
 ;   - read in species
 ;   - return data array
 ;
 ;   Files needed:
-;         -CAM-chem output in netCDF format
+;         -model output in netCDF format
 ;
 ;   Called in as:
 ;          tracer_array = read_in_species(filename,tracername)
@@ -47,9 +47,9 @@ begin
   end if
 
   ; -------------------------------
-  ; CAM-chem file
+  ; model file
   ; -------------------------------
-  filename = fileIN
+  filename := fileIN
   tracer = tracerIN
 
   ; check input
@@ -156,13 +156,13 @@ begin
 ;--------------------------------------------
 
   ; -------------------------------
-  ; CAM-chem load
+  ; model load
   ; -------------------------------
     fin = addfiles(filename, "r")         ; read in
     ListSetType (fin, "cat")               ; concatenate
 
   ; -------------------------------
-  ; CAM-chem collect and convert
+  ; model collect and convert
   ; -------------------------------
       if (tracer.eq."MACR_MVK") then
         tracer_dummy1 = fin[:]->MACR          ; mol/mol
