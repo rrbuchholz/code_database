@@ -1,18 +1,18 @@
 #!/bin/tcsh
 #
-#BSUB -a poe 
-#BSUB -P P19010000            # project code
-#BSUB -W 02:00                # wall-clock time (hrs:mins)
-#BSUB -n 14                   # number of tasks in job         
-#BSUB -R "span[ptile=2]"      # tasks per node 
-#BSUB -J korus_plot           # job name
-#BSUB -o korus_plot.%J.out    # output file name in which %J is replaced by the job ID
-#BSUB -e korus_plot.%J.err    # error file name in which %J is replaced by the job ID
-#BSUB -q geyser               # queue
-#BSUB -N                      # email when done
+#PBS -N firex_plot           ### job name
+#PBS -j oe                   ### combine error and output files
+#PBS -A P19010000            ### project code
+#PBS -l walltime=02:00:00    ### wall-clock time (hrs:mins:secs)
+#PBS -q regular              ### queue
+### Request one chunk with ncpus and mpiprocs set to
+### the number of lines in the command file
+#PBS -l select=1:ncpus=21:mpiprocs=21  ###select nodes
+#PBS -m e                    ### email when done
+#PBS -M buchholz@ucar.edu    ### email address
 
 umask 002
-cd /glade/u/home/buchholz/NCL_programs/korus
+cd /glade/u/home/buchholz/code_database/code_sets/firex
 
 #---------------------------------------
 # load NCL
@@ -21,25 +21,25 @@ module load ncl
 module list
 
 # link the updated colormap
-setenv NCARG_COLORMAPS /glade/u/home/buchholz/NCL_programs/korus/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
+setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/firex/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
 
 #---------------------------------------
-  set run_folder = "/glade/u/home/buchholz/NCL_programs/korus"
+  set run_folder = "/glade/u/home/buchholz/code_database/code_sets/firex"
 
 # determine dates of run
 # Jerome's forecast
   set folder = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/"
   set files = "KORUS_forecast_3inst.cam_0001.h1."
+
+# Shawn's WACCM forecast
+#  set folder = "/glade/scratch/shawnh/"
+#  set files = "cesm122_fsdssoa_f09_2015a.cam.h1."
+
+# Set date
   set current_date = `date +%Y-%m-%d` 
   set forecast_date = `date +%Y%m%d`
-#  set current_date = "2016-04-25"
-#  set forecast_date = 20160425
-
-# Louisa's run
-#  set folder = "/glade/scratch/emmons/archive/cesm122_fsdssoa_f09_2015a/atm/hist/"
-#  set files = "cesm122_fsdssoa_f09_2015a.cam.h1."
-#  set current_date = "2015-06-01"
-#  set forecast_date = 20150601
+#  set current_date = "2019-08-01"
+#  set forecast_date = 20190801
 
 #---------------------------------------
 # set up a command file
@@ -50,16 +50,16 @@ set j = 0
    set date_run = `date --date="$current_date +$j day" +%Y-%m-%d`
 
    if ($j == 0) then
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' \'file_prefix=\"$folder$files\"\' STATION=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' \'file_prefix=\"$folder$files\"\' STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
    else
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
-     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/korus_wrapper.ncl >> /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
+     echo ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
    endif
 
    @ j++
@@ -69,12 +69,12 @@ set j = 0
 # load parallel
 setenv MP_PGMMODEL mpmd
 # run the NCL plotting in parallel
-mpirun.lsf -cmdfile /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+mpirun.lsf -cmdfile /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
 
 #---------------------------------------
 # clean up
 # delete command file
-rm -f /glade/u/home/buchholz/NCL_programs/korus/cmd_file.txt
+rm -f /glade/u/home/buchholz/code_database/code_sets/firex/cmd_file.txt
 
   echo "Successfully plotted all tracers"
   echo "END OF PLOT ROUTINES"

@@ -49,7 +49,7 @@ begin
       print("Setting LATLON to "+LATLON)
   end if
   if (.not. isvar("LATLON_WUS")) then       ; is LATLON from command line?
-      LATLON_WUS = True
+      LATLON_WUS = False
       print("Setting LATLON_WUS to "+LATLON_WUS)
   end if
   if (.not. isvar("LATLON_SEUS")) then       ; is LATLON from command line?
@@ -72,12 +72,10 @@ begin
     ; name in CAM-chem file)
     ;------------
     if (.not. isvar("tracer_array")) then       ; is tracer_array from command line?
-        ;tracer_array = (/"CO", "CO01", "CO02", "CO03","CO04","CO05","CO06","CO07","CO08","CO09",\
-        ;                 "ISOP_etc", "O3", "NOx", "BC", "OC", "SOA", "SO4", "PAN",  "AEROD_v", \
-        ;                  "CO_var", "DUST_ODV"/)
-        ;tracer_array = (/"CO", "CO01", "CO02", "CO03","CO04","CO05","CO06",\
-        ;                "ISOP_etc", "O3", "NOx", "BC", "OC", "SOA", "SO4", "PAN",  "AEROD_v", \
-        ;                  "CO_var", "DUST_ODV"/)
+        ;tracer_array = (/"O3","ISOP","MACR_MVK","MTERP","NOx","NO","NO2","AROMATICS","CRESOL","HCN","CH3CN", \
+        ;        "O3S","PAN",\
+	;	"BC", "POM", "SOA", "SO4","DUST","PM25","NCL","AODVISdn",\
+	;	"CO", "CO01", "CO02", "CO03","CO04","CO05","CO06","CO07","CO08","CO09"/)
         tracer_array = (/"CO", "O3"/)
         print("Setting up tracer list "+tracer_array)
     end if
@@ -86,6 +84,7 @@ begin
     ;    tracer_array = (/ "AEROD_v"/)
     ;    print("Setting up tracer list "+tracer_array)
     ;end if
+
 
     ;loop over tracers
     do s = 0,dimsizes(tracer_array)-1
@@ -101,35 +100,86 @@ begin
       else if (tracer.eq."CO_var") then
         contour_levels    := (/-0.2,-0.1, 0., 0.05,0.1,0.15,0.2, 0.25,0.3,\
                             0.35,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4/)
-      else if (tracer.eq."ISOP_etc") then
+      else if (tracer.eq."ISOP") then
         contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
                                 0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
                                 3.,4.,5.,6.,7.,8.,10.,15.,20./)
+      else if (tracer.eq."MTERP") then
+        contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
+                                0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
+                                3.,4.,5.,6.,7.,8.,10.,15.,20./)				
+      else if (tracer.eq."MACR_MVK") then
+        contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
+                                0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
+                                3.,4.,5.,6.,7.,8.,10.,15.,20./)				
       else if (tracer.eq."NOx") then
         contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
                               2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."NO") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."NO2") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
       else if (tracer.eq."O3") then
         contour_levels    := (/25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
                               80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)
+      else if (tracer.eq."O3S") then
+        contour_levels    := (/25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
+                              80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)			      
       else if (tracer.eq."BC".or.tracer.eq."OC") then
-        contour_levels    := (/0e-10,1.1e-10,1.2e-10,1.3e-10,1.4e-10,1.6e-10,1.8e-10,\
-                              1.0e-09,1.4e-09,1.8e-09,2.2e-09,2.6e-09,3e-09,4e-09,\
-                              5e-09,6e-09,1e-08,3e-08/)
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."POM".or.tracer.eq."OC") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
       else if (tracer.eq."SOA") then
-        contour_levels    := (/0.5e-11,1e-11,2e-11,3e-11,4e-11,5e-11,6e-11,7e-11,8e-11,9e-11,\
-                              1e-10,1.2e-10,1.4e-10,1.6e-10,1.8e-10,2.0e-10,4.0e-10,6.0e-10,8.0e-10,\
-                              1.0e-09,2e-09,3e-09,4e-09,5e-09,5.0e-08,5.0e-07/)
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
       else if (tracer.eq."SO4") then
-        contour_levels    := (/1e-10,1.2e-10,1.4e-10,1.8e-10,\
-                              1.2e-09,1.4e-09,1.6e-09,1.8e-09,1.9e-09,2e-09,3e-09,4e-09,\
-                              5e-09,1e-08,1.5e-08,2.0e-08,3.0e-08,4.0e-08,5.0e-08,6.0e-08/)
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."DUST") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."PM25") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+      else if (tracer.eq."NCL") then
+        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
       else if (tracer.eq."PAN") then
         contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
                               1.8,2.,4.,6.,8.,10.,15.,20./)
-      else if (tracer.eq."AEROD_v".or.tracer.eq."DUST_ODV") then
+      else if (tracer.eq."AROMATICS") then
+        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
+                              1.8,2.,4.,6.,8.,10.,15.,20./)
+      else if (tracer.eq."CRESOL") then
+        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
+                              1.8,2.,4.,6.,8.,10.,15.,20./)
+      else if (tracer.eq."HCN") then
+        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
+                              1.8,2.,4.,6.,8.,10.,15.,20./)
+      else if (tracer.eq."CH3CN") then
+        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
+                              1.8,2.,4.,6.,8.,10.,15.,20./)			      
+      else if (tracer.eq."AODVISdn".or.tracer.eq."DUST_ODV") then
         contour_levels    := (/ 0.,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,\
                                1.0,1.2,1.4,1.6,1.8,2.,4.,6./)
 
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
       end if
       end if
       end if
@@ -201,7 +251,7 @@ begin
      ;------------
      if (CURTAIN) then
 
-       if (tracer.eq."AEROD_v".or.\
+       if (tracer.eq."AODVISdn".or.\
            tracer.eq."DUST_ODV") then
          print("no altitudes for 2D variable")
          continue   ; no curtain for 2D variable
@@ -220,7 +270,7 @@ begin
   ; station plots
   ;------------
   if (STATION) then
-    if (tracer.eq."AEROD_v".or.\
+    if (tracer.eq."AODVISdn".or.\
         tracer.eq."DUST_ODV") then
        print("no altitudes for 2D variable")
        continue   ; no altitudes for 2D variable
@@ -246,17 +296,16 @@ begin
       print("plotting timeseries for "+tracer+"..."+ filenames(0)+" to "+filenames(dimsizes(filenames)-1))
 
     ; station locations
-    ;'Baengnyeong Island',37.9660,124.6300
-    ;'Seoul_SNU',37.4580,126.9510
-    ;'Gosan, Jeju Island',33.2920,126.1620
-    ;'Pusan Univ., Busan',35.2350,129.0830
-    ;'GIST, Gwangju',35.2280,126.8430
-    ;'Fukue, Japan',32.751626,128.681728
-    ;'Gangneung-Wonju Univ.',37.7710,128.8670
+    ;'Boise, ID Airport',           43.562, -116.228+360     , 243.772
+    ;'McCall, ID',                  44.872, -116.115+360     , 243.885
+    ;'Mount Bachelor, OR',          43.979, -121.689+360     , 238.311
+    ;'Missoula, MT',                46.860, -113.985+360     , 246.015
+    ;'DRAGON site',                 46.917, -114.083+360     , 245.917
+    ;'Salina, KS Regional Airport', 38.779, -97.6395+360     , 262.3605
 
-    lat_array = (/ 37.9660, 37.4580, 33.2920, 35.2350, 35.2280, 32.751626, 37.7710/)
-    lon_array = (/124.6300, 126.9510, 126.1620, 129.0830, 126.8430, 128.681728, 128.8670/)
-    station_names = (/"Baeognyeong", "Seoul", "Gosan", "Busan", "Gwangju", "Fukue", "Gangneung-Wonju"/)
+    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779/)
+    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605/)
+    station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "DRAGON-site", "Salina-KS-Regional-Airport"/)
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, contour_levels, forecast_date)
 

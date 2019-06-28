@@ -85,7 +85,7 @@ outfolder = "forecast_plots/"
   ; -------------------------------
   ; regrid to selected levels
   ; -------------------------------
-  if (tracer.eq."AEROD_v".or.\
+  if (tracer.eq."AODVISdn".or.\
       tracer.eq."DUST_ODV") then
     ; only one level
     level_names := "Surface"
@@ -135,7 +135,7 @@ do i= 0,dimsizes(level_array)-1
       res@mpOutlineOn         = False                     ; will draw highres map later
       res@gsnMaximize         = True   
 
-      if (tracer.eq."AEROD_v".or.\
+      if (tracer.eq."AODVISdn".or.\
         tracer.eq."DUST_ODV") then
         res@tiMainString      = "FIREX WACCM forecast, Column, "+ \
                                 date(j)+" "+sprintf("%02g",datesec(j)/3600)+"Z, "+\
@@ -169,7 +169,7 @@ do i= 0,dimsizes(level_array)-1
    ; Set up the contour plot
    ;-----------------------
      if (i.eq.0) then
-       if (tracer.eq."AEROD_v".or.\
+       if (tracer.eq."AODVISdn".or.\
            tracer.eq."DUST_ODV") then
          plot=gsn_csm_contour_map_ce(wks,tracer_all(j,:,:),res)  ; plot contours
        else
@@ -237,16 +237,16 @@ do i= 0,dimsizes(level_array)-1
      country_shp_name    = "shapefiles/US_census_state/tl_2018_us_state.shp"
      lnres                  = True
        lnres@gsLineColor      = "gray24"
-       lnres@gsLineThicknessF = .9
+       lnres@gsLineThicknessF = 1.4
       country_id = gsn_add_shapefile_polylines(wks,plot,country_shp_name,lnres)
 
       world_shp_name    = "shapefiles/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L1.shp"
-        lnres@gsLineThicknessF = 1.1
+        lnres@gsLineThicknessF = 1.4
       world_id = gsn_add_shapefile_polylines(wks,plot,world_shp_name,lnres)
 
       world_shp_name_lake    = "shapefiles/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L2.shp"
-        lnres@gsLineThicknessF = 1.1
-      world_id = gsn_add_shapefile_polylines(wks,plot,world_shp_name_lake,lnres)
+        lnres@gsLineThicknessF = 1.4
+      world_idII = gsn_add_shapefile_polylines(wks,plot,world_shp_name_lake,lnres)
 
    ;----------------------------------------
    ; add in forcast day

@@ -151,17 +151,20 @@ do i=0, dimsizes(lat_array)-1
     res@tmXBMinorValues      = tracer_all&time
 
     res@tmYLMode             = "Explicit" ; Define own tick mark labels.
-    res@gsnYAxisIrregular2Log = True
-    res@tmYLValues           = (/925,850,700,500,300,200/)
-    res@tmYLLabels           = (/925,850,700,500,300,200/)
+    res@gsnYAxisIrregular2Log = False
+    res@tmYLValues           = (/925,850,700,600,500,300/)
+    res@tmYLLabels           = (/925,850,700,600,500,300/)
 
     res@tmYUseLeft           = False               ; disassociate  YR tick marks with YL tick marks
     res@tmYRLabelsOn         = True                ; turn on the YR tick mark labels
     res@tmYRMode             = "Explicit"          ; turn off height labels
-     height_labels = (/2,4,6,8,10/)
+
+     ;height_labels = (/0.5,1,2,4,6,10/)
+     height_labels_feet = (/1.,3.,5.,10.,18.,32./)             ; thousand feet for pilots
+     height_labels = (height_labels_feet*1000)/3280.84   ; convert to km for plotting
      pressures = pressure_station(dimsizes(pressure_station)-1) * exp((-height_labels*1000)/H)
      res@tmYRValues          = pressures
-     res@tmYRLabels          = height_labels
+     res@tmYRLabels          = height_labels_feet
 
   ; the contour plot
   plot = gsn_csm_contour(wks,tracer_station(lev|:, time|:),res)
@@ -170,7 +173,7 @@ do i=0, dimsizes(lat_array)-1
     txres = True
     txres@txFontHeightF = 0.022   ; Label right Y axis.
     txres@txAngleF      = 90.
-    gsn_text_ndc(wks,"Height (km)",.95,.6,txres)
+    gsn_text_ndc(wks,"Height (thousand feet)",.95,.6,txres)
 
 
   ; add in forcast day
