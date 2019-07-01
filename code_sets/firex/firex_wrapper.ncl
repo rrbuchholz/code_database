@@ -1,7 +1,9 @@
 ;=======================================================;
 ;  firex_wrapper.ncl
 ;=======================================================;
-;
+;   - contours adjusted
+;                            RS, WT, SW, RRB July 1, 2019 
+; ------------------------------------------------------;
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 from the KORUS 2016 campaign
 ;   - call other NCL-subroutines
@@ -36,9 +38,9 @@ load "curtain_plot.ncl"
 begin
 
   if (.not. isvar("filename")) then      ; is filename from command line?
-    filename = "/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-29-00000.nc"
+    filename = "/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.2019-06-30-00000.nc"
     print("korus_wrapper: Input file not given, setting to "+filename)
-    forecast_date = 20190621
+    forecast_date = 20190620
   end if
 
   ; -------------------------------
@@ -57,7 +59,7 @@ begin
       print("Setting LATLON_SEUS to "+LATLON_SEUS)
   end if
   if (.not. isvar("STATION")) then      ; is STATION from command line?
-      STATION = False
+      STATION = True
       print("Setting STATION to "+STATION)
       file_prefix = "/waccm-output/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3."
   end if
@@ -72,10 +74,8 @@ begin
     ; name in model file)
     ;------------
     if (.not. isvar("tracer_array")) then       ; is tracer_array from command line?
-        ;tracer_array = (/"O3","ISOP","MACR_MVK","MTERP","NOx","NO","NO2","AROMATICS","CRESOL","HCN","CH3CN", \
-        ;        "O3S","PAN",\
-	;	"BC", "POM", "SOA", "SO4","DUST","PM25","NCL","AODVISdn",\
-	;	"CO", "CO01", "CO02", "CO03","CO04","CO05","CO06","CO07","CO08","CO09"/)
+        ;tracer_array = (/"ISOP", "NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
+        ;                "DUST","PM25","AODVISdn","CO","CO01","CO02","COnotNA"/)
         tracer_array = (/"CO", "O3"/)
         print("Setting up tracer list "+tracer_array)
     end if
@@ -90,82 +90,48 @@ begin
     do s = 0,dimsizes(tracer_array)-1
       tracer = tracer_array(s)
       if (tracer.eq."CO") then
-        contour_levels    := (/40.,60.,80.,100., 120.,140.,160.,\
-                            180., 200., 240., 280., 300. ,350.,400.,\
-                            450., 500., 600., 800., 1000., 1200., 1600., 2000./)
-      else if (tracer.eq."CO01".or.tracer.eq."CO02".or.tracer.eq."CO03".or.\
-               tracer.eq."CO04".or.tracer.eq."CO05".or.tracer.eq."CO06".or.\
-               tracer.eq."CO07".or.tracer.eq."CO08".or.tracer.eq."CO09") then
-        contour_levels    := (/ 0.,1.,2.,5.,10.,15.,20.,25.,30.,40.,60.,80.,120.,250./)
-      else if (tracer.eq."CO_var") then
-        contour_levels    := (/-0.2,-0.1, 0., 0.05,0.1,0.15,0.2, 0.25,0.3,\
-                            0.35,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4/)
+        contour_levels    := (/60.,70.,80.,90.,100.,110.,120.,130.,140.,150.,160.,\
+                            170.,180.,190., 200., 240., 280., 300. ,350.,400.,450., 500./)
+      else if (tracer.eq."CO01".or.tracer.eq."CO02".or.tracer.eq."COnotNA") then
+     contour_levels    := (/ 0.,1.,2.,4.,6.,8.,10.,12.,14.,16.,18.,20.,22.,24.,26.,28.,\
+                             30.,35.,40.,50.,60.,80.,120.,180.,250./)
       else if (tracer.eq."ISOP") then
         contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
                                 0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
                                 3.,4.,5.,6.,7.,8.,10.,15.,20./)
-      else if (tracer.eq."MTERP") then
-        contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
-                                0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
-                                3.,4.,5.,6.,7.,8.,10.,15.,20./)				
-      else if (tracer.eq."MACR_MVK") then
-        contour_levels    := (/ 0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.15,0.2,0.25,\
-                                0.3,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.,\
-                                3.,4.,5.,6.,7.,8.,10.,15.,20./)				
       else if (tracer.eq."NOx") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
-      else if (tracer.eq."NO") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
-      else if (tracer.eq."NO2") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
+        contour_levels    := (/ 0.005,0.01,0.025,0.05,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20./)
       else if (tracer.eq."O3") then
-        contour_levels    := (/25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
+        contour_levels    := (/20.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
                               80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)
       else if (tracer.eq."O3S") then
-        contour_levels    := (/25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
-                              80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)			      
+        contour_levels    := (/0.,5.,10.,15.,20.,25.,30.,35.,40.,45.,50.,\
+                              60.,70.,80.,90.,100.,120.,140.,160.,180.,200./)
       else if (tracer.eq."BC".or.tracer.eq."OC") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+        contour_levels    := (/ 0.0,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,9.,10.,15.,20.,30.,40.,50.,60./)
       else if (tracer.eq."POM".or.tracer.eq."OC") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
+        contour_levels    := (/ 0.0,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,9.,10.,15.,20.,30.,40.,50.,60./)
       else if (tracer.eq."SOA") then
         contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
                               2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
       else if (tracer.eq."SO4") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+        contour_levels    := (/ 0.0,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
+                              2.5,3.,4.,5.,6.,7.,8.,9.,10.,15.,20.,30.,40.,50.,60./)
       else if (tracer.eq."DUST") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
+        contour_levels    := (/ 0.,0.2,0.4,0.6,0.8,1.,2.,4.,\
+                              6.,8.,10.,15.,20.,25.,30.,35.,40.,50.,60.,70./)
       else if (tracer.eq."PM25") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)
-      else if (tracer.eq."NCL") then
-        contour_levels    := (/ 0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,4.,5.,6.,7.,8.,10.,15.,20.,40.,60./)			      
+        contour_levels    := (/ 0.0,0.2,0.4,0.6,0.8,1.,2.,4.,\
+                              6.,8.,10.,15.,20.,25.,30.,35.,40.,45.,50.,60.,70.,80./)
       else if (tracer.eq."PAN") then
-        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
-                              1.8,2.,4.,6.,8.,10.,15.,20./)
-      else if (tracer.eq."AROMATICS") then
-        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
-                              1.8,2.,4.,6.,8.,10.,15.,20./)
-      else if (tracer.eq."CRESOL") then
-        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
-                              1.8,2.,4.,6.,8.,10.,15.,20./)
-      else if (tracer.eq."HCN") then
-        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
-                              1.8,2.,4.,6.,8.,10.,15.,20./)
-      else if (tracer.eq."CH3CN") then
-        contour_levels    := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
-                              1.8,2.,4.,6.,8.,10.,15.,20./)			      
+        contour_levels    := (/ 0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,\
+                              1.6,1.8,2.,4.,6.,8.,10.,12.,14.,16.,18./)
       else if (tracer.eq."AODVISdn".or.tracer.eq."DUST_ODV") then
-        contour_levels    := (/ 0.,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,\
-                               1.0,1.2,1.4,1.6,1.8,2.,4.,6./)
+        contour_levels    := (/ 0.,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.5,\
+                               0.6,0.7,0.8,0.9,1.,2.,4.,6./)
 
       end if
       end if
@@ -181,16 +147,8 @@ begin
       end if
       end if
       end if
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
-      end if
+
+ 
 
     ;------------
     ; Lat/Lon plots

@@ -301,6 +301,15 @@ do j= 0,dimsizes(date)-1
     tres@tmXBLabelFontHeightF = 0.0036
     tres@tmYLLabelFontHeightF = tres@tmXBLabelFontHeightF
 
+     ; add map outlines
+     tres@mpDataSetName         = "Earth..4"   ; This new database contains
+     tres@mpDataBaseVersion     = "MediumRes"        ; better map outlines
+     tres@mpOutlineOn           = True         ; Turn on map outlines
+     tres@mpOutlineBoundarySets = "GeophysicalAndUSStates"
+     tres@mpGeophysicalLineThicknessF = 4
+     tres@mpUSStateLineThicknessF = 2
+     tres@mpNationalLineThicknessF = 2
+
      plots(5) = gsn_csm_contour_map(wksII,tracer_all(j,dimsizes(tracer_all&lev)-1,:,:),tres)  ; plot temp contours 
 
    ;----------------------
@@ -410,30 +419,14 @@ do j= 0,dimsizes(date)-1
 	   end do
 	end do
 
-
-     ;----------------------------------------
-     ; add countries and counties
-     ;----------------------------------------
-      ; country_shp_name    = "/glade/u/home/pfister/KORUS/KOR_adm1.shp"
-	  country_shp_name = "/home/siyuan/Forecast_FIREX/shape_files/US_census_state/tl_2018_us_state.shp"
-      lnres                  = True
-      lnres@gsLineColor      = "gray24"
-      lnres@gsLineThicknessF = .9
-      country_id = gsn_add_shapefile_polylines(wksII,plots(5),country_shp_name,lnres)
-
-      ; world_shp_name    = "/glade/u/home/pfister/KORUS/countries.shp"
-	  world_shp_name    = "/home/siyuan/Forecast_FIREX/shape_files/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L2.shp"
-      lnres@gsLineThicknessF = 1.1
-      world_id = gsn_add_shapefile_polylines(wksII,plots(5),world_shp_name,lnres)
-
-
-
-  ; add in right Y-axis label
+    ;----------------------------------------
+    ; add in right Y-axis label
+    ;----------------------------------------
     txres = True
     txres@txFontHeightF := 0.011   ; Label right Y axis.
     txres@txAngleF      := 90.
-    gsn_text_ndc(wksII,"Height (10~S~3~N~ ft)",.87,.81,txres)
-    gsn_text_ndc(wksII,"Height (10~S~3~N~ ft)",.87,.55,txres)
+    gsn_text_ndc(wksII,"Height (thousand ft)",.87,.81,txres)
+    gsn_text_ndc(wksII,"Height (thousand ft)",.87,.55,txres)
 
    ;----------------------------------------
    ; add in forcast day and tracer name
@@ -449,7 +442,6 @@ do j= 0,dimsizes(date)-1
    ;----------------------------------------
    ; Add site info:
    ;----------------------------------------
-   
    
    polyres = True                        ; poly marker mods desired     
     polyres@gsMarkerSizeF = 10          ; select size to avoid streaking

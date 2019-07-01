@@ -167,14 +167,13 @@ do i=0, dimsizes(lat_array)-1
      res@tmYRLabels          = height_labels_feet
 
   ; the contour plot
-  plot = gsn_csm_contour(wks,tracer_station(lev|:, time|:),res)
+  plot = gsn_csm_contour(wks,tracer_station(lev|:,time|:),res)
 
   ; add in right Y-axis label
     txres = True
     txres@txFontHeightF = 0.022   ; Label right Y axis.
     txres@txAngleF      = 90.
     gsn_text_ndc(wks,"Height (thousand feet)",.95,.6,txres)
-
 
   ; add in forcast day
     txres@txFontHeightF = 0.012   ; Label right Y axis.

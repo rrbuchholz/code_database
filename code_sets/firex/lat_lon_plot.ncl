@@ -1,7 +1,9 @@
 ;=======================================================;
 ;  lat_lon_plot.ncl
 ;=======================================================;
-;
+;   - updated to FIREX domains and species
+;                               R Schwantes 17 June 2019 
+; ------------------------------------------------------;
 ; Concepts illustrated:
 ;   - developed for the FIREX 2019 campaign
 ;   - open model output
@@ -15,7 +17,7 @@
 ;
 ;   Called in as:
 ;         lat_lon_plot(file, tracer, max lat, min lat, min lon, max lon, \
-;                      pressure levels to plot, region name based on lat lon boundaries,\
+;                      pressure layers to plot, region name for plot,\
 ;                      color bar levels)
 ; 
 ;                                  RRB February 08, 2016
@@ -165,6 +167,16 @@ do i= 0,dimsizes(level_array)-1
         res@mpMinLonF         = leftboundary
         res@mpMaxLonF         = rightboundary
 
+      ; add map outlines
+      res@mpDataSetName         = "Earth..4"   ; This new database contains
+      res@mpDataBaseVersion     = "MediumRes"        ; better map outlines
+      res@mpOutlineOn           = True         ; Turn on map outlines
+      res@mpOutlineBoundarySets = "GeophysicalAndUSStates"
+      res@mpGeophysicalLineThicknessF = 4
+      res@mpUSStateLineThicknessF = 2
+      res@mpNationalLineThicknessF = 2
+ 
+
    ;-----------------------
    ; Set up the contour plot
    ;-----------------------
@@ -234,19 +246,16 @@ do i= 0,dimsizes(level_array)-1
    ;----------------------------------------
    ; add countries and counties
    ;----------------------------------------
-     country_shp_name    = "shapefiles/US_census_state/tl_2018_us_state.shp"
-     lnres                  = True
-       lnres@gsLineColor      = "gray24"
-       lnres@gsLineThicknessF = 1.4
-      country_id = gsn_add_shapefile_polylines(wks,plot,country_shp_name,lnres)
+    ;This is now plotted above.
+    ; country_shp_name    = "shapefiles/US_census_state/tl_2018_us_state.shp"
+    ; lnres                  = True
+    ;   lnres@gsLineColor      = "gray24"
+    ;   lnres@gsLineThicknessF = 1.4
+    ;  country_id = gsn_add_shapefile_polylines(wks,plot,country_shp_name,lnres)
 
-      world_shp_name    = "shapefiles/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L1.shp"
-        lnres@gsLineThicknessF = 1.4
-      world_id = gsn_add_shapefile_polylines(wks,plot,world_shp_name,lnres)
-
-      world_shp_name_lake    = "shapefiles/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L2.shp"
-        lnres@gsLineThicknessF = 1.4
-      world_idII = gsn_add_shapefile_polylines(wks,plot,world_shp_name_lake,lnres)
+    ;  world_shp_name    = "shapefiles/GSHHS_NOAA/GSHHS_shp/i/GSHHS_i_L1.shp"
+    ;    lnres@gsLineThicknessF = 1.4
+    ;  world_id = gsn_add_shapefile_polylines(wks,plot,world_shp_name,lnres)
 
    ;----------------------------------------
    ; add in forcast day
