@@ -27,7 +27,7 @@ begin
 
   ; check input
   if (.not.all(fileexists(filesIN))) then
-    print("altitude_ts_plot: One or all input files do not exist: " + fileIN)
+    print("altitude_ts_plot: One or all input files do not exist: " + filesIN)
     return
   end if
 
@@ -55,6 +55,15 @@ begin
     pltname      = "WACCM_"+tracer+"_"
     outfolder = "forecast_plots/"
 
+  ;------------
+  ; define location
+  ;------------
+  ; NAM
+   topboundary     = 65.0
+   bottomboundary  = 15.0
+   leftboundary    = -140.0
+   rightboundary   = -70.00
+
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
@@ -75,18 +84,32 @@ begin
     fin = addfiles(filenames, "r")         ; read in
     ListSetType (fin, "cat")               ; concatenate
 
-     tracer_all = read_in_species(filenames, tracer)
+     lat_bound_0 = bottomboundary-10
+     lat_bound_1 = topboundary+10
+     if (leftboundary.lt.0) then
+       lon_bound_0 = 360 + leftboundary - 10
+     else
+       lon_bound_0 = leftboundary - 10
+     end if
+     if (rightboundary.lt.0) then
+       lon_bound_1 = 360 + rightboundary + 10
+     else
+       lon_bound_1 = rightboundary + 10
+     end if
+
+     lev         = fin[0]->lev
+     lev_limit_0 = minind(abs(lev - max((/min(lev), 50.0/))))
+
+     tracer_all = read_in_species(filenames, tracer, lat_bound_0, lat_bound_1, lon_bound_0, lon_bound_1, lev_limit_0)
      tracername = tracer_all@tracername
 
      date = fin[:]->$"date"$
      datesec = fin[:]->$"datesec"$
      P0         = 0.01*fin[0]->P0           ; change Pa to mb
-     Psurf      = 0.01*fin[:]->PS
-     hyam       = fin[0]->hyam 
-     hybm       = fin[0]->hybm
+     Psurf      = 0.01*fin[:]->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+     hyam       = fin[0]->hyam(lev_limit_0:)
+     hybm       = fin[0]->hybm(lev_limit_0:)
 
-;printVarSummary(tracer_all)
-;exit
 
   ; -------------------------------
   ; Hybrid levels to pressure levels

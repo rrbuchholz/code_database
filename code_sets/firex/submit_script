@@ -21,23 +21,26 @@ module load ncl
 module list
 
 # link the updated colormap
-setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/firex/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
+setenv NCARG_COLORMAPS /glade/home/buchholz/code_database/code_sets/firex/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
 
 #---------------------------------------
-  set run_folder = "/glade/u/home/buchholz/code_database/code_sets/firex"
+  set run_folder = "/glade/home/buchholz/code_database/code_sets/firex"
 
 # determine dates of run
 # Jerome's forecast
-  set folder = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/"
-  set files = "KORUS_forecast_3inst.cam_0001.h1."
+#  set folder = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/"
+#  set files = "KORUS_forecast_3inst.cam_0001.h1."
 
 # Shawn's WACCM forecast
-#  set folder = "/glade/scratch/shawnh/"
-#  set files = "cesm122_fsdssoa_f09_2015a.cam.h1."
-
+  set folder_base = "/glade/scratch/shawnh/GEOS5_frcast_data/"
 # Set date
   set current_date = `date +%Y-%m-%d` 
   set forecast_date = `date +%Y%m%d`
+# Set folder
+  set folder = ${folder_base}/YYYYMMDD/model_output/finn/
+#  set files = "f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3."
+
+
 #  set current_date = "2019-08-01"
 #  set forecast_date = 20190801
 

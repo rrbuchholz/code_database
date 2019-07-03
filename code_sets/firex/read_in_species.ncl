@@ -21,7 +21,8 @@
 
 undef("read_in_species")
 
-function read_in_species(fileIN:string, tracerIN:string)
+function read_in_species(fileIN:string, tracerIN:string, lat_bound_0:numeric, lat_bound_1:numeric, \
+                       lon_bound_0:numeric, lon_bound_1:numeric, lev_limit_0:numeric)
 ;============================================
 ; Purpose: read in species
 ; 
@@ -130,77 +131,77 @@ if (tracer.eq."ISOP") then
   ; model collect and convert
   ; -------------------------------
       if (tracer.eq."NOx") then
-        tracer_dummy1 = fin[:]->NO2          ; mol/mol
-        tracer_dummy2 = fin[:]->NO          ; mol/mol
+        tracer_dummy1 = fin[:]->NO2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})        ; mol/mol
+        tracer_dummy2 = fin[:]->NO(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; mol/mol
         tracer_dummy = tracer_dummy1 +tracer_dummy2
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "NO + NO2 concentration"
       else if (tracer.eq."BC") then
-        tracer_dummy1 = fin[:]->bc_a1          ; kg/kg
-        tracer_dummy2 = fin[:]->bc_a4          ; kg/kg
+        tracer_dummy1 = fin[:]->bc_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy2 = fin[:]->bc_a4(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
         tracer_dummy = tracer_dummy1 +tracer_dummy2
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "bc_a1 + bc_4 concentration"
       else if (tracer.eq."POM") then
-        tracer_dummy1 = fin[:]->pom_a1          ; kg/kg
-        tracer_dummy2 = fin[:]->pom_a4          ; kg/kg
+        tracer_dummy1 = fin[:]->pom_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy2 = fin[:]->pom_a4(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
         tracer_dummy = tracer_dummy1 +tracer_dummy2
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "pom_a1+pom_a4 concentration"
       else if (tracer.eq."SOA") then
-        tracer_dummy1 = fin[:]->soa1_a1          ; kg/kg
-        tracer_dummy2 = fin[:]->soa1_a2          ; kg/kg
-        tracer_dummy3 = fin[:]->soa2_a1          ; kg/kg
-        tracer_dummy4 = fin[:]->soa2_a2          ; kg/kg
-        tracer_dummy5 = fin[:]->soa3_a1          ; kg/kg
-        tracer_dummy6 = fin[:]->soa3_a2          ; kg/kg
-        tracer_dummy7 = fin[:]->soa4_a1          ; kg/kg
-        tracer_dummy8 = fin[:]->soa4_a2          ; kg/kg
-        tracer_dummy9 = fin[:]->soa5_a1          ; kg/kg
-        tracer_dummy10 = fin[:]->soa5_a2         ; kg/kg
+        tracer_dummy1 = fin[:]->soa1_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy2 = fin[:]->soa1_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy3 = fin[:]->soa2_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy4 = fin[:]->soa2_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy5 = fin[:]->soa3_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy6 = fin[:]->soa3_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy7 = fin[:]->soa4_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy8 = fin[:]->soa4_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy9 = fin[:]->soa5_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy10 = fin[:]->soa5_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})         ; kg/kg
         tracer_dummy = tracer_dummy1+tracer_dummy2+tracer_dummy3+tracer_dummy4+tracer_dummy5 \
                        + tracer_dummy6+tracer_dummy7+tracer_dummy8+tracer_dummy9+tracer_dummy10
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "soa(1-5)_a1 + soa(1-5)_a2 concentration"
       else if (tracer.eq."SO4") then
-        tracer_dummy1 = fin[:]->so4_a1          ; kg/kg
-        tracer_dummy2 = fin[:]->so4_a2          ; kg/kg
-        tracer_dummy3 = fin[:]->so4_a3          ; kg/kg
+        tracer_dummy1 = fin[:]->so4_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy2 = fin[:]->so4_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy3 = fin[:]->so4_a3(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
         tracer_dummy = tracer_dummy1 +tracer_dummy2 +tracer_dummy3
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "SO4 concentration"
 
        else if (tracer.eq."DUST") then
-        tracer_dummy1 = fin[:]->dst_a1          ; kg/kg
-        tracer_dummy2 = fin[:]->dst_a2          ; kg/kg
-        tracer_dummy3 = fin[:]->dst_a3          ; kg/kg
+        tracer_dummy1 = fin[:]->dst_a1(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy2 = fin[:]->dst_a2(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
+        tracer_dummy3 = fin[:]->dst_a3(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})          ; kg/kg
         tracer_dummy = tracer_dummy1 +tracer_dummy2 +tracer_dummy3
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "DUST concentration"
        else if (tracer.eq."AODVISdn") then
-         tracer_dummy = fin[:]->$tracer$         ; mol/mol or kg/kg
+         tracer_dummy = fin[:]->$tracer$(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})         ; mol/mol or kg/kg
          tracer_dummy@units = ""
        else if (tracer.eq."COnotNA") then
-        tracer_dummy1 = fin[:]->CO03
-        tracer_dummy2 = fin[:]->CO04
-        tracer_dummy3 = fin[:]->CO05
-        tracer_dummy4 = fin[:]->CO06
-        tracer_dummy5 = fin[:]->CO07
-        tracer_dummy6 = fin[:]->CO08
-        tracer_dummy7 = fin[:]->CO09
+        tracer_dummy1 = fin[:]->CO03(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy2 = fin[:]->CO04(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy3 = fin[:]->CO05(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy4 = fin[:]->CO06(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy5 = fin[:]->CO07(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy6 = fin[:]->CO08(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        tracer_dummy7 = fin[:]->CO09(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
         tracer_dummy = tracer_dummy1+tracer_dummy2+tracer_dummy3+tracer_dummy4+tracer_dummy5 \
                        + tracer_dummy6+tracer_dummy7
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "CO anthro all except N America"
       else
-        tracer_dummy = fin[:]->$tracer$         ; mol/mol or kg/kg
+        tracer_dummy = fin[:]->$tracer$(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})         ; mol/mol or kg/kg
       end if
       end if
       end if
@@ -213,9 +214,9 @@ if (tracer.eq."ISOP") then
 
      ; Collect into one array and convert units for output
      if (tracer_dummy@units.eq."kg/kg") then
-      temp_k     = fin[:]->T                  ;K 
+      temp_k     = fin[:]->T(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})                  ;K 
       P0pa       = fin[0]->P0                 ;Pa
-      Psurf      = fin[:]->PS                 ;Pa
+      Psurf      = fin[:]->PS(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})                 ;Pa
       hyam       = fin[0]->hyam
       hybm       = fin[0]->hybm
      press_pa = pres_hybrid_ccm(Psurf,P0pa,hyam,hybm)

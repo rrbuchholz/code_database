@@ -90,20 +90,33 @@ begin
   ; -------------------------------
     fin = addfile(filename, "r")           ; read in
 
-     tracer_all = read_in_species(filename, tracer)
+     lat_bound_0 = bottomboundary-10
+     lat_bound_1 = topboundary+10
+     if (leftboundary.lt.0) then
+       lon_bound_0 = 360 + leftboundary - 10
+     else
+       lon_bound_0 = leftboundary - 10
+     end if
+     if (rightboundary.lt.0) then
+       lon_bound_1 = 360 + rightboundary + 10
+     else
+       lon_bound_1 = rightboundary + 10
+     end if
+
+     lev         = fin->lev
+     lev_limit_0 = minind(abs(lev - max((/min(lev), 50.0/))))
+
+     tracer_all = read_in_species(filename, tracer, lat_bound_0, lat_bound_1, lon_bound_0, lon_bound_1, lev_limit_0)
      tracername = tracer_all@tracername
 
       date         = fin->date
       datesec      = fin->datesec
-      lev         = fin->lev
 	  P0           = 0.01*fin->P0          ; change Pa to mb
-      Psurf        = 0.01*fin->PS
-      hyam         = fin->hyam 
-      hybm         = fin->hybm
-      lat          = fin->lat 
-      lon          = fin->lon
+      Psurf        = 0.01*fin->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      hyam         = fin->hyam(lev_limit_0:)
+      hybm         = fin->hybm(lev_limit_0:)
 
-	   
+
 	dim_tracer_all = dimsizes(tracer_all)
 
   ; -------------------------------
@@ -116,8 +129,8 @@ begin
       pm!2         = "lat"
       pm!3         = "lon"
       pm&time      = tracer_all&time
-      pm&lat       = lat
-      pm&lon       = lon
+      pm&lat       = tracer_all&lat
+      pm&lon       = tracer_all&lon
       pm@long_name = "mid-level pressures"
       pm@units     = "hPa"
 
@@ -310,6 +323,7 @@ do j= 0,dimsizes(date)-1
      tres@mpUSStateLineThicknessF = 2
      tres@mpNationalLineThicknessF = 2
 
+      tres@gsnAddCyclic        = False
      plots(5) = gsn_csm_contour_map(wksII,tracer_all(j,dimsizes(tracer_all&lev)-1,:,:),tres)  ; plot temp contours 
 
    ;----------------------
@@ -465,8 +479,8 @@ do j= 0,dimsizes(date)-1
   ; -------------------------------
   panel_res                       = True
   panel_res@txString              = "FIREX-AQ WACCM forecast " + date(j)+\
-                                    " "+sprintf("%02g",datesec(j)/3600) +"Z, "+\
-                                    sprintf("%02g",mod((datesec(j)/3600),24)) +"UTC"
+                                    " "+sprintf("%02g",datesec(j)/3600) +"UTC";+\
+                                    ;sprintf("%02g",mod((datesec(j)/3600),24)) +"UTC"
   panel_res@txPosYF               = 0.98
   panel_res@txPosXF               = 0.54
   panel_res@gsnPanelScalePlotIndex = 5

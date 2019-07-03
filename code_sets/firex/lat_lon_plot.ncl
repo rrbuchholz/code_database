@@ -68,19 +68,40 @@ outfolder = "forecast_plots/"
   ; model load
   ; -------------------------------
     fin = addfile(filename, "r")           ; read in
-     tracer_all = read_in_species(filename, tracer)
+
+     lat_bound_0 = bottomboundary-10
+     lat_bound_1 = topboundary+10
+     if (leftboundary.lt.0) then
+       lon_bound_0 = 360 + leftboundary - 10
+     else
+       lon_bound_0 = leftboundary - 10
+     end if
+     if (rightboundary.lt.0) then
+       lon_bound_1 = 360 + rightboundary + 10
+     else
+       lon_bound_1 = rightboundary + 10
+     end if
+
+     lev         = fin->lev
+     lev_limit_0 = minind(abs(lev - max((/min(lev), 50.0/))))
+     lev_limit_1 = dimsizes(lev)-1
+
+
+     tracer_all = read_in_species(filename, tracer, lat_bound_0, lat_bound_1, lon_bound_0, lon_bound_1, lev_limit_0)
      tracername = tracer_all@tracername
 
       date       = fin->$"date"$
       datesec    = fin->$"datesec"$
       P0mb       = 0.01*fin->P0            ; change Pa to mb
-      Psurf      = fin->PS
-      hyam       = fin->hyam               ; read to memory
-      hybm       = fin->hybm
-      u          = fin->U
-      v          = fin->V
+      Psurf      = fin->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      hyam       = fin->hyam(lev_limit_0:)               ; read to memory
+      hybm       = fin->hybm(lev_limit_0:)
+      ;u          = fin->U(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      ;v          = fin->V(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
 
 ;printVarSummary(tracer_all)
+;printVarSummary(Psurf)
+;print(tracer_all&lev)
 ;print(max(tracer_all))
 ;exit
 
@@ -107,11 +128,11 @@ outfolder = "forecast_plots/"
     tracer_new = vinth2p(tracer_all,hyam, hybm, pnew ,Psurf, 1    \
                  ,P0mb, 1, False)
 
-    u_new = vinth2p(u,hyam, hybm, pnew ,Psurf, 1    \
-                 ,P0mb, 1, False)
+    ;u_new = vinth2p(u,hyam, hybm, pnew ,Psurf, 1    \
+    ;             ,P0mb, 1, False)
 
-    v_new = vinth2p(v,hyam, hybm, pnew ,Psurf, 1    \
-                 ,P0mb, 1, False)
+    ;v_new = vinth2p(v,hyam, hybm, pnew ,Psurf, 1    \
+    ;             ,P0mb, 1, False)
   end if
 
 
@@ -136,16 +157,17 @@ do i= 0,dimsizes(level_array)-1
       res@gsnFrame            = False                     ; don't advance frame
       res@mpOutlineOn         = False                     ; will draw highres map later
       res@gsnMaximize         = True   
+      res@gsnAddCyclic        = False
 
       if (tracer.eq."AODVISdn".or.\
         tracer.eq."DUST_ODV") then
         res@tiMainString      = "FIREX WACCM forecast, Column, "+ \
-                                date(j)+" "+sprintf("%02g",datesec(j)/3600)+"Z, "+\
-                                sprintf("%02g",mod((datesec(j)/3600)+9,24)) +"KST"
+                                date(j)+" "+sprintf("%02g",datesec(j)/3600)+"UTC"; +\
+                                ; sprintf("%02g",mod((datesec(j)/3600)+9,24)) +"KST"
       else
         res@tiMainString      = "FIREX WACCM forecast, "+level_names(i)+", "+ \
-                                date(j)+" "+sprintf("%02g",datesec(j)/3600)+"Z, "+\
-                                sprintf("%02g",mod((datesec(j)/3600)+9,24)) +"KST"
+                                date(j)+" "+sprintf("%02g",datesec(j)/3600)+"UTC";+\
+                                ;sprintf("%02g",mod((datesec(j)/3600)+9,24)) +"KST"
       end if
 
       res@tiMainFontHeightF   = 0.022
@@ -187,18 +209,21 @@ do i= 0,dimsizes(level_array)-1
        else
          plot=gsn_csm_contour_map_ce(wks,tracer_all(j,dimsizes(tracer_all&lev)-1,:,:),res)  ; plot contours
        end if
-     else if (pnew(i-1).ge.700) then
-       plot=gsn_csm_contour_map_ce(wks,tracer_new(j,i-1,:,:),res)  ; plot contours 
+     else if (pnew(i-1).gt.700) then
+       plot=gsn_csm_contour_map_ce(wks,tracer_new(j,i-1,:,:),res)  ; plot contours
      else
        if (tracer.eq."CO") then
-         res@cnLevels             := contour_levels(2:17)
-       else if (tracer.eq."ISOP_etc".or.\
+         res@cnLevels             := contour_levels(1:16)
+       else if (tracer.eq."CO01") then
+         res@cnLevels             := contour_levels(0:14)
+       else if (tracer.eq."CO02".or.\
+                tracer.eq."COnotNA") then
+         res@cnLevels             := contour_levels(0:23)
+       else if (tracer.eq."ISOP".or.\
                 tracer.eq."NOx") then
          res@cnLevels             := contour_levels/10
-       else if (tracer.eq."PAN".or.\
-                tracer.eq."CO_var") then
-         res@cnLevels             := contour_levels/2
-       else if (tracer.eq."O3") then
+       else if (tracer.eq."O3".or.\
+                tracer.eq."O3S") then
          res@cnLevels             := contour_levels
        else
          res@cnLevels             := contour_levels/5
@@ -206,7 +231,8 @@ do i= 0,dimsizes(level_array)-1
        end if
        end if
        end if
-       plot=gsn_csm_contour_map_ce(wks,tracer_new(j,i-1,:,:),res)  ; plot contours 
+       end if
+       plot=gsn_csm_contour_map_ce(wks,tracer_new(j,i-1,:,:),res)  ; plot contours
      end if
      end if
 
@@ -235,13 +261,30 @@ do i= 0,dimsizes(level_array)-1
       resV@gsnLeftString   = ""
       resV@gsnRightString  = ""
    
-    if (i.eq.0) then
-      plotV = gsn_csm_vector(wks,u(j,dimsizes(u&lev)-1,:,:),v(j,dimsizes(v&lev)-1,:,:),resV)
-    else
-      plotV = gsn_csm_vector(wks,u_new(j,i-1,:,:),v_new(j,i-1,:,:),resV)
-    end if
+    ;if (i.eq.0) then
+    ;  plotV = gsn_csm_vector(wks,u(j,dimsizes(u&lev)-1,:,:),v(j,dimsizes(v&lev)-1,:,:),resV)
+    ;else
+    ;  plotV = gsn_csm_vector(wks,u_new(j,i-1,:,:),v_new(j,i-1,:,:),resV)
+    ;end if
 
-    overlay(plot,plotV)
+    ;overlay(plot,plotV)
+
+   ;----------------------------------------
+   ; Add site info:
+   ;        Boise:  43.6150N, 116.2023W
+   ;        Salina: 38.8403N, 97.6114W
+   ;----------------------------------------
+   polyres = True                        ; poly marker mods desired     
+    polyres@gsMarkerSizeF = 10          ; select size to avoid streaking
+    polyres@gsMarkerColor = "black" ;"red"        ; set polymarker color
+    polyres@tfPolyDrawOrder = "PostDraw"
+    polyres@gsMarkerThicknessF = 7
+    polyres@gsMarkerIndex    = 4
+
+   AddSite_Name = (/"Boise ID", "Salina KS"/)
+   AddSite_lat = (/43.6150, 38.8403/)
+   AddSite_lon = (/360-116.2023, 360-97.6114/)
+    stations_poly = gsn_add_polymarker(wks, plot, AddSite_lon, AddSite_lat, polyres)
 
    ;----------------------------------------
    ; add countries and counties
@@ -257,16 +300,6 @@ do i= 0,dimsizes(level_array)-1
     ;    lnres@gsLineThicknessF = 1.4
     ;  world_id = gsn_add_shapefile_polylines(wks,plot,world_shp_name,lnres)
 
-   ;----------------------------------------
-   ; add in forcast day
-   ;----------------------------------------
-    ;txres = True
-    ;txres@txFontHeightF = 0.012   ; Label right Y axis.
-    ;if (region_name.eq."east_asia") then
-    ;  gsn_text_ndc(wks,"Forecast run on: "+forecast_date,.18,.79,txres)
-    ;else
-    ;  gsn_text_ndc(wks,"Forecast run on: "+forecast_date,.18,.71,txres)
-    ;end if
 
 
     draw(plot)
