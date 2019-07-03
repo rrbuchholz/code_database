@@ -33,10 +33,10 @@ begin
   ; -------------------------------
   version = "V7"
   suff = "J"
-  location = "Wollongong"
+  location = "Darwin"
   surface = "land"
   year_s = 2001
-  network = "NDACC"
+  network = "TCCON"
 
   ;------------
   ; scale of outside sd
@@ -49,10 +49,10 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
-    ;plttype@wkPaperSize = "A4"
-    ;plttype@wkWidth = 0.5
-    ;plttype@wkHeight = 0.5
+    plttype      = "pdf"
+     ;plttype@wkPaperSize = "A4"
+     ;plttype@wkWidth = 0.5
+     ;plttype@wkHeight = 0.5
     year_e = 2017
 
   
@@ -111,7 +111,7 @@ begin
   ; Input file set-up
   ; -------------------------------
   ; MOPITT
-  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/"
+  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"
   mopitt_file = systemfunc ("ls "+mopitt_general+location+"_1deg_"+version+suff+"*all_"+surface+".nc")
 
   ; FTS
@@ -307,6 +307,29 @@ begin
   ; DAILY ANOMALIES
   ; -------------------------------
     day_anom = mopitt_array(:,0,0)-mopitt_day_climate_sm
+
+  ; -------------------------------
+  ; MONTH ANOMALIES
+  ; -------------------------------
+  years_of_record = year_e -year_s
+  climate_time_month = yyyymm_time(toint(year_s), toint(year_e), "integer")
+  month_avg_yfrac = yyyymm_to_yyyyfrac(stringtodouble(climate_time_month),0.5)
+  month_anom   = new((/toint(years_of_record+1)*12/), float)
+
+  do y = toint(startyear), toint(endyear)
+    do m=0,11
+      ind_yearmonth := ind(years.eq.y.and.months.eq.(m+1))
+      index_month = (y-toint(startyear))*12+m
+      if (.not.ismissing(ind_yearmonth(0))) then
+        if (dimsizes(ind_yearmonth).eq.1) then
+          month_anom(index_month)=tofloat(day_anom(ind_yearmonth))
+        else
+          month_anom(index_month)=dim_avg_n(tofloat(day_anom(ind_yearmonth)),0)
+        end if
+      end if
+    end do
+  end do
+
 
   ; -------------------------------
   ; DETERMINE EVENTS
@@ -719,7 +742,8 @@ if (PLOT) then
  
    res@gsnYRefLine           = 0.              ; reference line   
    res@gsnXYBarChart         = True            ; create bar chart 
-   plot5 = gsn_csm_xy(wks,climate_yfrac, day_anom,res)
+   ;plot5 = gsn_csm_xy(wks,climate_yfrac, day_anom,res)
+   plot5 = gsn_csm_xy(wks,month_avg_yfrac, month_anom,res)
 
   ; -------------------------------
   ; Add standard deviation
@@ -739,7 +763,7 @@ if (PLOT) then
     gsres                          = True                ; poly res
     gsres@gsFillColor            = "Red"         ; color chosen
     gsres@gsFillOpacityF         = 0.2                 
-    dum2 = gsn_add_polygon(wks,plot5,ya2,yb2,gsres)
+;    dum2 = gsn_add_polygon(wks,plot5,ya2,yb2,gsres)
 
  ; add zero line
   dum3 = gsn_add_polyline(wks,plot5,xx,yy,res_lines)      ; add polyline
@@ -764,9 +788,9 @@ if (PLOT) then
     anres@gsFillColor            = "orange"         ; color chosen
     anres@tfPolyDrawOrder        = "PreDraw"       ; send to back
     anres@gsFillOpacityF         = 0.3 
-    dum4 = gsn_add_polygon(wks,plot1,ya22,yb22,anres)
-    dum5 = gsn_add_polygon(wks,plot5,ya22,yb22,anres)
-    dum6 = gsn_add_polygon(wks,plot4,ya22,yb22,anres)
+    ;dum4 = gsn_add_polygon(wks,plot1,ya22,yb22,anres)
+    ;dum5 = gsn_add_polygon(wks,plot5,ya22,yb22,anres)
+    ;dum6 = gsn_add_polygon(wks,plot4,ya22,yb22,anres)
 
   if (PLOTFTS) then    
    plottime_f_events_new = yyyymmdd_to_yyyyfrac(f_events_new,0.5)
@@ -784,9 +808,9 @@ if (PLOT) then
    end do
     anres@gsFillColor            = "lightblue"         ; color chosen
     anres@gsFillOpacityF         = 0.5 
-    dum7 = gsn_add_polygon(wks,plot1,ya33,yb33,anres)
-    dum8 = gsn_add_polygon(wks,plot4,ya33,yb33,anres)  
-    dum9 = gsn_add_polygon(wks,plot5,ya33,yb33,anres)  
+    ;dum7 = gsn_add_polygon(wks,plot1,ya33,yb33,anres)
+    ;dum8 = gsn_add_polygon(wks,plot4,ya33,yb33,anres)  
+    ;dum9 = gsn_add_polygon(wks,plot5,ya33,yb33,anres)  
 
    end if ;(PLOTFTS)
 
@@ -875,7 +899,7 @@ if (PLOT) then
   tres       =  True
   tres@txFontHeightF = 0.018
   tres@txJust = "CenterLeft"
-     text=gsn_add_text(wks,plot1,event_label(0:dimsizes(event_times)-1),event_time_plot(0:dimsizes(event_times)-1),loc_labels,tres)
+     ;text=gsn_add_text(wks,plot1,event_label(0:dimsizes(event_times)-1),event_time_plot(0:dimsizes(event_times)-1),loc_labels,tres)
 
 
 

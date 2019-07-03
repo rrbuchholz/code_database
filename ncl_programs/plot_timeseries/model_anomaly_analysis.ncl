@@ -78,7 +78,7 @@ begin
   ; CAM-chem files
   ; -------------------------------
   anomaly_folder = "~/MOPITT_subset/V7/"
-  anomaly_filename = systemfunc ("ls "+anomaly_folder+location+"*.txt")
+  anomaly_filename = systemfunc ("ls "+anomaly_folder+location+"*sigma.txt")
 
   ; -------------------------------
   ; CAM-chem files
@@ -92,7 +92,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "pdf"
     ;plttype@wkPaperSize = "A4"
     ;plttype@wkWidth = 0.5
     ;plttype@wkHeight = 0.5
@@ -407,7 +407,7 @@ if (PLOT) then
 
 
     res@xyLineThicknessF         = 0.25
-    ;res@pmLegendDisplayMode      = "Always"        ; turn on legend
+    res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@xyExplicitLegendLabels   = (/"Methane oxidation", "NH Anthropogenic", "SH Anthropogenic",\
                                      "VOC oxidation", "Biogenic CO",\
                                      "Australian fire","South American fire",\

@@ -42,7 +42,7 @@ REMOVE = False
   mopitt_general     = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"+loc+"_1deg_"+version+ret+"MOPITTavg_"
   if (.not. isvar("pnum")) then      ; is location defined from command line?
       pnum = "l"
-      print("Setting surface to "+l)
+      print("Setting surface to "+pnum)
   end if  
        ; "l" - land
        ; "o" - water
@@ -98,7 +98,7 @@ REMOVE = False
      xmax                 = 3.0e18
      xmin                 = 0.5e18
 
-  PLOTBIAS         = True
+  PLOTBIAS         = False
      plot2Type     = "png"
      ; -------------------------------
      y2max                 = 1e18
@@ -110,7 +110,7 @@ REMOVE = False
         x2max                 = 2015.5
      end if
 
-  CSV_COLLECT         = False
+  CSV_COLLECT         = True
     outname           ="/IASI/home/buchholz/MOPITT_subset/"+version+"/analysis_output/"+\
                         version+ret+"_NDACC_comparison_results.csv"
 
