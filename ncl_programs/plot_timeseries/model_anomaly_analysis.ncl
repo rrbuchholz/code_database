@@ -92,7 +92,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "pdf"
     ;plttype@wkPaperSize = "A4"
     ;plttype@wkWidth = 0.5
     ;plttype@wkHeight = 0.5
