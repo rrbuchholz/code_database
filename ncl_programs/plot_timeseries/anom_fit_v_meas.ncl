@@ -24,30 +24,32 @@ begin
 ; USER DEFINED
 ; =========================================
  
-  location = "Siberia"
-  location_title = "Siberia"
+  location = "Darwin"
+  location_title = "Darwin"
   
   PLOT = True
-    plottype = "png"
-      plottype@wkWidth  = 3000
-      plottype@wkHeight = 1600
+    plottype = "pdf"
+      ;plottype@wkWidth  = 3000
+      ;plottype@wkHeight = 1600
       ;plottype@wkPaperWidthF  = 9 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
-    plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
+    ;plotname = "~/Documents/BB_variability/"+location+"_meas_v_mod"
+    plotname = "~/"+location+"_meas_v_mod"
 
   PREDICT = False
   TOP_THREE = False
   TWO_COMPARE = False
-  FULL_ANOMALY = True
+  FULL_ANOMALY = False
 ; =========================================
 ; SET UP
 ; =========================================
   ;anom_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  anom_loc = "~/Dropbox_Work/NH_CO_Variability/model_output/"
+  ;anom_loc = "~/Dropbox_Work/NH_CO_Variability/model_output/"
+  anom_loc = "~/stat_model_output/"
   anom_file = location+"coanom.txt"
 
   ;fit_loc = "~/Dropbox/Work/SH_CO_Variability/data/FittedResults/"
-  fit_loc = "~/Dropbox_Work/NH_CO_Variability/model_output/"
+  fit_loc = anom_loc 
   fit_file = location+"fitted.txt"
   
 ; ----------------------------------------
@@ -72,7 +74,7 @@ printVarSummary(meas_anom)
 ; ----------------------------------------
 ; Create date array
 ; ----------------------------------------
-  yyyymm = yyyymm_time(2001,2017,"integer")
+  yyyymm = yyyymm_time(2001,2016,"integer")
   ;yyyymm = yyyymm_time(1994,2016,"integer")
   yyyymm_select = new((dimsizes(yyyymm)/12*4), float)
    ;yyyymm_select(0:dimsizes(yyyymm_select)-1:4) = yyyymm(7:dimsizes(yyyymm)-1:12)
@@ -164,6 +166,9 @@ end if
 ; ----------------------------------------
   residual = meas_anom - fit_anom
 
+printVarSummary(yearfrac)
+print(yearfrac)
+printVarSummary(meas_anom)
 
 ; =========================================
 ; PLOT the timeseries
@@ -181,7 +186,7 @@ if (PLOT) then
    ;res@vpWidthF         = 1
    ;res@vpHeightF        = 0.25
     res@vpWidthF             = 0.9
-    res@vpHeightF            = 0.225                      ; set height of plot
+    res@vpHeightF            = 0.4                      ; set height of plot
    res@trXMinF          = 2001
    res@trXMaxF          = 2018
    
@@ -265,7 +270,7 @@ if (PLOT) then
     res2@tiXAxisString            = "Year"
 
     res2@vpWidthF             = 1.0
-    res2@vpHeightF            = 0.15                      ; set height of plot
+    res2@vpHeightF            = 0.26                      ; set height of plot
   plot1  = gsn_csm_xy (wks,yearfrac,meas_anom,res2)  ; create plot
 
     if (FULL_ANOMALY) then
@@ -451,9 +456,10 @@ if (PLOT) then
      res2@xyMarkerColor           = "black"  ; Marker color
     end if
 
+    res2@pmLegendDisplayMode     = "Never"        ; turn off legend
     res2@xyMarkerThicknessF       = 4
     res2@xyExplicitLegendLabels   := ""
-     res2@pmLegendParallelPosF     = 0.420
+     res2@pmLegendParallelPosF     = 0.320
   plot3  = gsn_csm_xy (wks,yearfrac,fit_anom,res2)  ; create plot
 
   end if

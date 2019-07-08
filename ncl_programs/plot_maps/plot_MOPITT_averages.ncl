@@ -22,15 +22,16 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "/net/mopfl/home/buchholz/code_database/ncl_programs/buchholz_global_util/arrow.ncl"
 
 ; add in bash for own colormaps
-;export NCARG_COLORMAPS=/IASI/home/buchholz/NCL_programs/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
+;export NCARG_COLORMAPS=/IASI/home/buchholz/ncl_programs/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
 
 begin
 ;***************************************************************
 ; User Input
 ;***************************************************************
-    version = "V7T"
+    version = "V8J"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_Jan_2002_2017.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_Nov_2002_2017.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
     ;sd_file = "/net/mopfl/home/buchholz/MOPITT_subset/averages/MOPITT_2001_2016_SONDsd.nc"
@@ -44,14 +45,14 @@ begin
    if (PLOT) then                            ; Map plot
        mapDir  = "./"                        ; directory for plot output
        mapName = "/net/mopfl/home/buchholz/MOPITT_"+version+"_tcol" ; plot name output
-       mapType = "x11"                       ; workstation type
-        mapType@wkWidth = 1800
-        mapType@wkHeight = 1800 
+       mapType = "pdf"                       ; workstation type
+        ;mapType@wkWidth = 1800
+        ;mapType@wkHeight = 1800 
    end if
 
-   DIFF = True
-     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201601_Jandiff.nc"
-     diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201701_Jandiff.nc"
+   DIFF = False
+     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200802_Febdiff.nc"
+     diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201402_Febdiff.nc"
 
 ;***************************************************************
 ; End User Input
@@ -138,7 +139,8 @@ end if
 
   if (PLOT) then
     wks = gsn_open_wks(mapType,mapName)
-    gsn_define_colormap(wks,"haxby_rrb")        ; change colour map
+    ;gsn_define_colormap(wks,"haxby_rrb")        ; change colour map
+    gsn_define_colormap(wks,"GMT_haxby")        ; change colour map
 
 ;gsn_draw_colormap(wks)
 ;exit
@@ -156,24 +158,26 @@ end if
     mapres@gsnDraw                   = False             ; do not advance frame
     mapres@vpXF                      = 0.06
     mapres@gsnMaximize               = True  
+    mapres@gsnPaperOrientation       = "portrait"
+
 
     mapres@mpGeophysicalLineThicknessF = 2.5
     mapres@cnFillOn                  = True
     mapres@cnFillMode                = "CellFill"     ; fill as grid boxes not contours
     mapres@cnLinesOn                 = False
 
-    mapres@lbTitleFontHeightF       = 0.014
-    mapres@lbLabelFontHeightF       = 0.014
+    mapres@lbTitleFontHeightF       = 0.022
+    mapres@lbLabelFontHeightF       = 0.022
     mapres@lbTitlePosition          = "bottom"      ; Label Bar title
-    mapres@lbOrientation             = "Vertical"     ; Label bar location
+    mapres@lbOrientation             = "Horizontal"     ; Label bar location
     mapres@lbLabelAutoStride         = True
     mapres@lbBoxLinesOn              = False
     mapres@lbBoxEndCapStyle           = "TriangleBothEnds"
-    ;mapres@pmLabelBarOrthogonalPosF  = .10            ; move whole thing down
+    mapres@pmLabelBarOrthogonalPosF  = .12            ; move whole thing down
 
-    mapres@gsnStringFontHeightF        =0.014
-    mapres@tmXBLabelFontHeightF        =0.014
-    mapres@tmYLLabelFontHeightF        =0.014
+    mapres@gsnStringFontHeightF        =0.022
+    mapres@tmXBLabelFontHeightF        =0.022
+    mapres@tmYLLabelFontHeightF        =0.022
     mapres@tmXBTickSpacingF            = 60.
     mapres@tmYLTickSpacingF            = 40.
 
@@ -194,9 +198,9 @@ end if
       mapres@mpCenterLonF            = 70
       ;-------------------------------------
       mapres@mpMinLatF               = -60       ; zoom to Aus
-      mapres@mpMaxLatF               = -10
-      mapres@mpMinLonF               = 110
-      mapres@mpMaxLonF               = 220
+      mapres@mpMaxLatF               = 0
+      mapres@mpMinLonF               = 100
+      mapres@mpMaxLonF               = 200
       mapres@mpCenterLonF            = 70
       ;-------------------------------------
       ;mapres@mpMinLatF               = -85       ; zoom to +/- 80
@@ -253,10 +257,11 @@ end if
     ;                   "15","17.5","20","22.5","25",\
     ;                   "27.5","30","32.5","35","37.5","40"/)
     mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    labels := fspan(0.0e17,8.0e17, 16)
+    labels := fspan(0.0e17,8.0e17, 17)
+print(labels) 
     labels_strings := (/"0", "0.5", "1.0","1.5","2.0","2.5",\
                        "3.0","3.5","4.0","4.5","5.0",\
-                       "5.5","6.0","6.5","7.0","7.5"/)
+                       "5.5","6.0","6.5","7.0","7.5","8.0"/)
     print(labels)
     mapres@cnLevels                  := labels
     mapres@lbLabelStrings            := labels_strings
@@ -279,17 +284,21 @@ end if
     ; ===================
     cmap = read_colormap_file("BlWhRe")
 printVarSummary(cmap)
-    colour_arr := (/cmap(40,:),cmap(48,:),cmap(50,:),cmap(50,:),cmap(51,:),cmap(52,:),\
-                 cmap(54,:), cmap(56,:),cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
-                 cmap(85,:),cmap(90,:),cmap(95,:),cmap(100,:)/)
+    ;colour_arr := (/cmap(40,:),cmap(48,:),cmap(50,:),cmap(50,:),cmap(51,:),cmap(52,:),\
+    ;            cmap(54,:), cmap(56,:),cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
+    ;             cmap(85,:),cmap(90,:),cmap(95,:),cmap(100,:)/)
+    colour_arr := (/cmap(40,:),cmap(48,:),cmap(49,:),cmap(51,:),cmap(52,:),\
+                 cmap(54,:), cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
+                 cmap(85,:),cmap(95,:),cmap(100,:)/)
+
     mapres@cnFillPalette       = colour_arr
     mapres@cnLevelSelectionMode      = "ExplicitLevels"
     mapres@lbTitleString             = "SD"             ; Label Bar title
     mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    labels := fspan(-2.0e17,8e17, 16)
+    labels := fspan(-2.0e17,8.0e17, 11)
+print(labels)
     labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
-                       "3.0","4.0","5.0","6.0","7.0","8.0",\
-                       "9.0","10.0","11.0","12.0","13.0"/)
+                       "3.0","4.0","5.0","6.0","7.0","8.0"/)
 
     ;labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
     ;                   "3.0","4.0","5.0","6.0","7.0","8.0",\
@@ -446,9 +455,14 @@ printVarSummary(cmap)
     ; Location Data
     ; ===================
 
-      station_name = (/"Darwin", "Wollongong", "Lauder"/)
-      station_lon = (/130.89, 150.88, 169.68/)
-      station_lat = (/-12.42, -34.41, -45.04/)
+      ;station_name = (/"Darwin", "Wollongong", "Lauder"/)
+      ;station_lon = (/130.89, 150.88, 169.68/)
+      ;station_lat = (/-12.42, -34.41, -45.04/)
+
+
+      station_name = (/"Darwin"/)
+      station_lon = (/130.89/)
+      station_lat = (/-12.42/)
 
     ; ===================
     ; Locations
@@ -456,22 +470,23 @@ printVarSummary(cmap)
     ;
      pmres                    = True
        pmres@gsMarkerIndex    = 16        ; filled markers
-       pmres@gsMarkerSizeF    = 0.008
+       pmres@gsMarkerSizeF    = 0.010
        pmres@gsMarkerColor    = "black"
 
        gsn_polymarker(wks,map,station_lon,station_lat,pmres)
+       points = gsn_add_polymarker(wks,map,station_lon,station_lat,pmres)
 
     ; ===================
     ; Add locations names
     ; ===================
     ;
      txres = True
-      txres@txFontHeightF  = 0.02
+      txres@txFontHeightF  = 0.022
       txres@txFont         = "helvetica-bold"
       txres@txJust         = "TopRight"
       txres@txFontColor    = "black"
 
-      ;text = gsn_add_text(wks,map,station_name(0),station_lon(0),station_lat(0)-2.5,txres)
+      text = gsn_add_text(wks,map,station_name(0),station_lon(0)-2.5,station_lat(0)+1.0,txres)
 
       txres@txJust         = "BottomLeft"
 
@@ -486,12 +501,12 @@ printVarSummary(cmap)
     ; ===================
   res1                     = True
     res1@gsnAttachBorderOn   = False
-    res1@tiYAxisFontHeightF  = 0.020
+    res1@tiYAxisFontHeightF  = 0.024
   res2                     = True
     res2@gsnMaximize         = True
     res2@gsnAttachPlotsXAxis = True
-    res2@tiXAxisFontHeightF  = 0.020
-    res2@tiYAxisFontHeightF  = 0.020
+    res2@tiXAxisFontHeightF  = 0.024
+    res2@tiYAxisFontHeightF  = 0.024
 
   ; map will be the base plot.
 
@@ -501,19 +516,19 @@ printVarSummary(cmap)
 
   panel_res                       = True
   panel_res@gsnPanelFigureStringsJust = "Bottomright"
-  panel_res@gsnPanelFigureStringsFontHeightF = 0.010
+  panel_res@gsnPanelFigureStringsFontHeightF = 0.018
   panel_res@gsnPanelFigureStringsPerimOn = True
-  panel_res@gsnPanelMainString    = "MOPITT Total column, SOND, 2001-2016"
+  panel_res@gsnPanelMainString    = "MOPITT total column CO, 2002-2017"
   panel_res@gsnPanelMainFontHeightF = 0.024 
 
   if (DIFF) then
-    panel_res@gsnPanelFigureStrings = (/"(a) Average January CO 2002-2017","(b) Jan 2003 difference to average","(b) Nov 2015 difference to average"/)
+    panel_res@gsnPanelFigureStrings = (/"Average February CO 2002-2017","Feb 2008 difference to average","Feb 2014 difference to average"/)
     gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
   else 
-    panel_res@gsnPanelFigureStrings = (/"(a) Average CO","(b) CO Std. Dev."/)
+    panel_res@gsnPanelFigureStrings = (/"Average CO","(b) CO Std. Dev."/)
     gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
   end if 
-  frame(wks)
+ ; frame(wks)
 
   ;draw(map)    ; All plots will be drawn.
   ;frame(wks)

@@ -29,25 +29,25 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "BBSiberia" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
+  loc = "Darwin" ; North/SouthAustralasia, East/WestSAmerica, Central/SouthSAfrica, MaritimeSEA
 
-  version = "V8T"
-  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V8/anomalies/"+loc+"_*.nc")
+  version = "V7J"
+  mopitt_file = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V7/anomalies/"+loc+"_*.nc")
 
 
-  location_title = "Siberia"
+  location_title = "Darwin"
   sub_label = "(a) "
     year_s = 2001
-    year_e = 2018
+    year_e = 2017
 
   ;------------
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "pdf"
     ;plttype@wkPaperSize = "A4"
-     plttype@wkWidth = 1200
-     plttype@wkHeight = 1200 
+     ;plttype@wkWidth = 1200
+     ;plttype@wkHeight = 1200 
       ymin       =-5e17
       ymax       =12e17
 

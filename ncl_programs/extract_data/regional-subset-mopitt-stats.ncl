@@ -30,15 +30,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2005
-  yend = 2017
+  ystart = 2001
+  yend = 2019
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "BBNWAu"
+  location = "NH_thinned_2_5"
 
   ;------------
   ; select daytime 
@@ -57,6 +57,8 @@ begin
   ;------------
   netCDF         = True
   COLAVG_VMR     = True
+  PIXELS         = False
+    pixel_number_select = 1
 
 
 ;--------------------------------------------
@@ -93,12 +95,13 @@ begin
   surface_index  = "SurfaceIndex"+suff
   diag_2         = "RetrievalAnomalyDiagnostic"+suff
   swath_index    = "SwathIndex"+suff
+  snr_calc       = "Level1RadiancesandErrors"+suff
 
    region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
                     "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
                     "BBCAmerica", "BBSAmerica","BBSAmOcean",\
                      "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
+                    "BBMSEA", "BBNWAu","BBEAu", "NH_thinned_2_5", "SH_thinned"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
@@ -157,8 +160,15 @@ do y = ystart,yend ; loop through years
      outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg.nc"
      if (COLAVG_VMR) then
         outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
+        if (PIXELS) then
+        print("Collecting pixel " +pixel_number_select)
+        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
+                       pixel_number_select+".nc"
+        print("Will write to " +outname)
+        end if
      end if
   end if
+
 
   ; -------------------------------
   ; SETUP ARRAYS 
@@ -215,7 +225,9 @@ do y = ystart,yend ; loop through years
       fin = addfile(all_files(i), "r")            ; read in
       sza          := fin->$solarza$
       surf_type    := fin->$surface_index$
-      pixel_num    := fin->$swath_index$
+      pixel_num    := fin->$swath_index$(:,0)
+      sn_5A        := fin->$snr_calc$(:,3,:)
+        snr_5A := sn_5A(:,0)/sn_5A(:,1)
       lat          := fin->$latitude$
       lon          := fin->$longitude$
       diag_anom    := fin->$diag_2$
@@ -223,13 +235,34 @@ do y = ystart,yend ; loop through years
         ;units value presumes use of TAI93 (International Atomic Time) format
         time@units = "seconds since 1993-1-1 00:00:00"
 
+     if (location.eq."NH_thinned_2_5".or.\
+         location.eq."SH_thinned") then
+       count_array := ispan(0, dimsizes(time)-1,1)
+       mod_array := count_array*0 + 32
+     end if
+
       ;--------------------------------------------
       ; Select region to bin (daytime retrievals)
       ;--------------------------------------------
-      region := ind(sza.le.dayflag.and.\
-                 ;(surf_type.eq.1.or.surf_type.eq.0).and.\ 
-                 surf_type.eq.s_id.and.\
-                 pixel_num.ne.3.and.\
+     if (location.eq."NH_thinned_2_5".or.\
+         location.eq."SH_thinned") then
+       region := ind(sza.le.dayflag.and.\
+                 ;pixel_num.eq.pixel_number_select.and.\
+                 snr_5A.gt.1000.and.\
+                 lat.le.topboundary.and.\
+                 lat.ge.bottomboundary.and.\
+                 lon.ge.leftboundary.and.\
+                 lon.le.rightboundary.and.\
+                 diag_anom(:,0).ne.1.and.\
+                 diag_anom(:,1).ne.1.and.\
+                 diag_anom(:,2).ne.1.and.\
+                 diag_anom(:,3).ne.1.and.\
+                 diag_anom(:,4).ne.1.and.\
+                 mod(count_array,mod_array).eq.0)
+     else
+       region := ind(sza.le.dayflag.and.\
+                 ;surf_type.eq.s_id.and.\
+                 snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\
@@ -239,6 +272,7 @@ do y = ystart,yend ; loop through years
                  diag_anom(:,2).ne.1.and.\
                  diag_anom(:,3).ne.1.and.\
                  diag_anom(:,4).ne.1)
+      end if
 
       if (all(ismissing(region))) then
         print("only one value from MOPITT at " + location +\

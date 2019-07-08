@@ -35,13 +35,17 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "CONTRAIL" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "CONTRAIL"
+  loc = "NAustralia" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "NAustralia"
 
-  version = "V8"
-  retrieval = "T"
+  version = "V7"
+  retrieval = "J"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
-  mopitt_files = systemfunc ("ls "+data_folder+"regions_v8/"+loc+"_"+version+retrieval+"*.nc")
+  ;mopitt_files = systemfunc ("ls "+data_folder+"regions_v8/"+loc+"_"+version+retrieval+"*.nc")
+  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"
+  mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_1deg_"+version+retrieval+"*all_land.nc")
+
+print(mopitt_files)
 
   if (loc.eq."Indonesia") then
     loc = "MaritimeSEA"
@@ -51,8 +55,6 @@ begin
   location_title = loc
     year_s = 2001
     year_e = 2017
-
-
 
   ;------------
   ; scale of outside sd
@@ -64,16 +66,17 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = True
-    plttype      = "x11"
+  PLOT           = False
+    plttype      = "pdf"
     ;plttype@wkPaperSize = "A4"
-     plttype@wkWidth = 1200
-     plttype@wkHeight = 1200 
+     ;plttype@wkWidth = 1200
+     ;plttype@wkHeight = 1200 
       ;ymin       =-5e17
       ;ymax       =10e17
       ;spacing    =5e17
 
-  scale_factor = 1e-09
+  ;scale_factor = 1e-09
+  scale_factor = 1e18
   
   CSV            = True
   if (CSV) then
@@ -81,7 +84,7 @@ begin
                      loc+"_"+version+retrieval+"MOPITTanomalies.csv"
   end if
 
-  NETCDF            = True
+  NETCDF            = False
   if (NETCDF) then
      nc_outname      = data_folder+"/"+version+"/anomalies/"+\
                         loc+"_"+version+retrieval+"MOPITTanomalies.nc"
@@ -101,7 +104,8 @@ begin
   ; names of data structures
   ; determined from an ncl_filedump
   ;sat_tcol      = "RetrievedCOTotalColumn"
-  sat_tcol      = "RetrievedX_CO"
+  sat_tcol     = "RetrievedCOTotalColumn_WGT"
+  ;sat_tcol      = "RetrievedX_CO"
 
    
   if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
@@ -110,11 +114,18 @@ begin
     ;sat_num       = "RetrievedCOtcolRegionStats"
     sat_num       = "RetrievedX_CORegionStats"
     sat_rand      = "AvgRandomError"
+  else if (loc.eq."Darwin") then
+    region_def = (/"Darwin","-12.42 Lat, 130.89 Lon"/)
+    timearray     = "Time_AVG"
+    sat_err       = "RetrievedCOTotalColumn_ERR"
+    sat_num       = "NumberofRetrievals"
+    sat_rand      = "RetrievedCOTotalColumn_ERR"
   else
     timearray     = "Time"
     sat_err       = "RetrievedCOTotalColumnError"
     sat_num       = "NumberInAvg"
     sat_rand      = "RetrievedCOColRandMax"
+  end if
   end if
 
   ; -------------------------------
@@ -180,10 +191,10 @@ begin
 
   print("***Reading MOPITT data at " + location)
     mopitt_tcol    = mopitt_in[:]->$sat_tcol$
-    mopitt_err     = mopitt_in[:]->$sat_err$
+    mopitt_time    = mopitt_in[:]->$timearray$
 
+    mopitt_err     = mopitt_in[:]->$sat_err$
     mopitt_rand    = mopitt_in[:]->$sat_rand$
-    mopitt_time    = mopitt_in[:]->$timearray$       
 
   if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
     mopitt_num     = mopitt_in[:]->$sat_num$(:,7)
@@ -341,8 +352,11 @@ if (PLOT) then
     res@gsnFrame            = False                 ; don't advance frame
     res@gsnMaximize         = True
 
-    res@trYMinF             = 55
-    res@trYMaxF             = 110
+    ;res@trYMinF             = 55
+    ;res@trYMaxF             = 110
+
+    res@trYMinF             = 0
+    res@trYMaxF             = 4
 
     ;res@trYMinF             = 1e18
     ;res@trYMaxF             = 3.2e18
@@ -369,11 +383,11 @@ if (PLOT) then
 
     res@tiMainString         = ""
     res@tiXAxisString        = ""
-    ;res@tiYAxisString        = "CO Column"
+    res@tiYAxisString        = "CO Column"
     ;res@gsnLeftString        = "molec. cm~S2~-2"
-    res@tiYAxisString        = "CO"
-    res@gsnLeftString        = "column average VMR (ppb)"
-    ;res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
+    ;res@tiYAxisString        = "CO"
+    ;res@gsnLeftString        = "column average VMR (ppb)"
+    res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
  
     res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@lgPerimOn                = False           ; Turn off perimeter
@@ -424,8 +438,10 @@ if (PLOT) then
     res@tmXBLabelsOn              = True
       res@tmXBLabelFontHeightF    = 0.10
 
-    res@trYMinF             = -15
-    res@trYMaxF             = 25
+    ;res@trYMinF             = -15
+    ;res@trYMaxF             = 25
+    res@trYMinF             = -1
+    res@trYMaxF             = 1
     ;res@trYMinF                  = ymin-0.05e18
     ;res@trYMaxF                  = ymax+0.05e18
     ;res@tmYLValues               = (/-0.5e18, 0e18, 0.5e18/)
@@ -542,7 +558,12 @@ if (NETCDF) then
   ; File 
   ; Attributes
   ;------------
-  region_def = str_split (mopitt_tcol@average_op_ncl,":")
+  if (loc.eq."Darwin") then
+    region_def = (/"Darwin","-12.42 Lat -12.42 Lat, 130.89 Lon 130.89 Lon"/)
+  else
+    region_def = str_split (mopitt_tcol@average_op_ncl,":")
+  end if 
+print(region_def(1))
   sep_lat_lon = str_split (region_def(1)," ")
 
   setfileoption(fout, "DefineMode",True)

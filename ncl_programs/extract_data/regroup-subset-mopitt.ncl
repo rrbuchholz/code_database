@@ -3,7 +3,7 @@
 ;=======================================================;
 ;
 ; Concepts illustrated:
-;   - For use with MOPITT CO version 6 or 7, subsetted data
+;   - For use with MOPITT CO version 6, 7 or 8, subsetted data
 ;   - Loading CO data from subsetted data
 ;          - option to select for pixel type
 ;          - option to select for surface type
@@ -14,7 +14,8 @@
 ;         -MOPITT subset of level 2, daily hdf files
 ;
 ;   To run type:
-;         regroup-subset-mopitt.ncl 
+;        ncl {optional variables: 'location_name="string"'\
+;             'smask="string"'} regroup-subset-mopitt.ncl 
 ;                                  RRB November 17, 2014
 ;=======================================================;
 ; load the libraries
@@ -31,9 +32,13 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  version = "V7T"
-  end_year = 2017
-  location_name = "Wollongong"
+  version = "V7"
+  ret = "J"
+  end_year = 2018
+  if (.not. isvar("location_name")) then      ; is location from command line?
+      location_name = "Arrival Heights"
+      print("Setting Location to "+location_name)
+  end if
 
   ;------------
   ; distance around 
@@ -47,17 +52,19 @@ begin
   PLOT           = True
     plttype      = "x11"
 
-  netCDF         = True
-    f1suffix     = "all_land"
-
   PIXEL_SELECT   = False
     pixelnum     = 4
     PMASK        = False      ; PMASK = True to mask pixel number, i.e. leave everything else
                               ; False to select pixel number
   SURFACE_MASK = True
-    smask        = "ocean"   ; select land, ocean, oceanland or mixed to mask
-                             ; i.e the opposite of what you select will be left
+    if (.not. isvar("location_name")) then      ; is CURTAIN from command line?
+      smask        = "land"   ; select to keep land, ocean, or mixed scenes and mask the opposite
+      print("Setting surface type mask "+smask)
+    end if
   
+  netCDF         = True
+    f1suffix     = "all_"+smask
+
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
@@ -95,88 +102,58 @@ begin
   ; -------------------------------
   ; STATION PARAMETERS
   ; -------------------------------
-    location = location_name
+  ; set up station coordinate parameters
+   station_names = (/"Altzomoni","Arrival Heights", "Ascension", "Boulder", "Bremen", "Darwin",\
+                     "Eureka", "Izana", "Jungfraujoch", "Kiruna", "Lauder", "La Reunion",\
+                     "Mauna Loa", "Ny Alesund", "Paris", "Paramibo", "Rikubetsu", "St Petersburg",\
+                     "Thule", "Toronto", "Tsukuba", "Wollongong", "Zugspitze"/)
 
-  if (location_name.eq."Arrival Heights") then
-    location = "ArrivalHeights"
-    time_diff    = 12               ; from UTC
-  else if (location_name.eq."Ascension") then
-    time_diff    = 0               ; from UTC
-    location_lat = -7.91
-    location_lon = -14.33
-  else if (location_name.eq."Boulder") then
-  else if (location_name.eq."Bremen") then
-    time_diff    = 1                ; from UTC
-  else if (location_name.eq."Darwin") then ; TCCON
-    time_diff    = 9.5              ; from UTC
-    location_lat = -12.424
-    location_lon = 130.892
-  else if (location_name.eq."Eureka") then
-    time_diff    = -6               ; from UTC 
-  else if (location_name.eq."Izana") then
-    time_diff    = 0                ; from UTC 
-  else if (location_name.eq."Jungfraujoch") then
-    location = "Jungfrau"
-    time_diff    = 1                ; from UTC 
-  else if (location_name.eq."Kiruna") then
-    time_diff    = 1                ; from UTC
-  else if (location_name.eq."Lauder") then
-    time_diff    = 12               ; from UTC
-    location_lat = -45.038
-    location_lon = 169.684
-  else if (location_name.eq."La Reunion") then
-    location = "Reunion"
-    time_diff    = 4                ; from UTC
-    location_lat = -20.901
-    location_lon = 55.485
-  else if (location_name.eq."Mauna Loa") then
-    location = "MaunaLoa"
-    time_diff    = -10              ; from UTC
-  else if (location_name.eq."Ny Alesund") then
-    location = "NyAlesund"
-    time_diff    = 1                ; from UTC
-  else if (location_name.eq."Paris") then
-  else if (location_name.eq."Rikubetsu") then
-  else if (location_name.eq."St Petersburg") then
-    location = "StPete"
-  else if (location_name.eq."Thule") then
-    time_diff    = -4               ; from UTC
-  else if (location_name.eq."Toronto") then
-    time_diff    = -5               ; from UTC
-  else if (location_name.eq."Wollongong") then
-    time_diff    = 10               ; from UTC
-    location_lat = -34.406
-    location_lon = 150.879
-  else if (location_name.eq."Zugspitze") then
-    time_diff    = 1                ; from UTC
-  else
-    print("Valid location not defined... exiting")
-    exit
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
-  end if
+   station_name_comp = (/"Altzomoni","ArrivalHeights", "Ascension", "Boulder", "Bremen", "Darwin",\
+                     "Eureka", "Izana", "Jungfrau", "Kiruna", "Lauder", "Reunion",\
+                     "MaunaLoa", "NyAlesund", "Paris", "Paramibo", "Rikubetsu", "StPete",\
+                     "Thule", "Toronto", "Tsukuba", "Wollongong", "Zugspitze"/)
+
+   ;                      lat,      lon,    time diff
+   station_select = (/(/  19.12,  -98.66,    0/),\  ;Altzomoni
+                      (/ -77.82,  166.65,    12. /),\  ;ArrivalHeights
+                      (/  -7.91,  -14.33,     0. /),\  ;Ascension
+                      (/  39.99, -105.26,    0/),\  ;Boulder
+                      (/  53.10,    8.85,     1. /),\  ;Bremen
+                      (/ -12.424, 130.892,    9.5/),\  ;Darwin
+                      (/  80.05,  -82.42,    -6. /),\  ;Eureka
+                      (/  28.30,  -16.48,     0. /),\  ;Izana
+                      (/  46.55,    7.98,     1. /),\  ;Jungfrau
+                      (/  67.84,   20.41,     1. /),\  ;Kiruna
+                      (/ -45.038, 169.684,   12. /),\  ;Lauder
+                      (/ -20.901,  55.485,    4. /),\  ;Reunion
+                      (/  19.54, -155.58,   -10. /),\  ;MaunaLoa
+                      (/  78.923,  11.923,    1. /),\  ;NyAlesund
+                      (/  48.97,    2.366,   0/),\  ;Paris
+                      (/   5.75,  -55.2,     0/),\  ;Paramibo
+                      (/  43.46,  143.8 ,    0/),\  ;Rikubetsu
+                      (/  59.88,   29.83,    0/),\  ;StPete
+                      (/  76.53,  -68.74,    -4. /),\  ;Thule
+                      (/  43.66,  -79.40,    -5. /),\  ;Toronto
+                      (/  36.05,  140.13,    0/),\  ;Tsukuba
+                      (/ -34.406, 150.879,   10. /),\  ;Wollongong
+                      (/  47.42,   10.98,     1. /) /) ;Zugspitze
+
+
+   ind_station = ind(station_names.eq.location_name)
+
+   location_lat    = station_select(ind_station,0)
+   location_lon    = station_select(ind_station,1)
+   time_diff       = station_select(ind_station,2)
+   location        = station_name_comp(ind_station)
+
+  print(location +" Lat: " +location_lat+", Lon: " + location_lon)
+  print(location +" time difference to UTC: " +time_diff)
 
   ; -------------------------------
   ; INPUT RELATED SETUP
   ; -------------------------------
-  mopitt_file = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_1deg_"+version+"_20010101-20170101.nc"
+  mopitt_files =systemfunc("ls /IASI/home/buchholz/MOPITT_subset/"+version+"/stations/"+location+"_1deg_"+version+ret+"*.nc")
+  print(mopitt_files)
 
   ; -------------------------------
   ; OUTPUT RELATED SETUP
@@ -187,7 +164,7 @@ begin
   end if
 
   if (netCDF) then
-     outname      = "/IASI/home/buchholz/MOPITT_subset/V7/stations/"+location+"_"+delta_deg+"deg_"+version+"MOPITTavg_"+f1suffix+".nc"
+     outname      = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"+location+"_"+delta_deg+"deg_"+version+ret+"MOPITTavg_"+f1suffix+".nc"
   end if
 
 
@@ -195,19 +172,12 @@ begin
   ; SELECTION SETUP
   ; -------------------------------
   if (SURFACE_MASK) then
-    if (smask.eq."ocean") then           ; land left
+    if (smask.eq."ocean") then           ; ocean left
        s_id = 0
-       s_id2 = 2
-    else if (smask.eq."land") then       ; ocean left
+    else if (smask.eq."land") then       ; land left
        s_id = 1
-       s_id2 = 2
-    else if (smask.eq."mixed") then      ; land and ocean left
+    else if (smask.eq."mixed") then      ; mixed left
        s_id = 2
-       s_id2 = 2
-    else if (smask.eq."oceanland") then  ; mixed pixels left
-       s_id = 0
-       s_id2 = 1
-    end if
     end if
     end if
     end if
@@ -226,38 +196,38 @@ begin
   ; MOPITT
   ; -------------------------------
   ; read data from region
-  fin = addfile(mopitt_file, "r")            ; read in
+  fin = addfiles(mopitt_files, "r")            ; read in
 
-    region_time_dummy    = fin->$sat_date$        ; time in seconds since 1993-1-1 00:00:00 (TAI93)
+    region_time_dummy    = fin[:]->$sat_date$        ; time in seconds since 1993-1-1 00:00:00 (TAI93)
       region_yfrac = cd_calendar(region_time_dummy,4)
       time_cut = ind(region_yfrac.lt.2011)
       ;index_stop = time_cut(dimsizes(time_cut)-1)
       index_stop = (dimsizes(region_time_dummy)-1)
 
     print("***Reading MOPITT data at " + location)
-    region_tcol    = fin->$tracer$(0:index_stop)
+    region_tcol    = fin[:]->$tracer$(0:index_stop)
       ;region_tcol@_FillValue = -999.99
       ;test = ind(region_tcol.eq.0)
       ;region_tcol(test)=region_tcol@_FillValue
-    region_err     = fin->$error$(0:index_stop)
+    region_err     = fin[:]->$error$(0:index_stop)
     region_rel_err = region_err/region_tcol
     region_wgt     = 1/(region_rel_err^2)
-    region_lat     = fin->$latitude$(0:index_stop)
-    region_lon     = fin->$longitude$(0:index_stop)
-    region_time    = fin->$sat_date$(0:index_stop)      ; time in seconds since 1993-1-1 00:00:00 (TAI93)
+    region_lat     = fin[:]->$latitude$(0:index_stop)
+    region_lon     = fin[:]->$longitude$(0:index_stop)
+    region_time    = fin[:]->$sat_date$(0:index_stop)      ; time in seconds since 1993-1-1 00:00:00 (TAI93)
     region_time    = region_time+time_diff_sec          ; change to local time
-    region_pix     = fin->$swath_index$(0:index_stop)
-    region_stype   = fin->$surface_index$(0:index_stop)
-    region_psurf   = fin->$pressure_surf$(0:index_stop)
-    region_dofs    = fin->$deg_freedom$(0:index_stop)
-    region_ap      = fin->$tcol_apriori$(0:index_stop)
-    region_v_ap    = fin->$vmr_aprior$(0:index_stop,:)
-    region_profile = fin->$vmr_aposterior$(0:index_stop,:)
-    region_ak      = fin->$vmr_avker$(0:index_stop,:,:)
-    region_col_ak  = fin->$col_avker$(0:index_stop,:)
-    region_diag_col= fin->$diag_1$(0:index_stop,:)
-    region_diag_anom = fin->$diag_2$(0:index_stop,:)
-    region_dryair  = fin->$dryair$(0:index_stop)
+    region_pix     = fin[:]->$swath_index$(0:index_stop)
+    region_stype   = fin[:]->$surface_index$(0:index_stop)
+    region_psurf   = fin[:]->$pressure_surf$(0:index_stop)
+    region_dofs    = fin[:]->$deg_freedom$(0:index_stop)
+    region_ap      = fin[:]->$tcol_apriori$(0:index_stop)
+    region_v_ap    = fin[:]->$vmr_aprior$(0:index_stop,:)
+    region_profile = fin[:]->$vmr_aposterior$(0:index_stop,:)
+    region_ak      = fin[:]->$vmr_avker$(0:index_stop,:,:)
+    region_col_ak  = fin[:]->$col_avker$(0:index_stop,:)
+    region_diag_col= fin[:]->$diag_1$(0:index_stop,:)
+    region_diag_anom = fin[:]->$diag_2$(0:index_stop,:)
+    region_dryair  = fin[:]->$dryair$(0:index_stop)
 
 
     ;--------------------------------------------
@@ -332,10 +302,10 @@ begin
   ; select for surface type
   ;--------------------------------------------
   if (SURFACE_MASK) then
-    print("masking "+smask)\
+    print("masking surface type, keeping:"+smask)\
       ; replace missing values for mixed only 
       ; or mixed and choice of ocean or land 
-      surf_ind = ind(region_stype.eq.s_id.or.region_stype.eq.s_id2)
+      surf_ind = ind(region_stype.ne.s_id)
     if (any(.not.ismissing(surf_ind))) then
         region_tcol(surf_ind)   = region_tcol@_FillValue
         region_time(surf_ind)   = region_time@_FillValue
@@ -516,7 +486,7 @@ if (PLOT) then
     res@trXMinF             = 2000
     res@trXMaxF             = end_year
 
-    res@tiMainString        = location_name + " MOPITT timeseries"
+    res@tiMainString        = location_name + " MOPITT "+version+ret+" timeseries"
     res@tiXAxisString       = "date"
     res@tiYAxisString       = "Total column CO (molec. cm~S2~-2  )"
   
@@ -543,7 +513,7 @@ if (netCDF) then
       fAtt@title              = "Average of MOPITT CO at " + delta_deg + \
                                 " degrees radius around " +location+ " station: "+\
                                 "Lat = " +location_lat+", Lon = "+ location_lon
-      fAtt@source             = "MOPITT level 2, version 6, thermal IR retrievals"
+      fAtt@source             = "MOPITT level 2, "+version+ret+", IR retrievals"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
 

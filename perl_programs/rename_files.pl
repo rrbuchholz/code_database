@@ -5,11 +5,16 @@
 #---                               rrb Apr 03, 2016 ---#
 #======================================================#
 
-chomp(@files_in = `ls *east_asia*`);
+$dir = "/amadeus-data/cam-chem/2018";
+$matchstring = "branch02.";
+$replacestring = "";
+
+chomp(@files_in = `ls $dir/*`);
+print "@files_in\n";
 
 for (@files_in){
   $out_name = $_;  
-  $out_name =~ s/east_asia/asia/g;
+  $out_name =~ s/$matchstring/$replacestring/g;
   print "$_ to $out_name\n";
   `mv $_ $out_name`;
   }
