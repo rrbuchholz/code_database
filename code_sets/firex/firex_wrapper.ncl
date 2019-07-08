@@ -76,11 +76,11 @@ begin
     ;------------
     if (.not. isvar("tracer_array")) then       ; is tracer_array from command line?
         ;2019 tracers
-        ;tracer_array = (/"ISOP", "NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
-        ;                "DUST","PM25","AODVISdn","CO","CO01","CO02","COnotNA"/)
+        tracer_array = (/"ISOP", "NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
+                        "DUST","PM25","AODVISdn","CO","CO01","CO02","COnotNA"/)
         ;2018 tracers
-        tracer_array = (/"NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
-                        "DUST","CO","CO01","CO02","COnotNA"/)
+        ;tracer_array = (/"NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
+        ;                "DUST","CO","CO01","CO02","COnotNA"/)
         ; test tracers
         ; tracer_array = (/"CO", "O3"/)
         print("Setting up tracer list "+tracer_array)

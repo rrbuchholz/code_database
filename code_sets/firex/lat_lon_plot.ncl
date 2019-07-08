@@ -96,8 +96,8 @@ outfolder = "forecast_plots/"
       Psurf      = fin->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
       hyam       = fin->hyam(lev_limit_0:)               ; read to memory
       hybm       = fin->hybm(lev_limit_0:)
-      ;u          = fin->U(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
-      ;v          = fin->V(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      u          = fin->U(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      v          = fin->V(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
 
 ;printVarSummary(tracer_all)
 ;printVarSummary(Psurf)
@@ -128,11 +128,11 @@ outfolder = "forecast_plots/"
     tracer_new = vinth2p(tracer_all,hyam, hybm, pnew ,Psurf, 1    \
                  ,P0mb, 1, False)
 
-    ;u_new = vinth2p(u,hyam, hybm, pnew ,Psurf, 1    \
-    ;             ,P0mb, 1, False)
+    u_new = vinth2p(u,hyam, hybm, pnew ,Psurf, 1    \
+                 ,P0mb, 1, False)
 
-    ;v_new = vinth2p(v,hyam, hybm, pnew ,Psurf, 1    \
-    ;             ,P0mb, 1, False)
+    v_new = vinth2p(v,hyam, hybm, pnew ,Psurf, 1    \
+                 ,P0mb, 1, False)
   end if
 
 
@@ -261,13 +261,13 @@ do i= 0,dimsizes(level_array)-1
       resV@gsnLeftString   = ""
       resV@gsnRightString  = ""
    
-    ;if (i.eq.0) then
-    ;  plotV = gsn_csm_vector(wks,u(j,dimsizes(u&lev)-1,:,:),v(j,dimsizes(v&lev)-1,:,:),resV)
-    ;else
-    ;  plotV = gsn_csm_vector(wks,u_new(j,i-1,:,:),v_new(j,i-1,:,:),resV)
-    ;end if
+    if (i.eq.0) then
+      plotV = gsn_csm_vector(wks,u(j,dimsizes(u&lev)-1,:,:),v(j,dimsizes(v&lev)-1,:,:),resV)
+    else
+      plotV = gsn_csm_vector(wks,u_new(j,i-1,:,:),v_new(j,i-1,:,:),resV)
+    end if
 
-    ;overlay(plot,plotV)
+    overlay(plot,plotV)
 
    ;----------------------------------------
    ; Add site info:

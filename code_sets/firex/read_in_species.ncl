@@ -216,15 +216,15 @@ if (tracer.eq."ISOP") then
      if (tracer_dummy@units.eq."kg/kg") then
       temp_k     = fin[:]->T(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})                  ;K 
       P0pa       = fin[0]->P0                 ;Pa
-      Psurf      = fin[:]->PS(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})                 ;Pa
-      hyam       = fin[0]->hyam
-      hybm       = fin[0]->hybm
+      Psurf      = fin[:]->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})                 ;Pa
+      hyam       = fin[0]->hyam(lev_limit_0:)
+      hybm       = fin[0]->hybm(lev_limit_0:)
      press_pa = pres_hybrid_ccm(Psurf,P0pa,hyam,hybm)
 
      valCOLLECT = tracer_dummy*press_pa/temp_k/287.05535*1.e+09 ; kg/kg -> ug/m3
          copy_VarCoords(tracer_dummy,valCOLLECT)
          copy_VarAtts(tracer_dummy,valCOLLECT)
-	 valCOLLECT@units = "ug/m3"
+         valCOLLECT@units = "~F33~m~F21~g/m~S~3~N~"
 	 
      else if (tracer_dummy@units.eq."mol/mol") then
          valCOLLECT = tracer_dummy*1.e9         ; mol/mol -> ppb
@@ -236,7 +236,7 @@ if (tracer.eq."ISOP") then
          valCOLLECT = tracer_dummy*1.e9         ; kg/m3 -> ug/m3
          copy_VarCoords(tracer_dummy,valCOLLECT)
          copy_VarAtts(tracer_dummy,valCOLLECT)
-	 valCOLLECT@units = "ug/m3"
+         valCOLLECT@units = "~F33~m~F21~g/m~S~3~N~"
     
      else
      valCOLLECT = tracer_dummy              
