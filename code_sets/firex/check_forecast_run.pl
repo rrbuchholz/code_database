@@ -11,12 +11,13 @@
 
 #------------------------------
 # location of CAM-chem output
-$dir = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/";
-$fname = "KORUS_forecast_3inst.cam_0001.h1.";
+$dir = "/glade/scratch/shawnh/GEOS5_frcst_data/";
+$fname = "f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h4.";
 
 #------------------------------
 # determine dates of run and current time
 chomp($current_date = `date +%Y-%m-%d`) ;
+chomp($forecast_date = `date +%Y%m%d`) ;
 chomp($forecast_end = `date --date='$current_date +5 day' +%Y-%m-%d`);
 chomp($time = `date +%H`);
 
@@ -24,7 +25,7 @@ chomp($time = `date +%H`);
 
 #------------------------------
 # open plotlog to see last time plotted
-$plotlog = "/glade/u/home/buchholz/NCL_programs/korus/.korus_plotlog";
+$plotlog = "/glade/u/home/buchholz/code_database/code_sets/firex/.firex_plotlog";
 open(IN, "<$plotlog");
 chomp(@lines = <IN>);
 close(IN);
@@ -32,14 +33,14 @@ $plotted = grep { /$current_date/ } @lines;
 
 #------------------------------
 # check if forecast is done and plot or not
-open(OUT,">/glade/u/home/buchholz/NCL_programs/korus/temp.out");
-chomp($end_file = `ls $dir$fname$forecast_end*`);
+open(OUT,">/glade/u/home/buchholz/code_database/code_sets/firex/temp.out");
+chomp($end_file = `ls ${dir}${forecast_date}/model_files.0/finn/$fname$forecast_end*`);
 
 if ($end_file ne '' && $plotted == 0){
   # forecast there and not done
   print OUT "Forecast completed, end file present: $end_file\n";
   print OUT "Submitting plot script\n";
-  `bsub < /glade/u/home/buchholz/NCL_programs/korus/submit_script`;
+  `sbatch < /glade/u/home/buchholz/code_database/code_sets/firex/submit_script_slurm`;
   open(OUT2,">>$plotlog");
   print OUT2 "plotted $current_date\n";
   close(OUT2);
@@ -59,8 +60,8 @@ else{
 if (($time == 17 || $time == 22)&& $plotted == 0){
   $to = 'buchholz@ucar.edu';
   $from = 'buchholz@ucar.edu';
-  $subject = 'KORUS-AQ plotting not done';
-  $message = 'After 4pm, KORUS-AQ plotting not done for '. $current_date .', may need to manually plot.';
+  $subject = 'FIREX-AQ plotting not done';
+  $message = 'After 4pm, FIREX-AQ plotting not done for '. $current_date .', may need to manually plot.';
  
   open(MAIL, "|/usr/sbin/sendmail -t");
  
@@ -78,7 +79,7 @@ if (($time == 17 || $time == 22)&& $plotted == 0){
 #------------------------------
 #clean up at 10 pm
 if ($time == 22 && $plotted == 1){
-  `rm -f /glade/u/home/buchholz/NCL_programs/korus/CAM-chem*.png`;
+  `rm -f /glade/u/home/buchholz/code_database/code_sets/firex/forecast_plots/WACCM*.png`;
 }
 
 

@@ -203,7 +203,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top, lat_bottom, lon_left, lon_right,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI *"+tracer+"*latlon_"+region_name+"*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/maps/"+region_name)
+     ;system("rsync -pI *"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
     end if ; LATLON
 
     if (LATLON_WUS) then
@@ -218,7 +218,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI *"+tracer+"*latlon_"+region_name+"*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/maps/"+region_name)
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_WUS
 
@@ -234,7 +234,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI *"+tracer+"*latlon_"+region_name+"*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/maps/"+region_name)
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_SEUS
 
@@ -252,9 +252,9 @@ begin
        print("plotting curtains for "+ tracer)
          curtain_plot(filename, tracer, curtain_contour_levels, forecast_date)
 
-     ;system("rsync --remove-source-files -pI *"+tracer+"*curtain*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/curtains")
+     ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
-     ;system("rsync -pI *"+tracer+"*curtain*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/curtains")
+     system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
      end if ; CURTAIN
 
@@ -302,7 +302,7 @@ begin
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, curtain_contour_levels, forecast_date)
 
-  ;system("rsync -pI *"+tracer+"*5dForecast*.png buchholz@amadeus.acom.ucar.edu:/data/web/mz4_output/korus_plots/camchem/sites")
+  system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
 
   end if ; STATION
 
