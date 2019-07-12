@@ -66,8 +66,8 @@ begin
   ;------------
   ; define location
   ;------------
-  location = "Canada"
-  location_name = "NW Canada"
+  location = "Darwin"
+  location_name = "Darwin"
   emissions = "variable"
 
   ; -------------------------------
