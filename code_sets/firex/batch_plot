@@ -22,7 +22,7 @@
   #files=f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.
   files=f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.
 
-  file_list="$(ls ${folder}${files}*2019-06-21*)"
+  file_list="$(ls ${folder}${files}*2019-06-27*)"
 
 
 echo $file_list
