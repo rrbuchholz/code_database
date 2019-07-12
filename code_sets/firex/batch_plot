@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #umask 002
 #cd ~/home/buchholz/code_database/code_sets/firex
 
@@ -30,13 +29,14 @@ echo $file_list
 for x in $file_list ; do
     echo ${x} \
 
-    dummy=$(echo "$x" | sed 's/\/waccm-output\/f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.//g')        # remove year specific to file
+    dummy=$(echo "$x" | sed 's/\/waccm-output\/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.//g')   # remove year specific to file
 
     forecast_date_dummy=$(echo "$dummy" | sed 's/-00000.nc//g')
     #forecast_date=2018-09-01
 
     forecast_date=$(echo "$forecast_date_dummy" | sed 's/-//g')
     echo ${forecast_date} \
+
 
 #---------------------------------------
 # run the plot routines on each file
