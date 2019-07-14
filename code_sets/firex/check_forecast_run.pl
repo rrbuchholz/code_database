@@ -7,7 +7,7 @@
 #---                               rrb Apr 03, 2016 ---#
 #======================================================#
 
-`cd /glade/u/home/buchholz/code_database/code_sets/firex/`;
+#`cd /glade/u/home/buchholz/code_database/code_sets/firex/`;
 
 #------------------------------
 # location of CAM-chem output
@@ -57,11 +57,11 @@ else{
 
 #------------------------------
 #send email if plotting not done after 5 pm
-if (($time == 17 || $time == 22)&& $plotted == 0){
+if (($time == 17 || $time == 23)&& $plotted == 0){
   $to = 'buchholz@ucar.edu';
   $from = 'buchholz@ucar.edu';
   $subject = 'FIREX-AQ plotting not done';
-  $message = 'After 4pm, FIREX-AQ plotting not done for '. $current_date .', may need to manually plot.';
+  $message = 'After 5pm, FIREX-AQ plotting not done for '. $current_date .', may need to manually plot.';
  
   open(MAIL, "|/usr/sbin/sendmail -t");
  

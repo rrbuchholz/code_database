@@ -218,7 +218,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_WUS
 
@@ -234,7 +234,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_SEUS
 
@@ -254,7 +254,7 @@ begin
 
      ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
+     system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
      end if ; CURTAIN
 
@@ -294,15 +294,23 @@ begin
     ;'Mount Bachelor, OR',          43.979, -121.689+360     , 238.311
     ;'Missoula, MT',                46.860, -113.985+360     , 246.015
     ;'DRAGON site',                 46.917, -114.083+360     , 245.917
-    ;'Salina, KS Regional Airport', 38.779, -97.6395+360     , 262.3605
-
-    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779/)
-    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605/)
-    station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "DRAGON-site", "Salina-KS-Regional-Airport"/)
+    ;'Salina, KS Regional Airport', 38.779, -97.6395+360     , 262.3605    
+    ;'Portland'                   , 45.516, -122.6793+360    , 237.321
+    ;'Spokane'                    , 47.659, -117.4260+360    , 242.574
+    ;'Salt-Lake-City'             , 40.761, -111.8910+360    , 248.109
+    ;'Kansas-City'                , 39.100, -94.5786+360     , 265.421
+    ;'Oklahoma-City'              , 35.468, -97.5164+360     , 262.484
+    ;'Denver'                     , 39.739, -104.9903+360    , 255.010
+    ;'Omaha'                      , 41.257, -95.9345+360     , 264.066
+    
+    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779, 45.516, 47.659, 40.761, 39.100, 35.468, 39.739, 41.257/)
+    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605, 237.321, 242.574, 248.109, 265.421, 262.484, 255.010, 264.066/)
+    station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "DRAGON-site", "Salina-KS-Regional-Airport", \
+                     "Portland", "Spokane", "Salt-Lake-City", "Kansas-City", "Oklahoma-City", "Denver", "Omaha"/)
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, curtain_contour_levels, forecast_date)
 
-  ;system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
+  system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
 
   end if ; STATION
 
