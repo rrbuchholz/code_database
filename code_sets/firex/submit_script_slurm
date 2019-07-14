@@ -35,8 +35,8 @@ setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/firex/colo
   set run_folder = "/glade/u/home/buchholz/code_database/code_sets/firex"
 
 ###  Hardcode date
-     set current_date = "2019-06-23"
-     set forecast_date = 20190623
+     set current_date = "2019-07-13"
+     set forecast_date = 20190713
 
 ### determine dates of run
 ### Jerome's forecast
@@ -49,8 +49,8 @@ setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/firex/colo
 ###  set current_date = `date +%Y-%m-%d`
 ###  set forecast_date = `date +%Y%m%d`
 ### Set folder
-  set folder = ${folder_base}/${forecast_date}/model_files.0/finn/
-  set files = "f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h4."
+  set folder = ${folder_base}/${forecast_date}/model_files/finn/
+  set files = "f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3."
 
   echo "Start plot: `date`"
 

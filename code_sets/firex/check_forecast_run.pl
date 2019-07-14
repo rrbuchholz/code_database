@@ -7,12 +7,12 @@
 #---                               rrb Apr 03, 2016 ---#
 #======================================================#
 
-`cd /glade/u/home/buchholz/NCL_programs/korus/`;
+`cd /glade/u/home/buchholz/code_database/code_sets/firex/`;
 
 #------------------------------
 # location of CAM-chem output
 $dir = "/glade/scratch/shawnh/GEOS5_frcst_data/";
-$fname = "f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h4.";
+$fname = "f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.";
 
 #------------------------------
 # determine dates of run and current time
@@ -34,7 +34,7 @@ $plotted = grep { /$current_date/ } @lines;
 #------------------------------
 # check if forecast is done and plot or not
 open(OUT,">/glade/u/home/buchholz/code_database/code_sets/firex/temp.out");
-chomp($end_file = `ls ${dir}${forecast_date}/model_files.0/finn/$fname$forecast_end*`);
+chomp($end_file = `ls ${dir}${forecast_date}/model_files/finn/$fname$forecast_end*`);
 
 if ($end_file ne '' && $plotted == 0){
   # forecast there and not done

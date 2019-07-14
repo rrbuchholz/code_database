@@ -203,7 +203,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top, lat_bottom, lon_left, lon_right,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI *"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+      system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
     end if ; LATLON
 
     if (LATLON_WUS) then
