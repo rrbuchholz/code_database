@@ -175,6 +175,7 @@ do i= 0,dimsizes(level_array)-1
       res@gsnLeftString   = "Forecast run on: "+forecast_date   ; add the gsn titles
       res@gsnRightString  = tracername + " ("+tracer_all@units+")"
       res@gsnRightStringFontHeightF = 0.020
+      res@gsnLeftStringFontHeightF = 0.020
 
       res@cnFillOn             = True
       res@cnLinesOn            = False
@@ -213,12 +214,10 @@ do i= 0,dimsizes(level_array)-1
        plot=gsn_csm_contour_map_ce(wks,tracer_new(j,i-1,:,:),res)  ; plot contours
      else
        if (tracer.eq."CO") then
-         res@cnLevels             := contour_levels(1:16)
-       else if (tracer.eq."CO01") then
-         res@cnLevels             := contour_levels(0:14)
-       else if (tracer.eq."CO02".or.\
-                tracer.eq."COnotNA") then
-         res@cnLevels             := contour_levels(0:23)
+         res@cnLevels             := contour_levels(1:15)
+       else if (tracer.eq."CO01".or.\
+                tracer.eq."CO02".or.tracer.eq."COnotNA") then
+         res@cnLevels             := contour_levels(0:19)
        else if (tracer.eq."ISOP".or.\
                 tracer.eq."NOx") then
          res@cnLevels             := contour_levels/10
@@ -227,7 +226,6 @@ do i= 0,dimsizes(level_array)-1
          res@cnLevels             := contour_levels
        else
          res@cnLevels             := contour_levels/5
-       end if
        end if
        end if
        end if
@@ -310,9 +308,13 @@ do i= 0,dimsizes(level_array)-1
       system("convert -density 96 -trim "+plot_name+"."+plttype+" "+plot_name+"."+plttype) 
    end if
 
+  ; Add in NCAR logo to plots
+  delete(wks)
+  cmd = "composite -geometry 80x80+850+20 ACOM-contemp-logo-blue-square.png "+ plot_name + ".png "+ plot_name + ".png"
+  system(cmd)
+
   end do
 end do
-
 
 end
 

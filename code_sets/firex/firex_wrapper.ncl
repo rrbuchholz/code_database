@@ -43,6 +43,7 @@ begin
     forecast_date = 20190620
   end if
   print("Processing " + filename)
+  hold_mainfile = filename
 
   ; -------------------------------
   ; Select which style/s to plots
@@ -77,7 +78,7 @@ begin
     if (.not. isvar("tracer_array")) then       ; is tracer_array from command line?
         ;2019 tracers
         tracer_array = (/"ISOP", "NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
-                        "DUST","PM25","AODVISdn","CO","CO01","CO02","COnotNA"/)
+                        "DUST","PM25","AODVISdn","CO","CO01","QFED_CO","CO02","COnotNA"/)
         ;2018 tracers
         ;tracer_array = (/"NOx","O3","O3S","PAN","BC","POM","SOA","SO4",\
         ;                "DUST","CO","CO01","CO02","COnotNA"/)
@@ -96,17 +97,14 @@ begin
     do s = 0,dimsizes(tracer_array)-1
       tracer = tracer_array(s)
       if (tracer.eq."CO") then
-        contour_levels    := (/40.,50.,60.,70.,80.,90.,100.,110.,120.,130.,140.,150.,160.,\
-                            170.,180.,190., 200., 240., 280., 300. ,350.,400.,450., 500./)
-        curtain_contour_levels  := contour_levels
-      else if (tracer.eq."CO01") then
-        contour_levels    := (/ 4.,6.,8.,10.,12.,13.,14.,15.,16.,17.,18.,19.,20.,40.,60.,80.,\
-                     100.,140.,180.,220.,260.,300.,340.,380.,420./)
-        curtain_contour_levels := (/ 0.,1.,2.,4.,6.,8.,10.,12.,14.,16.,18.,20.,22.,24.,26.,28.,\
-                             30.,35.,40.,50.,60.,80.,120.,180.,250./)
-      else if (tracer.eq."CO02".or.tracer.eq."COnotNA") then
-        contour_levels    := (/ 4.,6.,8.,10.,12.,13.,14.,15.,16.,17.,18.,19.,20.,40.,60.,80.,\
-                     100.,140.,180.,220.,260.,300.,340.,380.,420./)
+        contour_levels    := (/40.,50.,60.,70.,80.,90.,100.,120.,140.,160.,\
+                            180.,200.,250.,300.,350.,400.,450.,500.,550.,600.,650.,700.,750.,800.,850.,900./)
+        curtain_contour_levels  := (/40.,50.,60.,70.,80.,90.,100.,110.,120.,130.,140.,150.,160.,\
+                            170.,180.,190., 200., 240., 280., 300. ,350.,400.,450.,500./)
+      else if (tracer.eq."CO01".or.tracer.eq."QFED_CO".or.\
+              tracer.eq."CO02".or.tracer.eq."COnotNA") then
+        contour_levels    := (/ 5.,10.,15.,20.,40.,60.,80.,\
+                     100.,120.,140.,160.,180.,200.,250.,300.,350.,400.,450.,500.,550.,600.,650.,700.,750.,800./)
         curtain_contour_levels := (/ 0.,1.,2.,4.,6.,8.,10.,12.,14.,16.,18.,20.,22.,24.,26.,28.,\
                              30.,35.,40.,50.,60.,80.,120.,180.,250./)
       else if (tracer.eq."ISOP") then
@@ -118,50 +116,50 @@ begin
                                 3.,4.,5.,6.,7.,8.,10.,15.,20./)
       else if (tracer.eq."NOx") then
         contour_levels    := (/ 0.0,0.05,0.1,0.2,0.4,0.6,0.8,1.,2.,\
-                              3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,25.,30./)
+                              3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,25.,30.,35.,40./)
         curtain_contour_levels := (/ 0.005,0.01,0.025,0.05,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
                               2.5,3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20./)
       else if (tracer.eq."O3") then
         contour_levels    := (/20.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
-                              80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)
+                              80.,85.,90.,100.,110.,120.,130.,140.,160.,180.,200./)
         curtain_contour_levels := contour_levels
       else if (tracer.eq."O3S") then
         contour_levels    := (/0.,1.,2.,3.,4.,5.,10.,15.,20.,25.,30.,\
                               35.,40.,50.,60.,70.,80.,90.,100.,150.,200./)      
         curtain_contour_levels :=  (/10., 15., 20., 25.,30.,35.,40.,45.,50.,55.,\
                               60.,65.,70.,75.,80.,85.,90.,100.,120.,140.,160./)
-      else if (tracer.eq."BC".or.tracer.eq."OC") then
-        contour_levels    :=  (/ 0.0,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,3.5,4.,5.,6.,7.,8.,9.,10.,20.,30.,40.,50.,60./)
+      else if (tracer.eq."BC") then
+        contour_levels    :=  (/ 0.0,0.2,0.4,0.6,0.8,1.0,1.5,2.,\
+                              2.5,3.,3.5,4.,4.5,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,24./)
         curtain_contour_levels := array_append_record(fspan(0, 0.5, 16), (/1.0,2.0,3.0/), 0)
-      else if (tracer.eq."POM".or.tracer.eq."OC") then
-        contour_levels    :=  (/ 0.0,0.1,0.2,0.3,0.4,0.5,1.0,1.5,2.,\
-                              2.5,3.,3.5,4.,5.,6.,7.,8.,9.,10.,20.,30.,40.,50.,60./)
+      else if (tracer.eq."POM") then
+        contour_levels    :=  (/ 0.0,0.2,0.4,0.6,0.8,1.0,2.,\
+                              3.,4.,5.,6.,7.,8.,9.,10.,20.,30.,40.,50.,60.,70.,80.,90.,100./)
         curtain_contour_levels := array_append_record(fspan(0, 1.0, 11), fspan(2.0, 10.0, 9), 0)
       else if (tracer.eq."SOA") then
         contour_levels    :=  (/ 0.0,0.2,0.4,0.6,0.8,1.,2.,\
-                              4.,6.,8.,10.,12.,14.,16.,18.,20.,22.,24.,26.,28.,30.,35.,40.,45./)
+                              3.,4.,5.,6.,7.,8.,9.,10.,15.,20.,25.,30.,35.,40.,50.,60.,70.,80./)
         curtain_contour_levels := array_append_record(fspan(0, 1.0, 11), fspan(2.0, 10.0, 9), 0)
       else if (tracer.eq."SO4") then
         contour_levels    := (/ 0.0,0.2,0.4,0.6,0.8,1.0,1.5,2.,\
-                              2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9.,10.,15.,20.,25.,30./)
+                              2.5,3.,3.5,4.,4.5,5.,6.,7.,8.,9.,10.,15.,20./)
         curtain_contour_levels := array_append_record(fspan(0, 1.0, 11), fspan(2.0, 15.0, 14), 0)
       else if (tracer.eq."DUST") then
         contour_levels    := (/ 0.,0.2,0.4,0.6,0.8,1.,2.,4.,\
                               6.,8.,10.,15.,20.,25.,30.,40.,50.,60.,70.,80./)
         curtain_contour_levels :=  array_append_record(fspan(0, 5.0, 11), fspan(6.0, 30.0, 25), 0)
       else if (tracer.eq."PM25") then
-        contour_levels    :=  (/ 0.0,0.2,0.4,0.6,0.8,1.,2.,4.,\
-                              6.,8.,10.,15.,20.,25.,30.,35.,40.,50.,60.,70.,80.,90./)
+        contour_levels    :=  (/ 0.0,0.5,1.,2.,3.,4.,5.,\
+                              6.,7.,8.,9.,10.,15.,20.,25.,30.,35.,40.,50.,60.,70.,80.,90.,100./)
         curtain_contour_levels := array_append_record(fspan(0, 1.0, 11), fspan(2.0, 15.0, 14), 0)
       else if (tracer.eq."PAN") then
-        contour_levels    := (/ 0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,\
-                              1.6,1.8,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6./)      
+        contour_levels    := (/ 0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.5,\
+                              2.,2.5,3.,3.5,4.,4.5,5.,6.,7.,8.,9.,10./)      
         curtain_contour_levels := (/ 0.,0.2,0.3,0.4,0.5,0.6,0.8,1.0,1.4,\
                               1.8,2.,4.,6.,8.,10.,15.,20./)
       else if (tracer.eq."AODVISdn".or.tracer.eq."DUST_ODV") then
         contour_levels    := (/ 0.,0.025,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,\
-                               0.6,0.65,0.7/)
+                               0.6,0.65,0.7,0.75,0.8/)
       else
         contour_levels    := (/20.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.,75.,\
                               80.,85.,90.,100.,110.,120.,130.,140.,150.,200./)
@@ -180,9 +178,17 @@ begin
       end if
       end if
       end if
+
+    ;------------
+    ; different infile for QFED fire
+    ;------------
+     if (tracer.eq."QFED_CO") then
+        new_filename = str_sub_str(filename,"forecast.001.cam","forecast.002.cam")
+        filename = new_filename
+      else
+        filename = hold_mainfile
       end if
 
- 
 
     ;------------
     ; Lat/Lon plots
@@ -203,7 +209,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top, lat_bottom, lon_left, lon_right,\
                   pnew, region_name, contour_levels, forecast_date)
 
-      system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     ; system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
     end if ; LATLON
 
     if (LATLON_WUS) then
@@ -218,7 +224,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+    ; system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_WUS
 
@@ -234,7 +240,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+    ; system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_SEUS
 
@@ -254,7 +260,7 @@ begin
 
      ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
-     system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
+   ;  system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
      end if ; CURTAIN
 
@@ -310,7 +316,7 @@ begin
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, curtain_contour_levels, forecast_date)
 
-  system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
+ ; system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
 
   end if ; STATION
 

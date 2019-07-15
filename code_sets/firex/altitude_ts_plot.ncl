@@ -211,6 +211,11 @@ do i=0, dimsizes(lat_array)-1
      system("convert -density 96 -trim "+plot_name+"."+plttype+" "+plot_name+"."+plttype) 
   end if
 
+  ; Add in NCAR logo to plots
+  delete(wks)
+  cmd = "composite -geometry 80x80+880+580 ACOM-contemp-logo-blue-square.png "+ plot_name + ".png "+ plot_name + ".png"
+  system(cmd)
+
 end do ; stations
 
 end

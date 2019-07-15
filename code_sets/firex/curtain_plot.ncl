@@ -66,7 +66,7 @@ begin
 ; interpolate to unusual paths #3 and #4
 ;--------------------------------------------
 
-  npts     =   50                    ; number of points in resulting transect
+  npts     =   40 ;50                    ; number of points in resulting transect
   n_tickmarks_XB = 5
 
 ;--------------------------------------------
@@ -113,11 +113,21 @@ begin
       datesec      = fin->datesec
 	  P0           = 0.01*fin->P0          ; change Pa to mb
       Psurf        = 0.01*fin->PS(:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+        Psurf!0         = "time"
+        Psurf!1         = "lat"
+        Psurf!2         = "lon"
+        Psurf&time      = tracer_all&time
+        Psurf&lat       = tracer_all&lat
+        Psurf&lon       = tracer_all&lon
+
       hyam         = fin->hyam(lev_limit_0:)
       hybm         = fin->hybm(lev_limit_0:)
 
+      u            = fin->U(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      v            = fin->V(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})
+      wsbd         = sqrt(u^2 + v^2)
 
-	dim_tracer_all = dimsizes(tracer_all)
+     dim_tracer_all = dimsizes(tracer_all)
 
   ; -------------------------------
   ; Hybrid levels to pressure levels
@@ -147,18 +157,18 @@ begin
   ;    Boise:  43.6150N, 116.2023W
   ;    Salina: 38.8403N, 97.6114W
   ; ==============================
-    curtain_defs_lon = (/(/-116.2023,-116.2023/),\	;0
-                         (/-130.0,-100.0/),\		;1
-                         (/-110, -90/),\		;2
-                         (/-97.6114,-97.6114/),\	;3
-                         (/-90, -120/)/)		;4
-    curtain_defs_lat = (/(/35, 50/),\			;0
-                         (/43.6150,43.6150/),\		;1
-                         (/38.8403,38.8403/),\		;2
-                         (/35, 45/),\			;3
-                         (/36.8855, 44.5904/)/)		;4
+    curtain_defs_lon = (/(/-116.2023,-116.2023/),\	; C1
+                       (/-125.0,-105.0/),\              ; C2
+                       (/-97.6114,-97.6114/),\          ; C3
+                       (/-110, -90/),\                  ; C4
+                       (/-130, -90/)/)                  ; C5
+    curtain_defs_lat = (/(/50, 35/),\                   ; C1
+                       (/43.6, 43.6/),\                 ; C2
+                       (/45, 30/),\                     ; C3
+                       (/38.8403,38.8403/),\            ; C4
+                       (/44.5904, 36.8855/)/)           ; C5
 	curtain_defs_lon = where(curtain_defs_lon.lt.0.0, 360.0+curtain_defs_lon, curtain_defs_lon)
-	
+	  
 	dim_curtain_defs = dimsizes(curtain_defs_lat)
 	
 	transect = new((/dim_curtain_defs(0), dim_tracer_all(0), dim_tracer_all(1), npts/), float)
@@ -167,11 +177,15 @@ begin
 	transect!2 = "lev"
 	transect!3 = "npts"
 
-	transect_pm = new((/dim_curtain_defs(0), dim_tracer_all(0), dim_tracer_all(1), npts/), float)
-	transect_pm!0 = "curtain_index"
-	transect_pm!1 = "time"
-	transect_pm!2 = "lev"
-	transect_pm!3 = "npts"
+	;transect_pm = new((/dim_curtain_defs(0), dim_tracer_all(0), dim_tracer_all(1), npts/), float)
+	;transect_pm!0 = "curtain_index"
+	;transect_pm!1 = "time"
+	;transect_pm!2 = "lev"
+	;transect_pm!3 = "npts"
+
+        transect_pm = transect
+	  transect_u = transect
+	  transect_v = transect
 	
    ;----------------------------------------
    ; Add site info:
@@ -201,37 +215,62 @@ begin
 	else
 	   curtains = transect
 	   curtains_pm = transect_pm
+	   curtains_u = transect_u
+	   curtains_v = transect_v
 	   do n = 0, -1+dim_curtain_defs(0)
 		  dist_temp = gc_latlon(curtain_defs_lat(n,0),curtain_defs_lon(n,0),curtain_defs_lat(n,1),curtain_defs_lon(n,1),npts,2)
 		  transect(n,:,:,:) = linint2_points(tracer_all&lon,tracer_all&lat,tracer_all,True,dist_temp@gclon,dist_temp@gclat,2)
 		  transect_pm(n,:,:,:) = linint2_points(pm&lon,pm&lat,pm,True,dist_temp@gclon,dist_temp@gclat,2)
+		  transect_u(n,:,:,:) = linint2_points(u&lon,u&lat,u,True,dist_temp@gclon,dist_temp@gclat,2)
+		  transect_v(n,:,:,:) = linint2_points(v&lon,v&lat,v,True,dist_temp@gclon,dist_temp@gclat,2)
 	      delete(dist_temp)
 	      curtains(n,:,:,:) = rm_single_dims(transect(n,:,:,:))
 		  curtains_pm(n,:,:,:) = rm_single_dims(transect_pm(n,:,:,:))
+		  curtains_u(n,:,:,:) = rm_single_dims(transect_u(n,:,:,:))
+		  curtains_v(n,:,:,:) = rm_single_dims(transect_v(n,:,:,:))
 	      ; print("--- curtain ind: "+n)
 	      ; printMinMax(transect(n,:,:,:), 0)
 	   end do
 	   copy_VarAtts(tracer_all,transect)
 	   transect&lev    = tracer_all&lev
 	   curtains&lev    = tracer_all&lev
-	   ; curtains_pm&lev    = tracer_all_pm&lev
+	   curtains_pm&lev = tracer_all&lev
+	   curtains_u&lev  = tracer_all&lev
+	   curtains_v&lev  = tracer_all&lev
 	end if
 	
 	; printVarSummary(curtains)
 	; printVarSummary(curtains_pm)
 
-	 
-
 	curtains_swap = curtains(curtain_index|:, time|:, npts|:, lev|:)
 	curtains_pm_swap = curtains_pm(curtain_index|:, time|:, npts|:, lev|:)
+	curtains_u_swap = curtains_u(curtain_index|:, time|:, npts|:, lev|:)
+	curtains_v_swap = curtains_v(curtain_index|:, time|:, npts|:, lev|:)
+	; printVarSummary(curtains_pm_swap)
+	; printVarSummary(curtains_u_swap)
 	
 	curtains_regrid = linint1_Wrap(curtains_pm_swap, curtains_swap, False, lev, 0)
 	curtains_regrid := curtains_regrid(curtain_index|:, time|:,  lev|:, npts|:)
-    delete(curtains_swap)
-	delete(curtains_pm_swap)
-	delete(curtains)
-	delete(curtains_pm)
+
+	curtains_u_regrid = linint1_Wrap(curtains_pm_swap, curtains_u_swap, False, lev, 0)
+	curtains_u_regrid := curtains_u_regrid(curtain_index|:, time|:,  lev|:, npts|:)
 	
+	curtains_v_regrid = linint1_Wrap(curtains_pm_swap, curtains_v_swap, False, lev, 0)
+	curtains_v_regrid := curtains_v_regrid(curtain_index|:, time|:,  lev|:, npts|:)
+	
+	curtains_wspd_regrid = curtains_u_regrid
+	curtains_wspd_regrid = sqrt(curtains_u_regrid^2 + curtains_v_regrid^2)
+
+        delete(curtains_swap)
+        delete(curtains_pm_swap)
+        delete(curtains)
+        delete(curtains_pm)
+        delete(curtains_u)
+        delete(curtains_v)
+        delete(curtains_u_swap)
+        delete(curtains_v_swap)
+	
+        ; printVarSummary(curtains_u_regrid)
 
 ;--------------------------------------------
 ; plot curtains
@@ -247,7 +286,7 @@ do j= 0,dimsizes(date)-1
 
   
     plots = new((/6/), graphic)
-
+    plots_windbarb = new((/5/), graphic)
   
  ;-----------------------
  ; Set resources for plotting
@@ -271,7 +310,7 @@ do j= 0,dimsizes(date)-1
    cres@gsnRightString = " "
 
    cres@vpWidthF             = 0.65
-   cres@vpHeightF            = 0.5
+   cres@vpHeightF            = 0.53
 
    tres = True
      copy_VarAtts(cres, tres)
@@ -325,6 +364,32 @@ do j= 0,dimsizes(date)-1
 
       tres@gsnAddCyclic        = False
      plots(5) = gsn_csm_contour_map(wksII,tracer_all(j,dimsizes(tracer_all&lev)-1,:,:),tres)  ; plot temp contours 
+
+       ; add surface wind vectors
+       surfwind_res = True
+         surfwind_res@gsnDraw        = False          ; do not draw
+         surfwind_res@gsnFrame       = False          ; do not advance the frame
+         surfwind_res@vcGlyphStyle   = "CurlyVector" 
+         surfwind_res@vcMapDirection = False	      ; needed to disassociate the map from the vectors
+         surfwind_res@gsnAddCyclic   = False          ; data is not cyclic
+         surfwind_res@vcMinDistanceF = 0.015   
+         surfwind_res@vcMonoLineArrowColor = True
+         surfwind_res@vcLineArrowColor = "grey20"
+         surfwind_res@vcRefAnnoOn    = True     
+         surfwind_res@vcRefAnnoOrthogonalPosF = 0.02 
+         surfwind_res@vcRefLengthF   = 0.05 ;0.045    ; define length of vec ref
+         surfwind_res@vcRefMagnitudeF = 10
+         surfwind_res@vcRefAnnoString1On = True
+         surfwind_res@vcRefAnnoOrientation = "horizontal"
+         surfwind_res@vcRefAnnoString1   = "$VMG$" +" m/s"
+	   
+         surfwind_res@lbLabelBarOn    = False
+         surfwind_res@vcLevelSelectionMode = "ExplicitLevels" ; will explicitly set the levels
+         surfwind_res@vcWindBarbLineThicknessF= 2      ; set the wind barb thickness
+         surfwind_res@vcLevels        = ispan(0,20,5)  ; set the levels 
+
+         plot_surfwind = gsn_csm_vector_scalar(wksII, u(j, dimsizes(tracer_all&lev)-1, :, :), v(j, dimsizes(tracer_all&lev)-1, :, :), wsbd(j, dimsizes(tracer_all&lev)-1, :, :), surfwind_res)
+	 overlay(plots(5), plot_surfwind)
 
    ;----------------------
    ; create curtain labels
@@ -383,22 +448,59 @@ do j= 0,dimsizes(date)-1
 		  cres@tmXBLabels(k) = traj_x_label_lon + "~C~" + traj_x_label_lat 
 
        end do
-	   ; plots(n) = gsn_csm_contour(wksII,curtains(n, j, :, :),cres)
+       
+       ; plots(n) = gsn_csm_contour(wksII,curtains(n, j, :, :),cres)
 	   
-	   if (n.eq.0 .or. n.eq.2 .or. n.eq.4)
-	      cres@tiYAxisString        = "Altitude (hPa)" 
-	   else
-	      cres@tiYAxisString        = " " 
-	   end if
-	   plots(n) = gsn_csm_contour(wksII,curtains_regrid(n, j, :, :),cres)
+       if (n.eq.0 .or. n.eq.2 .or. n.eq.4)
+          cres@tiYAxisString        = "Altitude (hPa)" 
+       else
+          cres@tiYAxisString        = " " 
+       end if
+       plots(n) = gsn_csm_contour(wksII,curtains_regrid(n, j, :, :),cres)
 	  
+       ; ==============	   
+       ; Add wind barbs
+       ; ==============
+       windbarb_res = True
+         windbarb_res@gsnDraw        = False          ; do not draw
+         windbarb_res@gsnFrame       = False          ; do not advance the frame
+         windbarb_res@vcGlyphStyle   = "WindBarb"     ; select wind barbs 
+         windbarb_res@vcMapDirection = False			; needed to disassociate the map from the vectors
+         windbarb_res@gsnAddCyclic   = False              ; data is not cyclic
+         windbarb_res@vcWindBarbColor = "grey20"
+         windbarb_res@vcMinDistanceF = 0.02
+         windbarb_res@vcWindBarbTickLengthF = 0.4
+         windbarb_res@vcWindBarbTickSpacingF = 0.15
+       
+         windbarb_res@vcRefAnnoOn    = True       
+         ; windbarb_res@vcRefAnnoPerimOn = False
+         ; windbarb_res@vcRefAnnoBackgroundColor = -1
+         windbarb_res@vcRefAnnoOrthogonalPosF = 0.02 ;-1.0
+         windbarb_res@vcRefLengthF   = 0.03 ;0.045          ; define length of vec ref
+         windbarb_res@vcRefMagnitudeF = 30
+         windbarb_res@vcRefAnnoString1On = True
+         windbarb_res@vcRefAnnoOrientation = "horizontal"
+         windbarb_res@vcRefAnnoString1   = "$VMG$" +" m/s"
+	   
+         windbarb_res@lbLabelBarOn         = False
+         windbarb_res@vcLevelSelectionMode    = "ExplicitLevels" ; will explicitly set the levels
+         windbarb_res@vcWindBarbLineThicknessF= 2              ; set the wind barb thickness
+         windbarb_res@vcLevels                = ispan(0,50,10)    ; set the levels 
+	   
+         plots_windbarb(n) = gsn_csm_vector_scalar(wksII, curtains_u_regrid(n, j, :, :), curtains_v_regrid(n, j, :, :), curtains_wspd_regrid(n, j, :, :), windbarb_res)
+         overlay(plots(n),plots_windbarb(n))
 	   
 	   ; -----------------------------------
 	   ; create curtain transects on the map
 	   ; -----------------------------------
 	   cur(n) = gsn_add_polyline(wksII,plots(5),dist_temp@gclon,dist_temp@gclat,plres)
-	   cur_names(n) = gsn_add_text(wksII,plots(5),names_array(n),curtain_defs_lon(n,1)+0.5,curtain_defs_lat(n,1)+0.8,txres)
+	   cur_names(0) = gsn_add_text(wksII,plots(5),names_array(0),curtain_defs_lon(0,0)+2,curtain_defs_lat(0,0)+2,txres)   ; C1
+	   cur_names(1) = gsn_add_text(wksII,plots(5),names_array(1),curtain_defs_lon(1,0)-1,curtain_defs_lat(1,0)-1,txres)   ; C2
+	   cur_names(2) = gsn_add_text(wksII,plots(5),names_array(2),curtain_defs_lon(2,0)+2,curtain_defs_lat(2,0)+2,txres)   ; C3
+	   cur_names(3) = gsn_add_text(wksII,plots(5),names_array(3),curtain_defs_lon(3,0),curtain_defs_lat(3,0)-1,txres)     ; C4
+	   cur_names(4) = gsn_add_text(wksII,plots(5),names_array(4),curtain_defs_lon(4,0)-1,curtain_defs_lat(4,0)+1,txres)   ; C5
 	   delete(dist_temp)
+
 	   ; ----------------------------------------------------------------------------------------------------------------------
 	   ; Add site markers on the curtain...
 	   ; ... if the disttance bwtween the site and the great arc of the transect is less than a certain threshhold (say, 1 deg)
@@ -439,16 +541,16 @@ do j= 0,dimsizes(date)-1
     txres = True
     txres@txFontHeightF := 0.011   ; Label right Y axis.
     txres@txAngleF      := 90.
-    gsn_text_ndc(wksII,"Height (thousand ft)",.87,.81,txres)
-    gsn_text_ndc(wksII,"Height (thousand ft)",.87,.55,txres)
+    gsn_text_ndc(wksII,"Height (thousand ft)",.84,.83,txres)
+    gsn_text_ndc(wksII,"Height (thousand ft)",.84,.55,txres)
 
    ;----------------------------------------
    ; add in forcast day and tracer name
    ;----------------------------------------
     txres = True
-    txres@txFontHeightF = 0.010   ; Label left 
+    txres@txFontHeightF = 0.017   ; Label left 
     txres@txAngleF     := 0
-      gsn_text_ndc(wksII,"Forecast on: "+forecast_date,.32,0.94,txres)
+      gsn_text_ndc(wksII,"Forecast on: "+forecast_date,.4,0.94,txres)
 
     txres@txFontHeightF = 0.017   ; Label right
       gsn_text_ndc(wksII,tracername + " ("+tracer_all@units+")",.85,0.94,txres)
@@ -507,6 +609,11 @@ do j= 0,dimsizes(date)-1
   end if
 
   delete(cres)
+
+  ; Add in NCAR logo to plots
+   delete(wksII)
+   cmd = "composite -geometry 150x150+1700+2300 ACOM-contemp-logo-blue-square.png "+ plot_name + ".png "+ plot_name + ".png"
+   system(cmd)
 
 end do
 

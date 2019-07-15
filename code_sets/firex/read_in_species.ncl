@@ -30,7 +30,7 @@ function read_in_species(fileIN:string, tracerIN:string, lat_bound_0:numeric, la
 ;    fileIN: path to file to read, or a list of files
 ;
 ;    tracerIN: tracer name to read in
-;              current options:"CO", "CO01", "CO02", "COnotNA", "BC", "POM", "PM25",
+;              current options:"CO", "CO01", "QFED_CO", "CO02", "COnotNA", "BC", "POM", "PM25",
 ;                              "ISOP", "O3", "O3S", "NOx", "SOA", "SO4", "AODVISdn", "DUST"
 ;
 ; Return Value:
@@ -75,6 +75,8 @@ if (tracer.eq."ISOP") then
    tracername = "Strat O~B~3~N~"
  else if (tracer.eq."CO01") then
    tracername = "CO-fires"
+ else if (tracer.eq."QFED_CO") then
+   tracername = "CO-fires-qfed"
  else if (tracer.eq."CO02") then
    tracername = "CO-anthro-N Amer"
  else if (tracer.eq."COnotNA") then
@@ -100,6 +102,7 @@ if (tracer.eq."ISOP") then
  else
    tracername = tracer
 
+ end if
  end if
  end if
  end if
@@ -200,8 +203,11 @@ if (tracer.eq."ISOP") then
           copy_VarCoords(tracer_dummy1,tracer_dummy)
           copy_VarAtts(tracer_dummy1,tracer_dummy)
           tracer_dummy@long_name = "CO anthro all except N America"
+      else if (tracer.eq."QFED_CO") then
+        tracer_dummy = fin[:]->CO01(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})         ; mol/mol or kg/kg
       else
         tracer_dummy = fin[:]->$tracer$(:,lev_limit_0:,{lat_bound_0:lat_bound_1},{lon_bound_0:lon_bound_1})         ; mol/mol or kg/kg
+      end if
       end if
       end if
       end if
