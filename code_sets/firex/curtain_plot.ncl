@@ -612,7 +612,7 @@ do j= 0,dimsizes(date)-1
 
   ; Add in NCAR logo to plots
    delete(wksII)
-   cmd = "composite -geometry 150x150+1700+2300 ACOM-contemp-logo-blue-square.png "+ plot_name + ".png "+ plot_name + ".png"
+   cmd = "composite -geometry 150x150+1600+2330 ACOM-contemp-logo-blue-square.png "+ plot_name + ".png "+ plot_name + ".png"
    system(cmd)
 
 end do

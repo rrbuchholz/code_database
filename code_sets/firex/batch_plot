@@ -41,11 +41,11 @@ for x in $file_list ; do
 #---------------------------------------
 # run the plot routines on each file
 
-   ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   #ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
    ncl filename=\"$x\" CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   ncl filename=\"$x\" LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   ncl filename=\"$x\" LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   ncl filename=\"$x\" LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   #ncl filename=\"$x\" LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   #ncl filename=\"$x\" LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   #ncl filename=\"$x\" LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
 
 #---------------------------------------
 
