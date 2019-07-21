@@ -35,8 +35,8 @@ setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/firex/colo
   set run_folder = "/glade/u/home/buchholz/code_database/code_sets/firex"
 
 ###  Hardcode date
-###     set current_date = "2019-07-13"
-###     set forecast_date = 20190713
+###     set current_date = "2019-07-19"
+###     set forecast_date = 20190719
 
 ### determine dates of run
 ### Jerome's forecast
