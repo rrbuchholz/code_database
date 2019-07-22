@@ -22,7 +22,7 @@
   #files=f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.
   files=f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.
 
-  file_list="$(ls ${folder}${files}*2019-07-0*)"
+  file_list="$(ls ${folder}${files}*2019-07-1*)"
 
 
 echo $file_list
@@ -41,11 +41,11 @@ for x in $file_list ; do
 #---------------------------------------
 # run the plot routines on each file
 
-   #ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
    ncl filename=\"$x\" CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   #ncl filename=\"$x\" LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   #ncl filename=\"$x\" LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   #ncl filename=\"$x\" LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
 
 #---------------------------------------
 

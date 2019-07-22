@@ -215,7 +215,7 @@ do i= 0,dimsizes(level_array)-1
      else
        if (tracer.eq."CO") then
          res@cnLevels             := contour_levels(1:15)
-       else if (tracer.eq."CO01".or.\
+       else if (tracer.eq."CO01".or.tracer.eq."QFED_CO".or.\
                 tracer.eq."CO02".or.tracer.eq."COnotNA") then
          res@cnLevels             := contour_levels(0:19)
        else if (tracer.eq."ISOP".or.\

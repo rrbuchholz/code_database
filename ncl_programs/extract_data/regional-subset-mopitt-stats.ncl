@@ -31,14 +31,14 @@ begin
 ; user input
 ;--------------------------------------------
   ystart = 2001
-  yend = 2019
+  yend = 2018
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "NH_thinned_2_5"
+  location = "AnthIndi"
 
   ;------------
   ; select daytime 
@@ -261,7 +261,8 @@ do y = ystart,yend ; loop through years
                  mod(count_array,mod_array).eq.0)
      else
        region := ind(sza.le.dayflag.and.\
-                 ;surf_type.eq.s_id.and.\
+                 surf_type.eq.s_id.and.\
+                 pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
