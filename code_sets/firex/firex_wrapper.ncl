@@ -210,7 +210,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top, lat_bottom, lon_left, lon_right,\
                   pnew, region_name, contour_levels, forecast_date)
 
-      system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+      ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
     end if ; LATLON
 
     if (LATLON_WUS) then
@@ -225,7 +225,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_WUS
 
@@ -241,7 +241,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_SEUS
 
@@ -261,7 +261,7 @@ begin
 
      ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
-     system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
+     ;system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
      end if ; CURTAIN
 
@@ -295,7 +295,7 @@ begin
 
       print("plotting timeseries for "+tracer+"..."+ filenames(0)+" to "+filenames(dimsizes(filenames)-1))
 
-    ; station locations
+    ; station locations ------------------------------------------------
     ;'Boise, ID Airport',           43.562, -116.228+360     , 243.772
     ;'McCall, ID',                  44.872, -116.115+360     , 243.885
     ;'Mount Bachelor, OR',          43.979, -121.689+360     , 238.311
@@ -309,15 +309,25 @@ begin
     ;'Oklahoma-City'              , 35.468, -97.5164+360     , 262.484
     ;'Denver'                     , 39.739, -104.9903+360    , 255.010
     ;'Omaha'                      , 41.257, -95.9345+360     , 264.066
+    ; TOLNet sites ----------------------------------------------------
+    ;RO3QET           , 86.645W --> 273.355, 34.725N, POC: Dr. Mike Newchurch (mike@nsstc.uah.edu) loc: Huntsville, AL
+    ;TMF              , 117.68W --> 242.32 , 34.38N, POC: Dr. Thierry Leblanc (thierry.leblanc@jpl.nasa.gov) loc: Wrightwood, CA
+    ;AMOLITE          , 111.64W --> 248.36 , 57.184N, POC: Dr. Kevin Strawbridge (kevin.b.strawbridge@gmail.com) loc: Alberta, Canada
+    ;TROPOZ           , 76.84W  --> 283.16 , 38.99N, POC: Dr. John Sullivan (john.t.sullivan@nasa.gov) loc: Greenbelt, MD
+    ;TOPAZ            , 105.262W--> 254.738, 39.993N, POC: Dr. Chris Senff (christoph.senff@noaa.gov) loc: Boulder, CO
+    ;LMOL             , 76.385W --> 283.615, 37.096N, POC: Dr. Tim Berkoff (timothy.a.berkoff@nasa.gov) loc: Hampton, VA
     
-    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779, 45.516, 47.659, 40.761, 39.100, 35.468, 39.739, 41.257/)
-    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605, 237.321, 242.574, 248.109, 265.421, 262.484, 255.010, 264.066/)
+    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779, 45.516, 47.659, 40.761, 39.100, 35.468, 39.739, 41.257,\
+                 34.725, 34.38, 57.184, 38.99, 39.993, 37.096/)
+    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605, 237.321, 242.574, 248.109, 265.421, 262.484, 255.010, 264.066,\
+                 273.355, 242.32, 248.36, 283.16, 254.738, 283.615/)
     station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "DRAGON-site", "Salina-KS-Regional-Airport", \
-                     "Portland", "Spokane", "Salt-Lake-City", "Kansas-City", "Oklahoma-City", "Denver", "Omaha"/)
+                     "Portland", "Spokane", "Salt-Lake-City", "Kansas-City", "Oklahoma-City", "Denver", "Omaha",\
+                      "RO3QET", "TMF", "AMOLITE", "TROPOZ", "TOPAZ", "LMOL"/)
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, curtain_contour_levels, forecast_date)
 
-  system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
+  ;system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
 
   end if ; STATION
 
