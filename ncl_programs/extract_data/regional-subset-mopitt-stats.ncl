@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "AnthIndi"
+  location = "BBCanada"
 
   ;------------
   ; select daytime 
@@ -261,7 +261,7 @@ do y = ystart,yend ; loop through years
                  mod(count_array,mod_array).eq.0)
      else
        region := ind(sza.le.dayflag.and.\
-                 surf_type.eq.s_id.and.\
+                 ;surf_type.eq.s_id.and.\
                  pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
