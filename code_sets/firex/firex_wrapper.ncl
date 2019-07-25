@@ -33,6 +33,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 load "lat_lon_plot.ncl"
 load "altitude_ts_plot.ncl"
 load "curtain_plot.ncl"
+load "curtain_plot_custom.ncl"
 
 
 begin
@@ -258,6 +259,7 @@ begin
 
        print("plotting curtains for "+ tracer)
          curtain_plot(filename, tracer, curtain_contour_levels, forecast_date)
+         ;curtain_plot_custom(filename, tracer, curtain_contour_levels, forecast_date)
 
      ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
@@ -279,7 +281,7 @@ begin
       print("korus_wrapper: STATION file prefix not given")
     end if
 
-    ; determine 6 files
+    ; determine 5 files - WACCM changed to 4 day forecasts
     current_yeardoy = yyyymmdd_to_yyyyddd(forecast_date)
     date_array= new((/6/), string)
     do i = 0,5
@@ -288,8 +290,18 @@ begin
     end do
 
     filenames = new((/dimsizes(date_array)/), string)
+
+     if (tracer.eq."QFED_CO") then
+        new_file_prefix_1 = str_sub_str(file_prefix,"forecast.001.cam","forecast.002.cam")
+        new_file_prefix = str_sub_str(new_file_prefix_1,"finn","qfed")
+     end if
+
     do d = 0, dimsizes(date_array)-1
-      filenames(d) = systemfunc ("ls "+file_prefix+date_array(d)+"-00000.nc")
+      if (tracer.eq."QFED_CO") then
+        filenames(d) = systemfunc ("ls "+new_file_prefix+date_array(d)+"-00000.nc")
+      else
+        filenames(d) = systemfunc ("ls "+file_prefix+date_array(d)+"-00000.nc")
+      end if
     end do
 
 
@@ -317,11 +329,11 @@ begin
     ;TOPAZ            , 105.262W--> 254.738, 39.993N, POC: Dr. Chris Senff (christoph.senff@noaa.gov) loc: Boulder, CO
     ;LMOL             , 76.385W --> 283.615, 37.096N, POC: Dr. Tim Berkoff (timothy.a.berkoff@nasa.gov) loc: Hampton, VA
     
-    lat_array = (/43.562, 44.872, 43.979, 46.860, 46.917, 38.779, 45.516, 47.659, 40.761, 39.100, 35.468, 39.739, 41.257,\
+    lat_array = (/43.562, 44.872, 43.979, 46.860, 38.779, 45.516, 47.659, 40.761, 39.100, 35.468, 39.739, 41.257,\
                  34.725, 34.38, 57.184, 38.99, 39.993, 37.096/)
-    lon_array = (/243.772, 243.885, 238.311, 246.015, 245.917, 262.3605, 237.321, 242.574, 248.109, 265.421, 262.484, 255.010, 264.066,\
+    lon_array = (/243.772, 243.885, 238.311, 246.015, 262.3605, 237.321, 242.574, 248.109, 265.421, 262.484, 255.010, 264.066,\
                  273.355, 242.32, 248.36, 283.16, 254.738, 283.615/)
-    station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "DRAGON-site", "Salina-KS-Regional-Airport", \
+    station_names = (/"Boise-ID-Airport", "McCall-ID", "Mount-Bachelor-OR", "Missoula-MT", "Salina-KS-Regional-Airport", \
                      "Portland", "Spokane", "Salt-Lake-City", "Kansas-City", "Oklahoma-City", "Denver", "Omaha",\
                       "RO3QET", "TMF", "AMOLITE", "TROPOZ", "TOPAZ", "LMOL"/)
 

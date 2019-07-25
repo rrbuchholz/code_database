@@ -19,7 +19,7 @@ begin
 ; User input
 ; ===================
 
-   sitefile="/glade/u/home/buchholz/NCL_programs/korus/KORUS_ground_sites.csv"
+   sitefile="FIREX_ground_sites.csv"
 
   ; Plot definitions
   wks_type = "png"                          ; x11, png, ps or pdf
@@ -33,7 +33,8 @@ begin
    WORLD       = False
    ASIA        = False
    EAST_ASIA   = False
-   KOREA       = True
+   KOREA       = False
+   USA         = True
 
 if (WORLD) then
      topboundary           =  90           ; choose World
@@ -63,6 +64,13 @@ if (KOREA) then
      rightboundary         = 132.5
 end if
 
+if (USA) then
+     topboundary           = 60.
+     bottomboundary        = 20.
+     leftboundary          = -128.
+     rightboundary         = -75.
+end if
+
 
 ; ===================
 ; Read in data from files
@@ -87,7 +95,7 @@ end if
     site_lat  = sites(:,0)     ; latitude values
     site_lon  = sites(:,1)     ; longitude values
 
-
+;printVarSummary(sites_str)
 ;print(sites)
 ;print(site_names)
 ;exit
@@ -97,7 +105,7 @@ end if
 ; Start the Graphics
 ; ===================
 
-  wks  = gsn_open_wks(wks_type,"KORUS_ground_sites")     ; open a workstation
+  wks  = gsn_open_wks(wks_type,"FIREX_ground_sites")     ; open a workstation
   gsn_define_colormap(wks,"wh-bl-gr-ye-re")         ; define a different colormap.
   ncl = NhlNewColor(wks,.9,.9,.9)                   ; add grey to continents
 
@@ -106,10 +114,10 @@ end if
     mpres@gsnDraw                 = False
     ;mpres@mpFillColors            = (/-1,-1,ncl,-1/)  ; light grey to land masses
     mpres@mpFillOn = False
-    mpres@mpOutlineOn         = False                     ; will draw highres map later
+    ;mpres@mpOutlineOn         = False                     ; will draw highres map later
     mpres@gsnMaximize             = True 
-    mpres@gsnMajorLatSpacing      = 1
-    mpres@gsnMajorLonSpacing      = 1
+    mpres@gsnMajorLatSpacing      = 20
+    mpres@gsnMajorLonSpacing      = 20
 
     mpres@mpMaxLatF               =  topboundary
     mpres@mpMinLatF               =  bottomboundary 
@@ -123,19 +131,18 @@ end if
 
   map1 = gsn_csm_map(wks,mpres)
 
-
    ;----------------------------------------
    ; add countries and counties
    ;----------------------------------------
-     country_shp_name    = "/glade/u/home/pfister/KORUS/KOR_adm1.shp"
-     lnres                  = True
-       lnres@gsLineColor      = "gray60"
-       lnres@gsLineThicknessF = 1.0
-      country_id = gsn_add_shapefile_polylines(wks,map1,country_shp_name,lnres)
+     ;country_shp_name    = "/glade/u/home/pfister/KORUS/KOR_adm1.shp"
+     ;lnres                  = True
+     ;  lnres@gsLineColor      = "gray60"
+     ;  lnres@gsLineThicknessF = 1.0
+     ; country_id = gsn_add_shapefile_polylines(wks,map1,country_shp_name,lnres)
 
-      world_shp_name    = "/glade/u/home/pfister/KORUS/countries.shp"
-        lnres@gsLineThicknessF = 2.0
-      world_id = gsn_add_shapefile_polylines(wks,map1,world_shp_name,lnres)
+     ; world_shp_name    = "/glade/u/home/pfister/KORUS/countries.shp"
+     ;   lnres@gsLineThicknessF = 2.0
+     ; world_id = gsn_add_shapefile_polylines(wks,map1,world_shp_name,lnres)
 
    ;----------------------------------------
    ; Site information
@@ -159,7 +166,7 @@ end if
        pmres@gsMarkerColor="red"        ; set polymarker color
        stat_loc(i) = gsn_add_polymarker(wks,map1, site_lon(i), site_lat(i),pmres)
      else
-       pmres@gsMarkerColor="black"        ; set polymarker color
+       pmres@gsMarkerColor="red"        ; set polymarker color
        stat_loc(i) = gsn_add_polymarker(wks,map1, site_lon(i), site_lat(i),pmres)
      end if
    end do
@@ -178,49 +185,37 @@ end if
          txres@txJust         = "TopRight"
          txres@txFontColor    = "red"
          text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i),site_lat(i)-0.1,txres)
-     else if (site_names(i).eq."Pusan Univ., Busan".or.\
-         site_names(i).eq."Baengnyeong Island".or.\
-         site_names(i).eq."Gangneung-Wonju Univ.") then
-         txres@txJust         = "BottomLeft"
-         txres@txFontColor    = "red"
-         text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.1,site_lat(i),txres)
-     else if (site_names(i).eq."Gosan, Jeju Island".or.\
-         site_names(i).eq."GIST, Gwangju".or.\
-         site_names(i).eq."Fukue, Japan") then
+     else if (site_names(i).eq."Greenbelt, MD (TROPOZ)") then
          txres@txJust         = "BottomRight"
-         txres@txFontColor    = "red"
-         text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.1,site_lat(i),txres)
+         txres@txFontColor    = "black"
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.5,site_lat(i)+0.5,txres)
+     else if (site_names(i).eq."Boulder, CO (TOPAZ)".or.\
+              site_names(i).eq."Hampton, VA (LMOL)") then
+         txres@txJust         = "TopRight"
+         txres@txFontColor    = "black"
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.5,site_lat(i)-0.5,txres)
      ;--------------------------
      ; Other stations
      ;--------------------------
-     else if (site_names(i).eq."Osan".or.\
-              site_names(i).eq."NIER") then
-         txres@txJust         = "TopRight"
-         txres@txFontColor    = "black"
-         text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.1,site_lat(i),txres)
-     else if (site_names(i).eq."Taehwa Research Forest".or.\
-              site_names(i).eq."Daegwallyeong") then
+     else if (site_names(i).eq."Kansas-City".or.\
+              site_names(i).eq."Spokane".or.\
+              site_names(i).eq."Salt-Lake-City") then
          txres@txJust         = "TopLeft"
          txres@txFontColor    = "black"
-         text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.1,site_lat(i),txres)
-      else if (site_lon(i).ge.127.and.site_lat(i).ge.34) then
-        txres@txFontColor    = "black"
-        txres@txJust         = "BottomLeft"
-        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.1,site_lat(i),txres)
-      else if (site_names(i).eq."Kasuga, Japan") then
-        txres@txJust         = "BottomLeft"
-        txres@txFontColor    = "black"
-        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.1,site_lat(i),txres)
-      else if (site_names(i).eq."Jeonju") then
-        txres@txJust         = "TopRight"
-        txres@txFontColor    = "black"
-        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.1,site_lat(i),txres)
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.5,site_lat(i)+0.5,txres)
+     else if (site_names(i).eq."Mount Bachelor, OR") then
+         txres@txJust         = "TopCenter"
+         txres@txFontColor    = "black"
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.5,site_lat(i)-0.3,txres)
+     else if (site_names(i).eq."Huntsville, AL") then
+         site_names(i)="Huntsville, AL (RO3QET)"
+         txres@txJust         = "TopCenter"
+         txres@txFontColor    = "black"
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+3.0,site_lat(i)-0.3,txres)
       else
-        txres@txJust         = "BottomRight"
+        txres@txJust         = "TopLeft"
         txres@txFontColor    = "black"
-        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)-0.1,site_lat(i),txres)
-      end if
-      end if
+        text(i) = gsn_add_text(wks,map1,site_names(i),site_lon(i)+0.5,site_lat(i),txres)
       end if
       end if
       end if
@@ -265,13 +260,11 @@ end if
      txres@txJust           = "CenterLeft"             ; font smaller. default big
      txres@txPerimOn        = False
 
-     pmres@gsMarkerColor="black"        ; set polymarker color
+     pmres@gsMarkerColor="red"        ; set polymarker color
     gsn_polymarker_ndc(wks,0.125,0.08,pmres) ; draw polymarkers
-    gsn_text_ndc(wks,"Surface sites in the KORUS-AQ domain",0.15,0.08,txres)
+    gsn_text_ndc(wks,"Surface sites in the FIREX-AQ domain",0.15,0.08,txres)
        pmres@gsMarkerColor="red"        ; set polymarker color
-    gsn_polymarker_ndc(wks,0.125,0.06,pmres) ; draw polymarkers
-    gsn_text_ndc(wks,"Red markers: sites where CAM-chem altitude versus time is plotted",0.15,0.06,txres)
-    gsn_text_ndc(wks,"Grid indicates the edges of the CAM-chem grid boxes",0.15,0.04,txres)
+
 
 
   draw(map1)
