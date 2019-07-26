@@ -1,5 +1,5 @@
 ;=======================================================;
-;  combine_qfed_finn_ers.ncl
+;  combine_qfed_finn_ers_new.ncl
 ;=======================================================;
 ;
 ; Concepts illustrated:

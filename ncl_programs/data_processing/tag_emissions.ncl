@@ -53,10 +53,10 @@ begin
   ; emission files
   ; -------------------------------
 
-  years = "2002_2017"
+  years = "2000_2019"
   base_dir = "/data14b/buchholz/"
-  ;top_dir = base_dir + "qfed/cam_0.9x1.25/from_co2/v2.5/"
-  top_dir = base_dir + "cmip6/cam_0.9x1.25/"
+  top_dir = base_dir + "qfed/cam_0.9x1.25/from_co2/v2.5/"
+  ;top_dir = base_dir + "cmip6/cam_0.9x1.25/"
   ;top_dir = "/glade/work/buchholz/emis/qfed2.5_2014_2017_1x1/"
   if (.not. isvar("efile_in")) then        ; from command line?
        efile_in = top_dir + "allyears/qfed.emis_"+tracer+"_0.9x1.25_mol_"+years+".nc"
@@ -64,7 +64,7 @@ begin
   print("Processing: "+ efile_in)
 
   outpath = base_dir + "tagged/"
-  outfilepre = "finn.emis_"+tracer+"_0.9x1.25_mol_"+years
+  outfilepre = "qfed.emis_"+tracer+"_0.9x1.25_mol_"+years
   ;------------
   ; toggles
   ;------------
@@ -83,8 +83,8 @@ begin
   ; names of data structures
   ; -------------------------------
   if (type.eq."fire") then 
-    ;emiss           = "bb"
-    emiss           = "fire"
+    emiss           = "bb"
+    ;emiss           = "fire"
   else if (type.eq."anthro") then 
     emiss           = "emiss_anthro"
   else if (type.eq."ocean") then 
