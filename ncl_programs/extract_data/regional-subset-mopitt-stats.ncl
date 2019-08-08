@@ -30,15 +30,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2001
-  yend = 2018
+  ystart = 2005
+  yend = 2005
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "BBCanada"
+  location = "NH_monthly"
 
   ;------------
   ; select daytime 
@@ -101,7 +101,7 @@ begin
                     "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
                     "BBCAmerica", "BBSAmerica","BBSAmOcean",\
                      "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH_thinned_2_5", "SH_thinned"/)
+                    "BBMSEA", "BBNWAu","BBEAu", "NH_monthly", "SH_monthly"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
@@ -199,7 +199,8 @@ do y = ystart,yend ; loop through years
   ; loop over
   ; months
   ;------------
-  do m=0,11
+  ;do m=0,11
+  do m=6,11
     ; counter for counting number of files with selected values
     dcount = 0
     print("==================================")
@@ -486,6 +487,118 @@ do y = ystart,yend ; loop through years
               dryair_selected,err_selected,rande_selected,smoothe_selected,\
               m_apriori_selected,m_profile_selected,ak_selected,vmr_ak_selected/])
 
+if (location.eq."NH_monthly".or.\
+    location.eq."SH_monthly") then
+
+        outname      = outfolder+location+"_"+version+"subset_"+yearmonth_string(m)+\
+                      "monthavg_VMR_p"+pixel_number_select+".nc"
+;--------------------------------------------
+; Write out to a netCDF file
+;--------------------------------------------
+if (netCDF) then
+  ; saves MOPITT subset
+    print("Creating file...")
+    fout = addfile(outname, "c")
+    ;------------
+    ; File 
+    ; Attributes
+    ;------------
+    setfileoption(fout, "DefineMode",True)
+    fAtt                      = True
+      fAtt@title              = "Subset of month average MOPITT CO for " +location+"_"+year
+      fAtt@source             = "MOPITT level 2, version 8, TIR retrievals"
+      fAtt@creation_date      = systemfunc ("date")
+      fAtt@conventrions       = "CF"
+
+     fileattdef(fout, fAtt)
+     setfileoption(fout, "DefineMode",False)
+
+
+  ;------------
+  ; Variables
+  ;------------
+   month_tcol!0              = "time"
+   month_tcol&time           = yearmonth
+   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+   month_stats!0               = "time"
+   month_stats&time            = yearmonth
+   month_stats@average_op_ncl  = "monthly spatial statistics over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+   month_stats@definitions ="[0] Mean, [1] StdDev, [2] Min, [3] LowQuartile, [4] Median, "+cr+\
+       "[5] HighQuartile, [6] Max, [7] Total n, [8] Used n, [9] Missing, "+cr+\
+       "[10] Lower 5.0% (for n > 1000), [11] Upper 5.0% (for n > 1000)"
+
+   month_5_95!0               = "time"
+   month_5_95&time            = yearmonth
+   month_5_95@average_op_ncl  = "monthly 5th and 95th percentiles over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+
+   month_apriori!0               = "time"
+   month_apriori&time            = yearmonth
+
+   if (COLAVG_VMR) then
+     ;--- total column
+       fout->RetrievedX_CO       = month_tcol
+     ;--- stats
+       fout->RetrievedX_CORegionStats    = month_stats
+       fout->RetrievedX_CORegion5th95th  = month_5_95
+       fout->AvgAPrioriX_CO              = month_apriori
+   else
+     ;--- total column
+       fout->RetrievedCOTotalColumn        = month_tcol
+     ;--- stats
+       fout->RetrievedCOtcolRegionStats    = month_stats
+       fout->RetrievedCOtcolRegion5th95th  = month_5_95
+       fout->AvgAPrioriCOTotalColumn      = month_apriori
+   end if
+   ;--- 1D vars
+   month_dofs!0               = "time"
+   month_dofs&time            = yearmonth
+     fout->AvgDegreesofFreedomforSignal = month_dofs
+   month_psurf!0               = "time"
+   month_psurf&time            = yearmonth
+     fout->AvgSurfacePressure           = month_psurf
+   month_dryair!0               = "time"
+   month_dryair&time            = yearmonth
+     fout->AvgDryAirColumn              = month_dryair
+   month_err!0               = "time"
+   month_err&time            = yearmonth
+     fout->AvgError                     = month_err
+   month_rande!0               = "time"
+   month_rande&time            = yearmonth
+     fout->AvgRandomError               = month_rande
+   month_smoothe!0               = "time"
+   month_smoothe&time            = yearmonth
+     fout->AvgSmoothingError            = month_smoothe
+
+   ;--- 2D vars
+   month_prior!0               = "time"
+   month_prior&time            = yearmonth
+   month_prior!1               = "lev"
+     fout->AvgAPrioriCOMixingRatioProfile = month_prior
+   month_prof!0               = "time"
+   month_prof&time            = yearmonth
+   month_prof!1               = "lev"
+     fout->AvgRetrievedCOMixingRatioProfile = month_prof
+   month_colak!0               = "time"
+   month_colak&time            = yearmonth
+   month_colak!1               = "lev"
+     fout->AvgTotalColumnAveragingKernel = month_colak
+
+   ;--- 3D vars
+   month_vmrak!0               = "time"
+   month_vmrak&time            = yearmonth
+     fout->AvgRetrievalAveragingKernelMatrix = month_vmrak
+
+
+end if ;NETCDF
+end if ;Monthly saving for large regions
+
+
   end do ; month loop
 
 
@@ -493,6 +606,12 @@ do y = ystart,yend ; loop through years
 ; Write out to a netCDF file
 ;--------------------------------------------
 if (netCDF) then
+
+   if (location.eq."NH_monthly".or.\
+    location.eq."SH_monthly") then
+    continue ; already saved as month files
+   end if
+
   ; saves MOPITT subset
     print("Creating file...")
     fout = addfile(outname, "c")
