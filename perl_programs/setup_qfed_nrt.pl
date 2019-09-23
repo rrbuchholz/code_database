@@ -12,7 +12,8 @@
 #---                               rrb Apr 03, 2016 ---#
 #======================================================#
 
-$topdir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25";
+#$topdir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25";
+$topdir = "/data14b/buchholz/qfed/orig_0.25";
 `cd $topdir/`;
 
 #------------------------------
@@ -30,7 +31,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-$current_date = 20190503;
+#$current_date = 20190504;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -85,8 +86,8 @@ else{
 #------------------------------
 # process the emission file
 chomp($check_again = `ls $dir$fname*`);
-$codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
-#$codehome = "/home/buchholz/code_database/ncl_programs/data_processing";
+#$codehome = "/home/buchholz/Documents/code_database/ncl_programs/data_processing";
+$codehome = "/home/buchholz/code_database/ncl_programs/data_processing";
 
 
 if ($check_again ne '' && $processed == 0){
@@ -115,8 +116,8 @@ else{
 
 #------------------------------
 #Check Processed and send e-mail
-#chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
-$current_date_check = $current_date+10;
+chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
+#$current_date_check = $current_date+10;
 chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
@@ -154,7 +155,7 @@ else{
 #------------------------------
 #send to glade at 8am
 if ($time >= 5 && $min >= 30 && $processed == 1){
-`scp /net/modeling1/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+`scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
     print OUT "Sent to cheyenne. \n";
 }
 

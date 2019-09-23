@@ -74,7 +74,8 @@ begin
   ; -------------------------------
   ; input emission files
   ; -------------------------------
-  top_dir = "/net/modeling1/data14b/buchholz/"
+  ;top_dir = "/net/modeling1/data14b/buchholz/"
+  top_dir = "/data14b/buchholz/"
    f_ext = "qfed.emis_"
   if (NRT) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
@@ -106,15 +107,24 @@ begin
   ; VBS
   else if (tracer.eq."VBS") then
     pom_file_in = emis_dir+f_ext+"pom_a4_"+outres+"_mol_"+year+".nc"
+   if (NRT) then
+    specs_ivoc = (/"C3H6", "C3H8", "C2H6", "C2H4", "BIGENE", "BIGALK", "CH3COCH3", \
+                   "MEK", "CH3CHO", "CH2O", "BENZ", "TOLUENE", "XYLENE"/)
+   else
     specs_ivoc = (/"C3H6", "C3H8", "C2H6", "C2H4", "BIGENE", "BIGALK", "CH3COCH3", \
                    "MEK", "CH3CHO", "CH2O", "BENZENE", "TOLUENE", "XYLENES"/)
+    end if
     e_file_in = new(dimsizes(specs_ivoc), string)
     do i = 0, dimsizes(specs_ivoc)-1
       e_file_in(i) = emis_dir+f_ext+specs_ivoc(i)+"_"+outres+"_mol_"+year+".nc"
     end do
   ; SOAG
   else if (tracer.eq."SOAG") then
+   if (NRT) then
+    specs_soag = (/"BIGALK", "BIGENE", "TOLUENE", "BENZ",  "XYLENE", "ISOP", "C10H16"/)
+   else
     specs_soag = (/"BIGALK", "BIGENE", "TOLUENE", "BENZENE",  "XYLENES", "ISOP", "TERPENES"/)
+   end if
     e_file_in = new(dimsizes(specs_soag), string)
     do i = 0, dimsizes(specs_soag)-1
       e_file_in(i) = emis_dir+f_ext+specs_soag(i)+"_"+outres+"_mol_"+year+".nc"
