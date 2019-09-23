@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2000
-  yend = 2015
+  ystart = 2014
+  yend = 2017
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "GFAS"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
@@ -290,6 +290,19 @@ do t = 0, dimsizes(tracers)-1
       ttime = dimsizes(time)
       nlat = dimsizes(lat)
       mlon = dimsizes(lon)
+
+      date := fin->date
+printVarSummary(emiss_in)
+printVarSummary(time)
+printVarSummary(date)
+time_dummy = time +12
+copy_VarMeta(time, time_dummy)
+
+time2 = cd_convert(time, "days since 1850-01-01 00:00:00" )
+
+print(date + ": " + time +" = " +time2)
+
+exit
 
 
   ;********************************************

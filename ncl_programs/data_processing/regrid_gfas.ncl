@@ -226,6 +226,12 @@ do t = 0, dimsizes(input_array)-1
 
 printVarSummary(tracer_all)
 
+
+print(date)
+print(time)
+
+exit
+
   ; -------------------------------
   ; gfas res for sums/avgs
   ; -------------------------------
