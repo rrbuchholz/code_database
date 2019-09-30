@@ -211,7 +211,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top, lat_bottom, lon_left, lon_right,\
                   pnew, region_name, contour_levels, forecast_date)
 
-      ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+      system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
     end if ; LATLON
 
     if (LATLON_WUS) then
@@ -226,7 +226,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_WUS
 
@@ -242,7 +242,7 @@ begin
      lat_lon_plot(filename, tracer, lat_top_zoom, lat_bottom_zoom, lon_left_zoom, lon_right_zoom,\
                   pnew, region_name, contour_levels, forecast_date)
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
+     system("rsync -pI forecast_plots/*"+tracer+"*latlon_"+region_name+"*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/lat-lon")
 
      end if ; LATLON_SEUS
 
@@ -263,7 +263,7 @@ begin
 
      ;system("rsync --remove-source-files -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
-     ;system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
+     system("rsync -pI forecast_plots/*"+tracer+"*curtain*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/curtains")
 
      end if ; CURTAIN
 
@@ -312,7 +312,6 @@ begin
     ;'McCall, ID',                  44.872, -116.115+360     , 243.885
     ;'Mount Bachelor, OR',          43.979, -121.689+360     , 238.311
     ;'Missoula, MT',                46.860, -113.985+360     , 246.015
-    ;'DRAGON site',                 46.917, -114.083+360     , 245.917
     ;'Salina, KS Regional Airport', 38.779, -97.6395+360     , 262.3605    
     ;'Portland'                   , 45.516, -122.6793+360    , 237.321
     ;'Spokane'                    , 47.659, -117.4260+360    , 242.574
@@ -339,7 +338,7 @@ begin
 
     altitude_ts_plot(filenames, tracer, lat_array, lon_array, station_names, curtain_contour_levels, forecast_date)
 
-  ;system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
+  system("rsync -pI forecast_plots/*"+tracer+"*5dForecast*.png buchholz@modeling1.acom.ucar.edu:/data14b/siyuan/firex-plots/stations")
 
   end if ; STATION
 

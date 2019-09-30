@@ -40,7 +40,7 @@ if ($end_file ne '' && $plotted == 0){
   # forecast there and not done
   print OUT "Forecast completed, end file present: $end_file\n";
   print OUT "Submitting plot script\n";
-  `sbatch < /glade/u/home/buchholz/code_database/code_sets/firex/submit_script_slurm`;
+  `sbatch /glade/u/home/buchholz/code_database/code_sets/firex/submit_script_slurm`;
   open(OUT2,">>$plotlog");
   print OUT2 "plotted $current_date\n";
   close(OUT2);
