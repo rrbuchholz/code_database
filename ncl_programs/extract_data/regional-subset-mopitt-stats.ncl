@@ -30,15 +30,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2005
-  yend = 2005
+  ystart = 2013
+  yend = 2013
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "NH_monthly"
+  location = "SH_monthly"
 
   ;------------
   ; select daytime 
@@ -161,10 +161,10 @@ do y = ystart,yend ; loop through years
      if (COLAVG_VMR) then
         outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
         if (PIXELS) then
-        print("Collecting pixel " +pixel_number_select)
-        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
+          print("Collecting pixel " +pixel_number_select)
+          outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
                        pixel_number_select+".nc"
-        print("Will write to " +outname)
+          print("Will write to " +outname)
         end if
      end if
   end if
@@ -249,6 +249,7 @@ do y = ystart,yend ; loop through years
          location.eq."SH_thinned") then
        region := ind(sza.le.dayflag.and.\
                  ;pixel_num.eq.pixel_number_select.and.\
+                 pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
@@ -491,7 +492,7 @@ if (location.eq."NH_monthly".or.\
     location.eq."SH_monthly") then
 
         outname      = outfolder+location+"_"+version+"subset_"+yearmonth_string(m)+\
-                      "monthavg_VMR_p"+pixel_number_select+".nc"
+                      "monthavg_VMR.nc"
 ;--------------------------------------------
 ; Write out to a netCDF file
 ;--------------------------------------------

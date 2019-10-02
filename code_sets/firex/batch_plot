@@ -37,15 +37,15 @@ for x in $file_list ; do
     forecast_date=$(echo "$forecast_date_dummy" | sed 's/-//g')
     echo ${forecast_date} \
 
-    forecast_date=20190806
+    #forecast_date=20190807
 
     #echo ${forecast_date} 
 
 #---------------------------------------
 # run the plot routines on each file
 
-   #ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
-   #ncl filename=\"$x\" CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" file_prefix=\"$folder$files\" STATION=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
+   ncl filename=\"$x\" CURTAIN=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
    ncl filename=\"$x\" LATLON=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
    ncl filename=\"$x\" LATLON_WUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
    ncl filename=\"$x\" LATLON_SEUS=True forecast_date=$forecast_date $run_folder/firex_wrapper.ncl
