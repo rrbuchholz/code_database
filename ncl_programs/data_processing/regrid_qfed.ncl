@@ -39,7 +39,7 @@ begin
   ; QFED files
   ; -------------------------------
   qfed_dir = "/data14b/buchholz/qfed/orig_0.25/"+input_species+"_"+year+"/"
-  qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
+  qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"01*.nc4")
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -147,7 +147,9 @@ begin
 
       ; load and convert time format
       time_dummy       = fin[:]->$qfed_time$
+print(time_dummy)
       time = cd_convert(time_dummy, "days since 1850-01-01 00:00:00" )
+      ;time = cd_convert(time_dummy, "minutes since 2016-01-01 12:00:00" )
         time@long_name = "Time"
         time@calendar = "Gregorian"
         time!0 = "time"
@@ -163,6 +165,11 @@ begin
       delete(tracer_all&time )
       tracer_all!0 = "time"
       tracer_all&time = (time)
+
+print(date)
+print(time)
+
+exit
 
   ; -------------------------------
   ; QFED res for sums/avgs
