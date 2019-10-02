@@ -39,6 +39,8 @@ begin
     maxlev = 4.
     lev_spacing = 0.25
 
+  NETCDF           = False
+
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
@@ -72,7 +74,6 @@ begin
   model_tracer  = "CO"
 
   counter = 0
-  pvect = (/900.,800.,700.,600.,500.,400.,300.,200.,100./)
 
   ; -------------------------------
   ; CONSTANTS
@@ -83,7 +84,6 @@ begin
    MWair = 28.94                             ;--- g/mol
    xp_const = (NAv* 10)/(MWair*g)            ;--- scaling factor for turning vmr into pcol
                                              ;--- (note 1*e-09 because in ppb)
-
   ; -------------------------------
   ; REGIONS
   ; -------------------------------
@@ -115,41 +115,75 @@ begin
                      (/-60.,   0.,      -180.,     180./) /) ;SH
 
 
-
 ;--------------------------------------------
 ; load mopitt
 ;--------------------------------------------
-
 meas_file_selected = meas_files(0)
 mopitt_in := addfile(meas_file_selected, "r")
     apriori_surf  := mopitt_in->$sat_surfap$
     apriori_prof  := mopitt_in->$sat_ap$
     apriori_col   := mopitt_in->$sat_colap$
     AvKer         := mopitt_in->$sat_colak$
-    tcol_gas_dummy:= mopitt_in->$sat_co$
-      tcol_gas_dummy!0    = "lon"
-      delete_VarAtts(tcol_gas_dummy&lon, (/"Units", "projection"/))
-      tcol_gas_dummy!1    = "lat"
-      delete_VarAtts(tcol_gas_dummy&lat, (/"Units", "projection"/))
-    tcol_gas = tcol_gas_dummy(lat|:, lon|:) 
+    tcol_gas_orig:= mopitt_in->$sat_co$
+      tcol_gas_orig!0    = "lon"
+      delete_VarAtts(tcol_gas_orig&lon, (/"Units", "projection"/))
+      tcol_gas_orig!1    = "lat"
+      delete_VarAtts(tcol_gas_orig&lat, (/"Units", "projection"/))
+    tcol_gas = tcol_gas_orig(lat|:, lon|:)
     psurf         := mopitt_in->$sat_psurf$
-
-printVarSummary(tcol_gas)
-print(meas_file_selected)
-
-;--------------------------------------------
-; MOPITT combine a priori info
-;--------------------------------------------
+    pres_array    := mopitt_in->$"Pressure_MOP03"$
+    meas_lon      := mopitt_in->$"Longitude_MOP03"$
+    meas_lat      := mopitt_in->$"Latitude_MOP03"$
 
 ;--------------------------------------------
 ; Set up MOPITT pressure arrays
 ;--------------------------------------------
-  ;parray = new((/dimsizes(psurf), 10/), float)
-  ;parray(:,0) = doubletofloat(psurf)
-  ;do i=0,dimsizes(psurf)-1
-  ;  parray(i,1:9) = pvect
-  ;end do
-  ;parray(i,:) = psurf
+  meas_parray := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
+  meas_parray(:,:,0) = psurf
+  do i=0,dimsizes(pres_array)-1
+    meas_parray(:,:,i+1) = pres_array(i)
+  end do
+
+  ; Correct for where MOPITT surface pressure <900 hPa
+  ; Determine the level where the surface pressure needs to sit
+  meas_delta_p := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
+      do z= 0, 8, 1
+        meas_delta_p(:,:,z) = meas_parray(:,:,0)-meas_parray(:,:,z+1)
+      end do
+   meas_delta_p(:,:,z) = 1000
+
+  ; Repeat surface values at all levels to replace
+  ; in equivalent position in parray if needed
+  meas_psurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float) 
+   do z= 0, 9, 1
+    meas_psurfarray(:,:,z) = psurf
+   end do
+  ; add fill values below true surface
+   meas_parray = where(meas_delta_p.le.0,meas_parray@_FillValue,meas_parray)
+   meas_parray = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),meas_psurfarray,meas_parray)
+  ; meas_parray = where(meas_delta_p@_FillValue,meas_parray@_FillValue,meas_parray)
+
+
+;--------------------------------------------
+; MOPITT combine a priori profile info
+; (surface values are separate to profiles)
+;--------------------------------------------
+printVarSummary(apriori_prof)
+apriori_prof_all := new((/dimsizes(meas_lon), dimsizes(meas_lat),10/),float,-9999)
+      apriori_prof_all(:,:,1:9)  = apriori_prof
+      apriori_prof_all(:,:,0)  = apriori_surf
+
+; Repeat surface a priori values at all levels to replace if needed
+apsurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float) 
+   do z= 0, 9, 1
+    apsurfarray(:,:,z) = apriori_surf
+   end do
+
+; Correct for where MOPITT surface pressure <900 hPa
+; (add fill values)
+   apriori_prof_all = where(meas_delta_p.le.0,apriori_prof_all@_FillValue,apriori_prof_all)
+   apriori_prof_all = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),apsurfarray,apriori_prof_all)
+
 
 ;--------------------------------------------
 ; load associated climatology file
@@ -198,14 +232,16 @@ model_in = addfile(model_file_selected, "r")
      model_tcol_all&time      = tracer_in&time
      model_tcol_all&lat       = tracer_in&lat
      model_tcol_all&lon       = tracer_in&lon
-model_tcol_all = lonFlip(model_tcol_all)
-
+   model_tcol_all = lonFlip(model_tcol_all)
 
 ;--------------------------------------------
-; Model downscale to MOPITT Grid
+; Model downscaled to MOPITT Grid
 ;--------------------------------------------
 tracer_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, tracer_in, tcol_gas&lon, tcol_gas&lat, False)
+tracer_remap@_FillValue=-9999
+  ;tracer_remap = where(meas_parray@_FillValue,tracer_remap@_FillValue,tracer_remap)
 ps_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, ps, tcol_gas&lon, tcol_gas&lat, False)
+
 
 ;--------------------------------------------
 ; Model to MOPITT layers
@@ -219,21 +255,19 @@ tracer_remap_press = vinth2p(tracer_remap, hyam, hybm, pvect_2, ps_remap, 2, P0,
 test = tracer_remap_press(0,:,:,:)
 test2 = test(lon|:,lat|:,lev_p|:)
 
-do i = 0, dimsizes()
-  model_smooth = apriori_col + AvKer#test2
-end do
+model_smooth = apriori_col
+copy_VarCoords(tcol_gas_orig,model_smooth)
+delete_VarAtts(model_smooth, (/"Units", "long_name", "projection"/))
 
-printVarSummary(apriori_prof)
-printVarSummary(test2)
-printVarSummary(AvKer)
-printVarSummary(model_smooth)
-exit
-;--------------------------------------------
-; Difference
-;--------------------------------------------
+model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
+model_smooth_plot = model_smooth(lat|:, lon|:)
 
-printVarSummary(model_tcol_all(0,:,:))
-printVarSummary(tcol_gas)
+;--------------------------------------------
+; Relative difference
+;--------------------------------------------
+diff_tcol = (tcol_gas - model_smooth_plot)/tcol_gas
+  copy_VarCoords(model_smooth_plot,diff_tcol)
+
 ;--------------------------------------------
 ; Regional averages
 ;--------------------------------------------
@@ -285,15 +319,15 @@ if (PLOT) then
       map2 = gsn_csm_contour_map_ce(wks,model_tcol_all(0,:,:)/1e18,mapres)
 
      mapres@gsnLeftString     = "Smoothed CAM-chem climatology"   ;
-      map3 = gsn_csm_contour_map_ce(wks,tracer_remap(0,25,:,:)/1e-7,mapres)
+      map3 = gsn_csm_contour_map_ce(wks,model_smooth_plot/1e18,mapres)
 
-     mapres@gsnLeftString     = "Difference MOPITT and smoothed CAM-chem"   ;
-     mapres@gsnRightString     = "" 
+     mapres@gsnLeftString     = "Relative difference: (MOPITT - smoothed CAM-chem)/MOPITT"   ;
+     mapres@gsnRightString     = ""
      mapres@cnFillPalette       = "hotcold_18lev"
-     mapres@cnMinLevelValF          = -1.             ; set the minimum contour level
-     mapres@cnMaxLevelValF          = 1.               ; set the maximum contour level
-     mapres@cnLevelSpacingF         = 0.1                ; set the interval between contours
-      map4 = gsn_csm_contour_map_ce(wks,model_tcol_all(0,:,:),mapres)
+     mapres@cnMinLevelValF          = -0.5             ; set the minimum contour level
+     mapres@cnMaxLevelValF          = 0.5               ; set the maximum contour level
+     mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
+      map4 = gsn_csm_contour_map_ce(wks,diff_tcol(:,:),mapres)
 
 
     panel_res                      = True
@@ -304,6 +338,13 @@ if (PLOT) then
     gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
 
 end if ; PLOT
+
+;--------------------------------------------
+; Write out region averages
+;--------------------------------------------
+if (NETCDF) then
+
+end if ; NETCDF
 
 end
 
