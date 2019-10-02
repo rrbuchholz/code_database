@@ -31,7 +31,7 @@ print "$tracerlist \n";
 #------------------------------------
 # concatenate files
 #------------------------------------
-for  $i (2012..2012) {
+for  $i (2015..2015) {
   $y =  sprintf("%04d",$i);
   $outfile = $outdir."CAM_chem_merra2_FCSD_1deg_FINN_".$region."_".$y.".nc";
   print "$outfile\n";
