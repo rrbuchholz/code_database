@@ -5,16 +5,16 @@
 #
 
 $region = "Boulder";
-$topdir = "/gpfs/fs1/scratch/buchholz/archive/";
-$casedir = "fmerra.2.1003.FCSD.f09.chey181031.finncmip.56L.boulder/atm/h2/";
+$topdir = "/glade/scratch/buchholz/archive/";
+$casedir = "f.e21_003.FCSD.f09_f09_mg17.ch190918_finn_56L_merra2.boulder/atm/h1/";
+#$casedir = "f.e21_003.FCSD.f09_f09_mg17.ch190918_qfed_56L_merra2.boulder/atm/h1/";
 #$casedir = "fmerra.2.1003.FCSD.1deg.chey180910.cmip.56L.boulder/atm/h2/";
 #$runtype = "anth";
 #$casedir = "fmerra.208.FCSD.1deg.chey180418".$runtype."/atm/hist/";
 #$casedir = "fmerra.2.0.FCSD.1deg.chey180617.cmip.".$runtype."/atm/hist/";
 #$casedir = "CAMchem_fmerra_e15_BAM_constE/";
 $rundir = $topdir.$casedir;
-$outpath = "/glade/work/buchholz/CAM_chem_output/";
-$outdir = $outpath."boulder/";
+$outdir = "/glade/work/buchholz/CAM_chem_output/boulder/";
 
 #------------------------------------
 # create tracer list of tagged tracers to extract
@@ -31,11 +31,11 @@ print "$tracerlist \n";
 #------------------------------------
 # concatenate files
 #------------------------------------
-for  $i (2016..2017) {
+for  $i (2015..2015) {
   $y =  sprintf("%04d",$i);
-  $outfile = $outdir."CAM_chem_fmerra2_FCSD_1deg_FINN_".$region."_".$y.".nc";
+  $outfile = $outdir."CAM_chem_merra2_FCSD_1deg_FINN_".$region."_".$y.".nc";
   print "$outfile\n";
-  chomp(@to_combine = `ls $rundir*h2.*$y-*.nc`);
+  chomp(@to_combine = `ls $rundir/$y/*$y-*.nc`);
   print "Combining $y\n";
 
   #print "ncrcat -O -v date,datesec,time,lat,lon,P0,hyam,hybm,hyai,hybi,PS,PDELDRY,$tracerlist @to_combine $outfile\n";
