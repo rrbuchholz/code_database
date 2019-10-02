@@ -43,9 +43,9 @@ begin
   ;order = (/ "QFED", "FINN"/)
   ;order = (/  "QFED regridded","QFED native","QFED x FINN", "FINN 1.5"/)
   ;order = (/  "QFED regridded","QFED x FINN", "FINN 1.5","GFAS x FINN", "GFAS regridded"/)
-  ;order = (/  "QFED", "FINN 1.5", "GFAS"/)
+  order = (/  "QFED", "FINN 1.5", "GFAS"/)
   ;order = (/  "QFED", "FINN 1.5", "GFAS", "CMIP6" /)
-  order = (/  "QFED x FINN E.R.s"/)
+  ;order = (/  "QFED x FINN E.R.s"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
@@ -54,11 +54,11 @@ begin
    finn_dir = "finn/cam_"+reso+"/"
    gfas_dir = "gfas/cam_"+reso+"/"
    cmip6_dir ="gfed/cmip6_cam_"+reso+"/"
-   ;e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
+   e_file_in = (/qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
    ;              ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\
    ;              qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional.nc",\                 
-   ;              finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
-   ;              gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional_2014_2017.nc"/);,\  
+                 finn_dir+"region_sums/finn.emis_"+tracer+"_"+reso+"_FINN_Tg_regional_2014_2017.nc", \
+                 gfas_dir+"regridded/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_Tg_regional_2014_2017.nc"/);,\  
    ;              gfas_dir+"from_co2/region_sums/gfas.emis_"+tracer+"_"+reso+"_GFAS_cross_FINN_Tg_regional.nc"/)
 
    ;e_file_in = (/;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_Tg_regional_2014_2017.nc",\
@@ -66,7 +66,7 @@ begin
    ;              qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_"+tracer+"_"+reso+"_QFED_cross_FINN_Tg_regional_2000_2018.nc",\                 
    ;              finn_dir+"region_sums/finn.emis_C2H6_"+reso+"_FINN_Tg_regional_2002_2017.nc"/)
 
-    e_file_in = qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_CO_0.9x1.25_QFED_cross_FINN_Tg_regional_2000_2018.nc"
+   ; e_file_in = qfed_dir+"from_co2/v2.5/region_sums/qfed.emis_CO_0.9x1.25_QFED_cross_FINN_Tg_regional_2000_2018.nc"
 
 
    ; cheyenne
