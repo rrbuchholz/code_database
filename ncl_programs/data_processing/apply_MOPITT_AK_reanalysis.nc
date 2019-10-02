@@ -13,6 +13,7 @@
 ;          > ncl apply_MOPITT_AK_reanalysis.ncl
 ;                            RRB Oct 1, 2019
 ;============================================
+load "/IASI/home/buchholz/code_database/ncl_programs/buchholz_global_util/ultrafine_mopitt.ncl"
 
 begin
 
@@ -147,10 +148,13 @@ mopitt_in := addfile(meas_file_selected, "r")
   ; Correct for where MOPITT surface pressure <900 hPa
   ; Determine the level where the surface pressure needs to sit
   meas_delta_p := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
-      do z= 0, 8, 1
-        meas_delta_p(:,:,z) = meas_parray(:,:,0)-meas_parray(:,:,z+1)
+      do z= 0, 9, 1
+        if (z.eq.9) then
+          meas_delta_p(:,:,z) = meas_parray(:,:,0)-0
+        else
+          meas_delta_p(:,:,z) = meas_parray(:,:,0)-meas_parray(:,:,z+1)
+        end if
       end do
-   meas_delta_p(:,:,z) = 1000
 
   ; Repeat surface values at all levels to replace
   ; in equivalent position in parray if needed
@@ -161,8 +165,7 @@ mopitt_in := addfile(meas_file_selected, "r")
   ; add fill values below true surface
    meas_parray = where(meas_delta_p.le.0,meas_parray@_FillValue,meas_parray)
    meas_parray = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),meas_psurfarray,meas_parray)
-  ; meas_parray = where(meas_delta_p@_FillValue,meas_parray@_FillValue,meas_parray)
-
+   meas_parray = where(ismissing(meas_delta_p),meas_parray@_FillValue,meas_parray)
 
 ;--------------------------------------------
 ; MOPITT combine a priori profile info
@@ -183,7 +186,9 @@ apsurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
 ; (add fill values)
    apriori_prof_all = where(meas_delta_p.le.0,apriori_prof_all@_FillValue,apriori_prof_all)
    apriori_prof_all = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),apsurfarray,apriori_prof_all)
+   apriori_prof_all = where(ismissing(meas_delta_p),apriori_prof_all@_FillValue,apriori_prof_all)
 
+   logap = log(apriori_prof_all)
 
 ;--------------------------------------------
 ; load associated climatology file
@@ -208,8 +213,8 @@ model_in = addfile(model_file_selected, "r")
     pi&lev       = tracer_in&lev
     pi&lat       = tracer_in&lat
     pi&lon       = tracer_in&lon
-    pi@long_name = "edge-level pressures"
-    pi@units     = "hPa"
+    pi@long_name = "mid-level pressures"
+    pi@units     = "Pa"
 
   ; -------------------------------
   ; Calculate pressure array delta_p
@@ -241,23 +246,55 @@ tracer_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, tracer_in,
 tracer_remap@_FillValue=-9999
   ;tracer_remap = where(meas_parray@_FillValue,tracer_remap@_FillValue,tracer_remap)
 ps_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, ps, tcol_gas&lon, tcol_gas&lat, False)
-
-
-;--------------------------------------------
-; Model to MOPITT layers
-;--------------------------------------------
-pvect_2 = (/950,850,750,650,550,450,350,250,150,50/)
-tracer_remap_press = vinth2p(tracer_remap, hyam, hybm, pvect_2, ps_remap, 2, P0, 1, False) ; HACKED re-do
+pi_remap = pres_hybrid_ccm(ps_remap, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
+    pi_remap!0         = "time"
+    pi_remap!1         = "lev"
+    pi_remap!2         = "lat"
+    pi_remap!3         = "lon"
+    pi_remap&time      = tracer_in&time
+    pi_remap&lev       = tracer_in&lev
+    pi_remap&lat       = ps_remap&lat
+    pi_remap&lon       = ps_remap&lon
+    pi@long_name = "mid-level pressures"
+    pi@units     = "Pa"
 
 ;--------------------------------------------
 ; Smoothed tcol - apply AKs
 ;--------------------------------------------
-test = tracer_remap_press(0,:,:,:)
-test2 = test(lon|:,lat|:,lev_p|:)
+model_smooth_calc = new(dimsizes(tcol_gas_orig), float)
+copy_VarCoords(tcol_gas_orig,model_smooth_calc)
+delete_VarAtts(model_smooth_calc, (/"Units", "long_name", "projection"/))
+sublevs = 100
+AvKer_calcs = where(ismissing(AvKer), 0, AvKer)
+logap_calcs = where(ismissing(logap), 0, logap)
 
-model_smooth = apriori_col
-copy_VarCoords(tcol_gas_orig,model_smooth)
-delete_VarAtts(model_smooth, (/"Units", "long_name", "projection"/))
+;Loop over Latitude
+do l = 0, dimsizes(meas_lat)-1
+  ;Loop over Longitude
+  ;do m = 0, dimsizes(meas_lon)-1
+  do m = 0, 2
+    if (all(ismissing(meas_parray(m,l,:)))) then
+       continue
+    else 
+      ; Model to MOPITT layers
+      model_interp := ultrafine_mopitt(tracer_remap(0,:,l,m), pi_remap(0,:,l,m)/100, meas_parray(m,l,:), sublevs)
+      log_modelinterp = log(model_interp/1e-09)
+      log_modelinterp_calc = where(ismissing(log_modelinterp), 0, log_modelinterp)
+
+      ; Convolve AK and a priori
+      model_smooth_calc(m,l) = apriori_col(m,l) + AvKer_calcs(m,l,:)#(log_modelinterp-logap_calcs(m,l,:))
+
+      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l))
+      ; SOMETHING WEIRD HAPPENING WITH MISSING VALUES IN LOWER LAYERS
+
+    end if
+  end do
+end do
+
+model_smooth = model_smooth_calc
+printVarSummary(model_smooth)
+
+
 
 model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
 model_smooth_plot = model_smooth(lat|:, lon|:)
