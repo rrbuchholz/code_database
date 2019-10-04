@@ -115,6 +115,13 @@ begin
                      (/  0.,  60.,      -180.,     180./),\  ;NH
                      (/-60.,   0.,      -180.,     180./) /) ;SH
 
+  ; -------------------------------
+  ; TIME arrays
+  ; -------------------------------
+  yearmonth = yyyymm_time(year,year, "integer")
+;month_tcol
+;month_apriori
+;month_dofs
 
 ;--------------------------------------------
 ; load mopitt
@@ -262,6 +269,7 @@ pi_remap = pres_hybrid_ccm(ps_remap, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
 ; Smoothed tcol - apply AKs
 ;--------------------------------------------
 model_smooth_calc = new(dimsizes(tcol_gas_orig), float)
+model_smooth_calc_b = new(dimsizes(tcol_gas_orig), float)
 copy_VarCoords(tcol_gas_orig,model_smooth_calc)
 delete_VarAtts(model_smooth_calc, (/"Units", "long_name", "projection"/))
 sublevs = 100
@@ -272,7 +280,7 @@ logap_calcs = where(ismissing(logap), 0, logap)
 do l = 0, dimsizes(meas_lat)-1
   ;Loop over Longitude
   ;do m = 0, dimsizes(meas_lon)-1
-  do m = 0, 2
+  do m = 110, 120       ; for debugging
     if (all(ismissing(meas_parray(m,l,:)))) then
        continue
     else 
@@ -283,8 +291,9 @@ do l = 0, dimsizes(meas_lat)-1
 
       ; Convolve AK and a priori
       model_smooth_calc(m,l) = apriori_col(m,l) + AvKer_calcs(m,l,:)#(log_modelinterp-logap_calcs(m,l,:))
+      model_smooth_calc_b(m,l) = apriori_col(m,l) + sum(AvKer_calcs(m,l,:)*(log_modelinterp-logap_calcs(m,l,:)))
 
-      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l))
+      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l))
       ; SOMETHING WEIRD HAPPENING WITH MISSING VALUES IN LOWER LAYERS
 
     end if
@@ -292,10 +301,6 @@ do l = 0, dimsizes(meas_lat)-1
 end do
 
 model_smooth = model_smooth_calc
-printVarSummary(model_smooth)
-
-
-
 model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
 model_smooth_plot = model_smooth(lat|:, lon|:)
 
@@ -380,6 +385,52 @@ end if ; PLOT
 ; Write out region averages
 ;--------------------------------------------
 if (NETCDF) then
+
+  ; saves MOPITT subset
+    print("Creating file...")
+    fout = addfile(outname, "c")
+    ;------------
+    ; File 
+    ; Attributes
+    ;------------
+    setfileoption(fout, "DefineMode",True)
+    fAtt                      = True
+      fAtt@title              = "MOPITT AK smoothed CAM-chem Reanalysis for " +\
+                                 "multiple regions in "+year
+      fAtt@source             = "MOPITT level 3, version 8, TIR retrievals and "+\
+                                "Gaubert 2017 Renalysis"
+      fAtt@creation_date      = systemfunc ("date")
+      fAtt@conventrions       = "CF"
+
+     fileattdef(fout, fAtt)
+     setfileoption(fout, "DefineMode",False)
+
+  ;------------
+  ; Variables
+  ;------------
+   month_tcol!0              = "time"
+   month_tcol&time           = yearmonth
+   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+   month_apriori!0               = "time"
+   month_apriori&time            = yearmonth
+
+   if (COLAVG_VMR) then
+     ;--- total column
+       fout->RetrievedX_CO       = month_tcol
+     ;--- stats
+       fout->AvgAPrioriX_CO      = month_apriori
+   else
+     ;--- total column
+       fout->RetrievedCOTotalColumn       = month_tcol
+     ;--- stats
+       fout->AvgAPrioriCOTotalColumn      = month_apriori
+   end if
+   ;--- 1D vars
+   month_dofs!0               = "time"
+   month_dofs&time            = yearmonth
+     fout->AvgDegreesofFreedomforSignal = month_dofs
 
 end if ; NETCDF
 

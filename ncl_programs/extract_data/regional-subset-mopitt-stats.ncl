@@ -30,8 +30,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2013
-  yend = 2013
+  ystart = 2017
+  yend = 2017
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
