@@ -41,6 +41,8 @@ begin
     lev_spacing = 0.25
 
   NETCDF           = False
+     outfolder = "~/CAM_chem/regions_MOPITT_AK/"
+
 
 ;--------------------------------------------
 ; end user input
@@ -64,6 +66,7 @@ begin
   sat_ap        = "APrioriCOMixingRatioProfileDay_MOP03"
   sat_colap     = "APrioriCOTotalColumnDay_MOP03"
   sat_colak     = "TotalColumnAveragingKernelDay_MOP03"
+  sat_ak        = "RetrievalAveragingKernelMatrixDay_MOP03"
   sat_co        = "RetrievedCOTotalColumnDay_MOP03"
   sat_psurf     = "SurfacePressureDay_MOP03"
 
@@ -83,8 +86,11 @@ begin
    g      = 9.81                             ;--- m/s - gravity
    H = (8.314*240)/(0.0289751*9.8)           ;--- scale height
    MWair = 28.94                             ;--- g/mol
-   xp_const = (NAv* 10)/(MWair*g)            ;--- scaling factor for turning vmr into pcol
+   xp_const = (NAv* 10)/(MWair*g)*1e-09    ;--- scaling factor for turning vmr into pcol
                                              ;--- (note 1*e-09 because in ppb)
+   ;xp_const = 2.12e13
+
+
   ; -------------------------------
   ; REGIONS
   ; -------------------------------
@@ -123,15 +129,26 @@ begin
 ;month_apriori
 ;month_dofs
 
+;do f = 0, dimsizes(meas_files)-1
+do f = 0, 1
 ;--------------------------------------------
 ; load mopitt
 ;--------------------------------------------
-meas_file_selected = meas_files(0)
+meas_file_selected = meas_files(f)
 mopitt_in := addfile(meas_file_selected, "r")
+
+sat_time = mopitt_in@StartTime_MOP03
+  ;units value presumes use of TAI93 (International Atomic Time) format
+  sat_time@units = "seconds since 1993-1-1 00:00:00"
+sat_yyyymmdd = cd_calendar(sat_time,2)
+split_time = str_split_by_length(tostring(sat_yyyymmdd),2)
+sat_mm = toint(split_time(2))
+
     apriori_surf  := mopitt_in->$sat_surfap$
     apriori_prof  := mopitt_in->$sat_ap$
     apriori_col   := mopitt_in->$sat_colap$
     AvKer         := mopitt_in->$sat_colak$
+    AvKer_prof    := mopitt_in->$sat_ak$
     tcol_gas_orig:= mopitt_in->$sat_co$
       tcol_gas_orig!0    = "lon"
       delete_VarAtts(tcol_gas_orig&lon, (/"Units", "projection"/))
@@ -155,11 +172,14 @@ mopitt_in := addfile(meas_file_selected, "r")
   ; Correct for where MOPITT surface pressure <900 hPa
   ; Determine the level where the surface pressure needs to sit
   meas_delta_p := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
+  meas_delta_p_2 := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
       do z= 0, 9, 1
         if (z.eq.9) then
           meas_delta_p(:,:,z) = meas_parray(:,:,0)-0
+          meas_delta_p_2(:,:,z) = 74
         else
           meas_delta_p(:,:,z) = meas_parray(:,:,0)-meas_parray(:,:,z+1)
+          meas_delta_p_2(:,:,z) = meas_parray(:,:,z)-meas_parray(:,:,z+1)
         end if
       end do
 
@@ -173,6 +193,13 @@ mopitt_in := addfile(meas_file_selected, "r")
    meas_parray = where(meas_delta_p.le.0,meas_parray@_FillValue,meas_parray)
    meas_parray = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),meas_psurfarray,meas_parray)
    meas_parray = where(ismissing(meas_delta_p),meas_parray@_FillValue,meas_parray)
+
+;ind_lt_900 = ind(psurf.lt.900)
+  p1D      = ndtooned(psurf)
+  dsizes_psurf = dimsizes(psurf)
+  indices  = ind_resolve(ind(p1D.lt.900),dsizes_psurf)
+print(meas_parray(indices(0,0),indices(0,1),:))
+
 
 ;--------------------------------------------
 ; MOPITT combine a priori profile info
@@ -195,12 +222,12 @@ apsurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
    apriori_prof_all = where((meas_delta_p.le.100 .and. meas_delta_p.ge.0),apsurfarray,apriori_prof_all)
    apriori_prof_all = where(ismissing(meas_delta_p),apriori_prof_all@_FillValue,apriori_prof_all)
 
-   logap = log(apriori_prof_all)
+   logap = log10(apriori_prof_all)
 
 ;--------------------------------------------
 ; load associated climatology file
 ;--------------------------------------------
-model_file_selected = model_files(0)
+model_file_selected = model_files(sat_mm-1)
 model_in = addfile(model_file_selected, "r")
     tracer_in     := model_in->$model_tracer$
     ps            = model_in->$"PS"$
@@ -270,6 +297,7 @@ pi_remap = pres_hybrid_ccm(ps_remap, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
 ;--------------------------------------------
 model_smooth_calc = new(dimsizes(tcol_gas_orig), float)
 model_smooth_calc_b = new(dimsizes(tcol_gas_orig), float)
+model_smooth_calc_c = new(dimsizes(tcol_gas_orig), float)
 copy_VarCoords(tcol_gas_orig,model_smooth_calc)
 delete_VarAtts(model_smooth_calc, (/"Units", "long_name", "projection"/))
 sublevs = 100
@@ -280,39 +308,83 @@ logap_calcs = where(ismissing(logap), 0, logap)
 do l = 0, dimsizes(meas_lat)-1
   ;Loop over Longitude
   ;do m = 0, dimsizes(meas_lon)-1
-  do m = 110, 120       ; for debugging
+  do m = 110, 200       ; for debugging
     if (all(ismissing(meas_parray(m,l,:)))) then
        continue
     else 
       ; Model to MOPITT layers
       model_interp := ultrafine_mopitt(tracer_remap(0,:,l,m), pi_remap(0,:,l,m)/100, meas_parray(m,l,:), sublevs)
-      log_modelinterp = log(model_interp/1e-09)
+      log_modelinterp = log10(model_interp/1e-09)
       log_modelinterp_calc = where(ismissing(log_modelinterp), 0, log_modelinterp)
 
       ; Convolve AK and a priori
       model_smooth_calc(m,l) = apriori_col(m,l) + AvKer_calcs(m,l,:)#(log_modelinterp-logap_calcs(m,l,:))
       model_smooth_calc_b(m,l) = apriori_col(m,l) + sum(AvKer_calcs(m,l,:)*(log_modelinterp-logap_calcs(m,l,:)))
 
-      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l))
+;##########
+          ak := AvKer_prof(m,l,:,:)
+          ak_calcs = where(ismissing(ak), 0, ak)
+          ; convolve
+          ; calculate (need to do vector wise because array calcs don't handle missing vals)
+          logmodel_ak = new(dimsizes(logap_calcs(m,l,:)), float)        
+          do z = 0, dimsizes(logmodel_ak)-1
+            logmodel_ak(z) = logap_calcs(m,l,z) + dim_sum(ak_calcs(:,z) * (log_modelinterp-logap_calcs(m,l,:)))
+          end do
+          ;logmodel_ak := logap_calcs(m,l,:) + ak_calcs # (log_modelinterp-logap_calcs(m,l,:))
+          ; calculate tcol
+          model_ak := 10^logmodel_ak
+          model_smooth_calc_c(m,l)= dim_sum((xp_const * model_ak) * meas_delta_p_2(m,l,:))
+;##########
+
+;lt_900_index := ind(indices(:,0).eq.m.and.indices(:,1).eq.l)
+;if (.not.(ismissing(lt_900_index))) then
+;  print(model_smooth_calc(m,l))
+;  print(model_smooth_calc_b(m,l))
+;  print(model_smooth_calc_c(m,l))
+;  print(meas_parray(indices(lt_900_index,0),indices(lt_900_index,1),:))
+;print(ak_calcs)
+;print(logmodel_ak)
+;end if
+
+      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l)+", Smooth3: "+model_smooth_calc_c(m,l))
       ; SOMETHING WEIRD HAPPENING WITH MISSING VALUES IN LOWER LAYERS
 
     end if
   end do
 end do
 
+      copy_VarMeta(model_smooth_calc,model_smooth_calc_b)
+      copy_VarMeta(model_smooth_calc,model_smooth_calc_c)
+
+;--------------------------------------------
+; Collect
+;--------------------------------------------
 model_smooth = model_smooth_calc
+model_smooth_b = model_smooth_calc_b
+model_smooth_c = model_smooth_calc_c
 model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
+model_smooth_b = where(ismissing(tcol_gas_orig),model_smooth_b@_FillValue,model_smooth_b)
+model_smooth_c = where(ismissing(tcol_gas_orig),model_smooth_c@_FillValue,model_smooth_c)
 model_smooth_plot = model_smooth(lat|:, lon|:)
+model_smooth_plot_b = model_smooth_b(lat|:, lon|:)
+model_smooth_plot_c = model_smooth_c(lat|:, lon|:)
+
+print(isdefined("model_smooth_array"))
+
+if (isdefined("model_smooth_array")) then
+   model_smooth_array(sat_mm-1,:,:) = model_smooth_b
+else 
+   model_smooth_array = new((/dimsizes(yearmonth), dimsizes(model_smooth_b(:,0)), dimsizes(model_smooth_b(0,:))/), float)
+   model_smooth_array(sat_mm-1,:,:) = model_smooth_b
+end if
 
 ;--------------------------------------------
 ; Relative difference
 ;--------------------------------------------
-diff_tcol = (tcol_gas - model_smooth_plot)/tcol_gas
+diff_tcol = (tcol_gas - model_smooth_plot_b)/tcol_gas
+diff_tcol_smooth = (model_smooth_plot_b - model_smooth_plot_c)/model_smooth_plot_b
   copy_VarCoords(model_smooth_plot,diff_tcol)
-
-;--------------------------------------------
-; Regional averages
-;--------------------------------------------
+  copy_VarCoords(model_smooth_plot,diff_tcol_smooth)
 
 
 ;--------------------------------------------
@@ -354,14 +426,14 @@ if (PLOT) then
     ;-------------------
       mapres@cnFillPalette      = "BlAqGrYeOrRe"
       mapres@gsnRightString     = "x 10~S2~18   molec. cm~S2~-2"
-      mapres@gsnLeftString     = "MOPITT"
+      mapres@gsnLeftString     = "MOPITT "+ year + "Jan"
       map1 = gsn_csm_contour_map_ce(wks,tcol_gas(:,:)/1e18,mapres)
 
       mapres@gsnLeftString     = "CAM-chem climatology"
       map2 = gsn_csm_contour_map_ce(wks,model_tcol_all(0,:,:)/1e18,mapres)
 
-     mapres@gsnLeftString     = "Smoothed CAM-chem climatology"   ;
-      map3 = gsn_csm_contour_map_ce(wks,model_smooth_plot/1e18,mapres)
+     mapres@gsnLeftString     = "Smoothed CAM-chem climatology (col)"   ;
+      map3 = gsn_csm_contour_map_ce(wks,model_smooth_plot_b/1e18,mapres)
 
      mapres@gsnLeftString     = "Relative difference: (MOPITT - smoothed CAM-chem)/MOPITT"   ;
      mapres@gsnRightString     = ""
@@ -371,22 +443,52 @@ if (PLOT) then
      mapres@cnLevelSpacingF         = 0.05                ; set the interval between contours
       map4 = gsn_csm_contour_map_ce(wks,diff_tcol(:,:),mapres)
 
+     mapres@gsnLeftString     = "Relative difference: (col smoothed - prof smoothed CAM-chem)/MOPITT"   ;
+     mapres@gsnRightString     = ""
+     mapres@cnFillPalette       = "hotcold_18lev"
+     mapres@cnMinLevelValF          = -0.1             ; set the minimum contour level
+     mapres@cnMaxLevelValF          = 0.1               ; set the maximum contour level
+     mapres@cnLevelSpacingF         = 0.02                ; set the interval between contours
+      map5 = gsn_csm_contour_map_ce(wks,diff_tcol_smooth(:,:),mapres)
+
 
     panel_res                      = True
       panel_res@gsnMaximize        = True  
       panel_res@txString           = ""
       panel_res@gsnPanelLabelBar   = False                ; add common colorbar
 
-    gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
+    ;gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
+    gsn_panel(wks,(/map1,map3,map4,map5/),(/2,2/),panel_res)
 
 end if ; PLOT
 
-;--------------------------------------------
-; Write out region averages
-;--------------------------------------------
-if (NETCDF) then
+end do ; file loop
 
-  ; saves MOPITT subset
+;--------------------------------------------
+; Regional averages
+;--------------------------------------------
+do r = 0, dimsizes(region_names)-1
+
+   location = region_names(r)
+
+   topboundary     = region_select(r,1)
+   bottomboundary  = region_select(r,0)
+   rightboundary   = region_select(r,3)
+   leftboundary    = region_select(r,2)
+
+   region_smoothed := model_smooth_plot_b(:, {topboundary:bottomboundary},{leftboundary:rightboundary})
+   region_average := dim_sum_n_Wrap(dim_sum_n_Wrap(model_smooth_plot_b,1),0)
+
+printVarSummary(region_average)
+
+  ;--------------------------------------------
+  ; Write out region averages
+  ;--------------------------------------------
+  if (NETCDF) then
+
+     outname      = outfolder+location+"_CAMchemxMOPAK_"+year+"monthavg.nc"
+
+  ; saves region average
     print("Creating file...")
     fout = addfile(outname, "c")
     ;------------
@@ -396,7 +498,7 @@ if (NETCDF) then
     setfileoption(fout, "DefineMode",True)
     fAtt                      = True
       fAtt@title              = "MOPITT AK smoothed CAM-chem Reanalysis for " +\
-                                 "multiple regions in "+year
+                                 location+" in "+year
       fAtt@source             = "MOPITT level 3, version 8, TIR retrievals and "+\
                                 "Gaubert 2017 Renalysis"
       fAtt@creation_date      = systemfunc ("date")
@@ -408,31 +510,18 @@ if (NETCDF) then
   ;------------
   ; Variables
   ;------------
-   month_tcol!0              = "time"
-   month_tcol&time           = yearmonth
+   region_average!0              = "time"
+   region_average&time           = yearmonth
    month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
                                     topboundary+" to "+bottomboundary+ " Lat, "+\
                                     leftboundary+" to "+rightboundary+" Lon"
-   month_apriori!0               = "time"
-   month_apriori&time            = yearmonth
 
-   if (COLAVG_VMR) then
-     ;--- total column
-       fout->RetrievedX_CO       = month_tcol
-     ;--- stats
-       fout->AvgAPrioriX_CO      = month_apriori
-   else
-     ;--- total column
-       fout->RetrievedCOTotalColumn       = month_tcol
-     ;--- stats
-       fout->AvgAPrioriCOTotalColumn      = month_apriori
-   end if
-   ;--- 1D vars
-   month_dofs!0               = "time"
-   month_dofs&time            = yearmonth
-     fout->AvgDegreesofFreedomforSignal = month_dofs
+   ;--- total column
+   fout->Model_smoothed_X_CO     = region_average
 
-end if ; NETCDF
+  end if ; NETCDF
+
+end do ; region averages
 
 end
 

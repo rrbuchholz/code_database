@@ -30,15 +30,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2017
-  yend = 2017
+  ystart = 2001
+  yend = 2018
   version = "V8T"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "SH_monthly"
+  location = "MSEA_stats"
 
   ;------------
   ; select daytime 
@@ -97,38 +97,39 @@ begin
   swath_index    = "SwathIndex"+suff
   snr_calc       = "Level1RadiancesandErrors"+suff
 
-   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
-                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH_monthly", "SH_monthly"/)
+   ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+   ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+   ;                 "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+   ;                  "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+   ;                 "BBMSEA", "BBNWAu","BBEAu", "NH_monthly", "SH_monthly"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
-                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
-                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
-                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-                     (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
-                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-                     (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
-                     (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
-                     (/-10.,   8.,        95.,     125./),\  ;BBMSEA
-                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
-                     (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,      -180.,     180./),\  ;NH
-                     (/-60.,   0.,      -180.,     180./) /) ;SH
+   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+   ;                  (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+   ;                  (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+   ;                  (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+   ;                  (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
+   ;                  (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+   ;                  (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
+   ;                  (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+   ;                  (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
+   ;                  (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
+   ;                  (/-10.,   8.,        95.,     125./),\  ;BBMSEA
+   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
+   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
+   ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
+   ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   ;region_names := (/"CONTRAIL","TEST"/)
+   region_names := (/"CONTRAIL","MSEA_stats","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   ;region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
-   ;                   (/-60.,   0.,      -180.,     180./) /)   ; TEST
+   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+                      (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
+                      (/ -60.,   0.,      -180.,     180./) /)  ; TEST
 
    ind_region = ind(region_names.eq.location)
 
@@ -145,7 +146,7 @@ begin
   ; -------------------------------
   if (surface.eq."land") then           ; land left
      s_id = 1
-  else if (surface.eq."water") then       ; ocean left
+  else if (surface.eq."water") then     ; ocean left
      s_id = 0
   end if
   end if
@@ -200,7 +201,7 @@ do y = ystart,yend ; loop through years
   ; months
   ;------------
   ;do m=0,11
-  do m=6,11
+  do m=0,11
     ; counter for counting number of files with selected values
     dcount = 0
     print("==================================")
@@ -263,7 +264,7 @@ do y = ystart,yend ; loop through years
                  mod(count_array,mod_array).eq.0)
      else
        region := ind(sza.le.dayflag.and.\
-                 ;surf_type.eq.s_id.and.\
+                 surf_type.eq.s_id.and.\
                  pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\

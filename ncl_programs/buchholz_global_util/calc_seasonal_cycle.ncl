@@ -31,7 +31,7 @@ function calc_seasonal_cycle(valIN[*]:numeric, timeIN[*]:numeric, ystartIN:numer
 ;    valOUT: Seasonal cycle averaged over the whole dataset
 ;
 ;============================================
-local date, years, months, days, yyyymmdd, day_yfrac, ymid, smooth_val, detrend_val_smooth, detrend_val, climate_time, climate_doy, val_array, val_ClmDay, ind_data, Clm_doy, new_val_ClmDay
+local date, years, months, days, yyyymmdd, day_yfrac, ystart, ymid, smooth_val, detrend_val_smooth, detrend_val, climate_time, climate_doy, val_array, val_ClmMon
 
 begin
 
@@ -45,77 +45,62 @@ begin
        smoothIN = 230
   end if
 
+
   ;--------------------------------------------
   ; DATE MANIPULATIONS
   ;--------------------------------------------
-  date    = cd_calendar(timeIN, 0)
-      years  = floattointeger(date(:,0))
-      months = floattointeger(date(:,1))
-      days   = floattointeger(date(:,2))
-  yyyymmdd       = cd_calendar(timeIN, 2)
-  day_yfrac      = cd_calendar(timeIN, 4)
+    yyyymm = timeIN
+    date = str_split_by_length(timeIN,4)
+    months = toint(date(:,1))
+    day_yfrac = yyyymm_to_yyyyfrac(timeIN, 0.5)
 
   ; -------------------------------
   ; DETREND
   ; ------------------------------- 
+    ystart = toint(date(0,0))
     ymid = (tofloat(yendIN-ystartIN))/2
 
     smooth_val         = runave(valIN,smoothIN,0)
     detrend_val_smooth = dtrend_msg_n (day_yfrac,smooth_val,False,True,0)
-    detrend_val = valIN - detrend_val_smooth@slope*(day_yfrac-ystartIN-ymid-0.5)
+    detrend_val = valIN - detrend_val_smooth@slope*(day_yfrac-ystart-ymid-0.5)
 
  ; -------------------------------
-  ; CLIMATOLOGICAL DAY AVERAGES 
+  ; CLIMATOLOGICAL MONTH AVERAGES 
   ; ------------------------------- 
-    climate_time = yyyymmdd_time(toint(ystartIN), toint(yendIN), "integer")
-    climate_doy = yyyymmdd_to_yyyyddd(climate_time)
+    climate_time = yyyymm_time(toint(ystartIN), toint(yendIN), "integer")
     val_array = new((/dimsizes(climate_time),1,1/),double)   ;needs to be 3D for climate calculations
     do j=0,dimsizes(climate_time)-1
-      ind_avail := ind(yyyymmdd.eq.climate_time(j))
+      ind_avail := ind(yyyymm.eq.climate_time(j))
       if (.not.ismissing(ind_avail(0)))then
         val_array(j,0,0) = detrend_val(ind_avail)
       end if
     end do
 
-   val_ClmDay = clmDayTLL(val_array, climate_doy)         ; daily climatology at each grid point
+    val_array!0 = "time"
+    val_array!1 = "lat"
+    val_array!2 = "lon"
 
-  ; -------------------------------
-  ; SPLINE FIT TO FILL MISSING VALUES
-  ; -------------------------------
-    ind_data = ind(.not.ismissing(val_ClmDay(:,0,0)))
-    Clm_doy = val_ClmDay&year_day                            ;366 days in climate year
-    xi = Clm_doy(ind_data)
-    yi = val_ClmDay(ind_data,0,0)
-    xo = Clm_doy
-    yo = ftcurv(xi, yi, xo)
-    new_val_ClmDay = val_ClmDay
-    new_val_ClmDay = where(ismissing(val_ClmDay(:,0,0)),yo,val_ClmDay(:,0,0))
-
+   val_ClmMon = clmMonTLL(val_array)         ; daily climatology at each grid point
   ; -------------------------------
   ; CLIMATOLOGOCAL MONTHLY STDDEV
   ; -------------------------------
-    climate_year = yyyyddd_to_yyyymmdd(2004000+Clm_doy)        ; use dummy leap year to convert to month
-    split_mm =str_split_by_length(tostring(climate_year),2)
-    climate_val_day_sd = new((/dimsizes(Clm_doy),1,1/), double)
+    val_ClmDaysd = new(dimsizes(val_ClmMon), double)
     do kk=0,11
       month_ind := ind(months.eq.(kk+1))
-      mm_ind    := ind(toint(split_mm(:,2)).eq.(kk+1))
       val_to_avg := detrend_val(month_ind)
-      climate_val_day_sd(mm_ind,0,0) = dim_stddev_n(tofloat(val_to_avg),0)
+      val_ClmDaysd(kk,0,0) = dim_stddev_n(tofloat(val_to_avg),0)
     end do
-    climate_val_day_sd!0 = "year_day"
-    climate_val_day_sd&year_day = Clm_doy
+    val_ClmDaysd!0 = "month"
+    val_ClmDaysd&month = val_ClmMon&month
 
   ; -------------------------------
-  ; SMOOTHED DAILY CLIMATOLOGY AND
-  ; MONTH STDDEV USING 2 HARMONCS  
+  ; SETUP OUTPUT  
   ; -------------------------------
-    val_ClmDay_sm = smthClmDayTLL(new_val_ClmDay, 2)  
-    val_ClmDaysd_sm = smthClmDayTLL(climate_val_day_sd, 2)
-
-    valCOMB = new((/dimsizes(Clm_doy),2/),double)
-      valCOMB(:,0) = val_ClmDay_sm(:,0,0)
-      valCOMB(:,1) = val_ClmDaysd_sm(:,0,0)
+    valCOMB = new((/dimsizes(val_ClmMon(:,0,0)),2/),double)
+      valCOMB(:,0) = val_ClmMon(:,0,0)
+      valCOMB(:,1) = val_ClmDaysd(:,0,0)
+    valCOMB!0 = "month"
+    valCOMB&month = val_ClmMon&month
 
   ; -------------------------------
   ; RETURN VALUES 
