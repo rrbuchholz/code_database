@@ -116,8 +116,8 @@ else{
 
 #------------------------------
 #Check Processed and send e-mail
-#chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
-$current_date_check = $current_date+10;
+chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
+#$current_date_check = $current_date+10;
 chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
@@ -144,6 +144,13 @@ if ($processed == 0 && $proc_file == 1){
     print MAIL $message;
     close(MAIL);
     print OUT "***** Processed, email sent successfully *****\n";
+
+   #------------------------------
+   #send to glade after 1am
+   if ($time >= 1 && $min >= 01 && $processed == 1){
+   `scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+       print OUT "Sent to cheyenne. \n";
+   }
 }
 elsif ($processed == 1 && $proc_file == 1){
     print OUT "Processed and email already sent. \n";
@@ -153,14 +160,7 @@ else{
 }
 
 #------------------------------
-#send to glade at 8am
-if ($time >= 5 && $min >= 30 && $processed == 1){
-`scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
-    print OUT "Sent to cheyenne. \n";
-}
-
-#------------------------------
-#send email if processing not done by 7am
+#send email if processing not done by 8am
 if ($time == 8 && $processed == 0){
   $subject = 'QFED processing not done';
   $message = 'After 8am, QFED processing not done for '. $current_date .', may need to manually process.';
