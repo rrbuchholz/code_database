@@ -20,7 +20,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  year = 2001
+  year = 2018
   meas_dir = "/MOPITT/V8T/Archive/L3/"
   meas_files = systemfunc ("ls "+meas_dir+year+"*/month/*.he5")
 
@@ -30,7 +30,7 @@ begin
   ;------------
   ; toggles
   ;------------
-  PLOT           = True
+  PLOT           = False
     plotType      = "x11"
     plotName      = "test"
    ; -------------------------------
@@ -40,8 +40,8 @@ begin
     maxlev = 4.
     lev_spacing = 0.25
 
-  NETCDF           = False
-     outfolder = "~/CAM_chem/regions_MOPITT_AK/"
+  NETCDF           = True
+     outfolder = "/IASI/home/buchholz/CAM_chem/smoothed_reanalysis/"
 
 
 ;--------------------------------------------
@@ -98,7 +98,7 @@ begin
                     "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
                     "BBCAmerica", "BBSAmerica","BBSAmOcean",\
                      "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH_monthly", "SH_monthly"/)
+                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
@@ -125,24 +125,25 @@ begin
   ; TIME arrays
   ; -------------------------------
   yearmonth = yyyymm_time(year,year, "integer")
-;month_tcol
-;month_apriori
-;month_dofs
 
 ;do f = 0, dimsizes(meas_files)-1
-do f = 0, 1
-;--------------------------------------------
-; load mopitt
-;--------------------------------------------
-meas_file_selected = meas_files(f)
-mopitt_in := addfile(meas_file_selected, "r")
+;do f = 0, 2
+;do f = 3, 5
+;do f = 6, 8
+do f = 9, 11
+  ;--------------------------------------------
+  ; load mopitt
+  ;--------------------------------------------
+  meas_file_selected = meas_files(f)
+  print(meas_file_selected)
+  mopitt_in := addfile(meas_file_selected, "r")
 
-sat_time = mopitt_in@StartTime_MOP03
-  ;units value presumes use of TAI93 (International Atomic Time) format
-  sat_time@units = "seconds since 1993-1-1 00:00:00"
-sat_yyyymmdd = cd_calendar(sat_time,2)
-split_time = str_split_by_length(tostring(sat_yyyymmdd),2)
-sat_mm = toint(split_time(2))
+  sat_time = mopitt_in@StartTime_MOP03
+    ;units value presumes use of TAI93 (International Atomic Time) format
+    sat_time@units = "seconds since 1993-1-1 00:00:00"
+  sat_yyyymmdd = cd_calendar(sat_time,2)
+  split_time = str_split_by_length(tostring(sat_yyyymmdd),2)
+  sat_mm = toint(split_time(2))
 
     apriori_surf  := mopitt_in->$sat_surfap$
     apriori_prof  := mopitt_in->$sat_ap$
@@ -159,6 +160,27 @@ sat_mm = toint(split_time(2))
     pres_array    := mopitt_in->$"Pressure_MOP03"$
     meas_lon      := mopitt_in->$"Longitude_MOP03"$
     meas_lat      := mopitt_in->$"Latitude_MOP03"$
+
+;--------------------------------------------
+; setup arrays
+;--------------------------------------------
+printVarSummary(tcol_gas_orig)
+
+;if (f.eq.0) then
+  model_smooth_calc := new((/dimsizes(tcol_gas_orig(:,0)),dimsizes(tcol_gas_orig(0,:))/), float)
+  model_smooth_calc_b := new(dimsizes(model_smooth_calc), float)
+  model_smooth_calc_b_vmr := new(dimsizes(model_smooth_calc), float)
+  model_smooth_calc_c := new(dimsizes(model_smooth_calc), float)
+
+  model_smooth_calc!0 = tcol_gas_orig!0
+  model_smooth_calc!1 = tcol_gas_orig!1
+  model_smooth_calc&lon = tcol_gas_orig&lon
+  model_smooth_calc&lat = tcol_gas_orig&lat
+
+  copy_VarCoords(model_smooth_calc,model_smooth_calc_b)
+  copy_VarCoords(model_smooth_calc,model_smooth_calc_b_vmr)
+  copy_VarCoords(model_smooth_calc,model_smooth_calc_c)
+;end if
 
 ;--------------------------------------------
 ; Set up MOPITT pressure arrays
@@ -195,9 +217,9 @@ sat_mm = toint(split_time(2))
    meas_parray = where(ismissing(meas_delta_p),meas_parray@_FillValue,meas_parray)
 
 ;ind_lt_900 = ind(psurf.lt.900)
-  p1D      = ndtooned(psurf)
+  p1D      := ndtooned(psurf)
   dsizes_psurf = dimsizes(psurf)
-  indices  = ind_resolve(ind(p1D.lt.900),dsizes_psurf)
+  indices  := ind_resolve(ind(p1D.lt.900),dsizes_psurf)
 print(meas_parray(indices(0,0),indices(0,1),:))
 
 
@@ -211,7 +233,7 @@ apriori_prof_all := new((/dimsizes(meas_lon), dimsizes(meas_lat),10/),float,-999
       apriori_prof_all(:,:,0)  = apriori_surf
 
 ; Repeat surface a priori values at all levels to replace if needed
-apsurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float) 
+apsurfarray := new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float) 
    do z= 0, 9, 1
     apsurfarray(:,:,z) = apriori_surf
    end do
@@ -230,15 +252,15 @@ apsurfarray = new((/dimsizes(meas_lon), dimsizes(meas_lat), 10/), float)
 model_file_selected = model_files(sat_mm-1)
 model_in = addfile(model_file_selected, "r")
     tracer_in     := model_in->$model_tracer$
-    ps            = model_in->$"PS"$
-    hyam          = model_in->$"hyam"$
-    hybm          = model_in->$"hybm"$
-    P0            = model_in->$"P0"$
+    ps            := model_in->$"PS"$
+    hyam          := model_in->$"hyam"$
+    hybm          := model_in->$"hybm"$
+    P0            := model_in->$"P0"$
 
 ;--------------------------------------------
 ; model hybrid layers to pressure
 ;--------------------------------------------
-  pi = pres_hybrid_ccm(ps, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
+  pi := pres_hybrid_ccm(ps, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
     pi!0         = "time"
     pi!1         = "lev"
     pi!2         = "lat"
@@ -253,7 +275,7 @@ model_in = addfile(model_file_selected, "r")
   ; -------------------------------
   ; Calculate pressure array delta_p
   ; -------------------------------
-  delta_p = new(dimsizes(tracer_in),float)
+  delta_p := new(dimsizes(tracer_in),float)
   copy_VarCoords(tracer_in,delta_p)
   do i = 0, dimsizes(delta_p&lev)-2
     delta_p(:,i,:,:) = pi(:,i+1,:,:) - pi(:,i,:,:)
@@ -262,7 +284,7 @@ model_in = addfile(model_file_selected, "r")
   ; -------------------------------
   ; Base model tcol
   ; -------------------------------
-   model_tcol_all  = dim_sum_n((tracer_in*xp_const*delta_p)/100,1)  ; dp Pa -> hPa
+   model_tcol_all  := dim_sum_n((tracer_in*xp_const*delta_p)/100,1)  ; dp Pa -> hPa
      model_tcol_all!0         = "time"
      model_tcol_all!1         = "lat"
      model_tcol_all!2         = "lon"
@@ -276,7 +298,7 @@ model_in = addfile(model_file_selected, "r")
 ;--------------------------------------------
 ; Model downscaled to MOPITT Grid
 ;--------------------------------------------
-tracer_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, tracer_in, tcol_gas&lon, tcol_gas&lat, False)
+tracer_remap := area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, tracer_in, tcol_gas&lon, tcol_gas&lat, False)
 tracer_remap@_FillValue=-9999
   ;tracer_remap = where(meas_parray@_FillValue,tracer_remap@_FillValue,tracer_remap)
 ps_remap = area_conserve_remap_Wrap(tracer_in&lon, tracer_in&lat, ps, tcol_gas&lon, tcol_gas&lat, False)
@@ -295,11 +317,6 @@ pi_remap = pres_hybrid_ccm(ps_remap, P0, hyam, hybm) ; pi(ntim,klevi,nlat,mlon)
 ;--------------------------------------------
 ; Smoothed tcol - apply AKs
 ;--------------------------------------------
-model_smooth_calc = new(dimsizes(tcol_gas_orig), float)
-model_smooth_calc_b = new(dimsizes(tcol_gas_orig), float)
-model_smooth_calc_c = new(dimsizes(tcol_gas_orig), float)
-copy_VarCoords(tcol_gas_orig,model_smooth_calc)
-delete_VarAtts(model_smooth_calc, (/"Units", "long_name", "projection"/))
 sublevs = 100
 AvKer_calcs = where(ismissing(AvKer), 0, AvKer)
 logap_calcs = where(ismissing(logap), 0, logap)
@@ -307,8 +324,8 @@ logap_calcs = where(ismissing(logap), 0, logap)
 ;Loop over Latitude
 do l = 0, dimsizes(meas_lat)-1
   ;Loop over Longitude
-  ;do m = 0, dimsizes(meas_lon)-1
-  do m = 110, 200       ; for debugging
+  do m = 0, dimsizes(meas_lon)-1
+  ;do m = 110, 150       ; for debugging
     if (all(ismissing(meas_parray(m,l,:)))) then
        continue
     else 
@@ -346,51 +363,46 @@ do l = 0, dimsizes(meas_lat)-1
 ;print(logmodel_ak)
 ;end if
 
-      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l)+", Smooth3: "+model_smooth_calc_c(m,l))
+ ;     print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l)+", Smooth3: "+model_smooth_calc_c(m,l))
       ; SOMETHING WEIRD HAPPENING WITH MISSING VALUES IN LOWER LAYERS
 
     end if
   end do
 end do
 
-      copy_VarMeta(model_smooth_calc,model_smooth_calc_b)
-      copy_VarMeta(model_smooth_calc,model_smooth_calc_c)
-
 ;--------------------------------------------
-; Collect
+; Convert to column average VMR
 ;--------------------------------------------
-model_smooth = model_smooth_calc
-model_smooth_b = model_smooth_calc_b
-model_smooth_c = model_smooth_calc_c
-model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
-model_smooth_b = where(ismissing(tcol_gas_orig),model_smooth_b@_FillValue,model_smooth_b)
-model_smooth_c = where(ismissing(tcol_gas_orig),model_smooth_c@_FillValue,model_smooth_c)
-model_smooth_plot = model_smooth(lat|:, lon|:)
-model_smooth_plot_b = model_smooth_b(lat|:, lon|:)
-model_smooth_plot_c = model_smooth_c(lat|:, lon|:)
-
-print(isdefined("model_smooth_array"))
-
-if (isdefined("model_smooth_array")) then
-   model_smooth_array(sat_mm-1,:,:) = model_smooth_b
-else 
-   model_smooth_array = new((/dimsizes(yearmonth), dimsizes(model_smooth_b(:,0)), dimsizes(model_smooth_b(0,:))/), float)
-   model_smooth_array(sat_mm-1,:,:) = model_smooth_b
-end if
-
-;--------------------------------------------
-; Relative difference
-;--------------------------------------------
-diff_tcol = (tcol_gas - model_smooth_plot_b)/tcol_gas
-diff_tcol_smooth = (model_smooth_plot_b - model_smooth_plot_c)/model_smooth_plot_b
-  copy_VarCoords(model_smooth_plot,diff_tcol)
-  copy_VarCoords(model_smooth_plot,diff_tcol_smooth)
+    dry_air  := mopitt_in->DryAirColumnDay_MOP03
+    model_smooth_calc_b_vmr= model_smooth_calc_b/dry_air
 
 
 ;--------------------------------------------
 ; plot
 ;--------------------------------------------
 if (PLOT) then
+
+;--------------------------------------------
+; Collect
+;--------------------------------------------
+model_smooth := model_smooth_calc
+model_smooth_b := model_smooth_calc_b
+model_smooth_c := model_smooth_calc_c
+model_smooth = where(ismissing(tcol_gas_orig),model_smooth@_FillValue,model_smooth)
+model_smooth_b = where(ismissing(tcol_gas_orig),model_smooth_b@_FillValue,model_smooth_b)
+model_smooth_c = where(ismissing(tcol_gas_orig),model_smooth_c@_FillValue,model_smooth_c)
+model_smooth_plot := model_smooth(lat|:, lon|:)
+model_smooth_plot_b := model_smooth_b(lat|:, lon|:)
+model_smooth_plot_c := model_smooth_c(lat|:, lon|:)
+
+;--------------------------------------------
+; Relative difference
+;--------------------------------------------
+diff_tcol := (tcol_gas - model_smooth_plot_b)/tcol_gas
+diff_tcol_smooth := (model_smooth_plot_b - model_smooth_plot_c)/model_smooth_plot_b
+  copy_VarCoords(model_smooth_plot,diff_tcol)
+  copy_VarCoords(model_smooth_plot,diff_tcol_smooth)
+
 
 ;************************************************
 ; Setting up correlation plot
@@ -458,35 +470,21 @@ if (PLOT) then
       panel_res@gsnPanelLabelBar   = False                ; add common colorbar
 
     ;gsn_panel(wks,(/map1,map2,map3,map4/),(/2,2/),panel_res)
-    gsn_panel(wks,(/map1,map3,map4,map5/),(/2,2/),panel_res)
+    gsn_panel(wks,(/map1,map3,map4,map5/),(/2,2/),panel_res)    
 
 end if ; PLOT
 
-end do ; file loop
 
-;--------------------------------------------
-; Regional averages
-;--------------------------------------------
-do r = 0, dimsizes(region_names)-1
-
-   location = region_names(r)
-
-   topboundary     = region_select(r,1)
-   bottomboundary  = region_select(r,0)
-   rightboundary   = region_select(r,3)
-   leftboundary    = region_select(r,2)
-
-   region_smoothed := model_smooth_plot_b(:, {topboundary:bottomboundary},{leftboundary:rightboundary})
-   region_average := dim_sum_n_Wrap(dim_sum_n_Wrap(model_smooth_plot_b,1),0)
-
-printVarSummary(region_average)
+  print("-------------------------------------------")
+  print("Collected: "+ (year*100+sat_mm))
 
   ;--------------------------------------------
-  ; Write out region averages
+  ; Write out 
   ;--------------------------------------------
   if (NETCDF) then
 
-     outname      = outfolder+location+"_CAMchemxMOPAK_"+year+"monthavg.nc"
+     dateout = year*100 +sat_mm
+     outname      = outfolder+"CAMchem_x_MOP_AK_"+dateout+".nc"
 
   ; saves region average
     print("Creating file...")
@@ -497,12 +495,13 @@ printVarSummary(region_average)
     ;------------
     setfileoption(fout, "DefineMode",True)
     fAtt                      = True
-      fAtt@title              = "MOPITT AK smoothed CAM-chem Reanalysis for " +\
-                                 location+" in "+year
+      fAtt@title              = "MOPITT AK smoothed CAM-chem Reanalysis for " +year\
+                                 +" " +sprintf("%0.2i",sat_mm)
       fAtt@source             = "MOPITT level 3, version 8, TIR retrievals and "+\
                                 "Gaubert 2017 Renalysis"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
+      fAtt@time               = dateout
 
      fileattdef(fout, fAtt)
      setfileoption(fout, "DefineMode",False)
@@ -510,18 +509,12 @@ printVarSummary(region_average)
   ;------------
   ; Variables
   ;------------
-   region_average!0              = "time"
-   region_average&time           = yearmonth
-   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
-                                    topboundary+" to "+bottomboundary+ " Lat, "+\
-                                    leftboundary+" to "+rightboundary+" Lon"
-
    ;--- total column
-   fout->Model_smoothed_X_CO     = region_average
-
+   fout->Model_smoothed_tcol     = model_smooth_calc_b
+   fout->Model_smoothed_X_CO     = model_smooth_calc_b_vmr
   end if ; NETCDF
 
-end do ; region averages
+end do ; file loop
 
 end
 

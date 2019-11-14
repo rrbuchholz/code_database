@@ -20,8 +20,7 @@ function calc_seasonal_cycle(valIN[*]:numeric, timeIN[*]:numeric, ystartIN:numer
 ; Arguments:
 ;    valIN: Values associated with the time array
 ;
-;    timeIN: The native time array of the values
-;            Must be in "time since ..."
+;    timeIN: The native time array of the values, can be in yyyymmdd
 ;
 ;    ystartIN: Year the average seasonal cycle starts 
 ;            
@@ -81,6 +80,7 @@ begin
     val_array!2 = "lon"
 
    val_ClmMon = clmMonTLL(val_array)         ; daily climatology at each grid point
+
   ; -------------------------------
   ; CLIMATOLOGOCAL MONTHLY STDDEV
   ; -------------------------------
