@@ -22,7 +22,7 @@
   #files=f.e21.FWSD.f09_f09_mg17.forecast.001.cam.h3.
   files=f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.
 
-  file_list="$(ls ${folder}${files}*2019-07-22*)"
+  file_list="$(ls ${folder}${files}*2019-08-07*)"
 
 
 echo $file_list
@@ -37,7 +37,7 @@ for x in $file_list ; do
     forecast_date=$(echo "$forecast_date_dummy" | sed 's/-//g')
     echo ${forecast_date} \
 
-    #forecast_date=20190720
+    #forecast_date=20190807
 
     #echo ${forecast_date} 
 

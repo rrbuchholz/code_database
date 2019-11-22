@@ -35,17 +35,18 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "NAustralia" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "NAustralia"
+  loc = "MSEA" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "MSEA"
 
-  version = "V7"
-  retrieval = "J"
+  version = "V8"
+  retrieval = "T"
   data_folder = "/IASI/home/buchholz/MOPITT_subset/"
   ;mopitt_files = systemfunc ("ls "+data_folder+"regions_v8/"+loc+"_"+version+retrieval+"*.nc")
-  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"
-  mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_1deg_"+version+retrieval+"*all_land.nc")
+  ;mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"
+  mopitt_general = "/IASI/home/buchholz/MOPITT_subset/regions_v8/"
+  ;mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_stats_"+version+"*all_land.nc")
+  mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_stats_"+version+retrieval+"subset*.nc")
 
-print(mopitt_files)
 
   if (loc.eq."Indonesia") then
     loc = "MaritimeSEA"
@@ -54,7 +55,7 @@ print(mopitt_files)
 
   location_title = loc
     year_s = 2001
-    year_e = 2017
+    year_e = 2018
 
   ;------------
   ; scale of outside sd
@@ -66,8 +67,8 @@ print(mopitt_files)
   ;------------
   ; toggles
   ;------------
-  PLOT           = False
-    plttype      = "pdf"
+  PLOT           = True
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
      ;plttype@wkWidth = 1200
      ;plttype@wkHeight = 1200 
@@ -75,8 +76,8 @@ print(mopitt_files)
       ;ymax       =10e17
       ;spacing    =5e17
 
-  ;scale_factor = 1e-09
-  scale_factor = 1e18
+  scale_factor = 1e-09
+  ;scale_factor = 1e18
   
   CSV            = True
   if (CSV) then
@@ -104,11 +105,11 @@ print(mopitt_files)
   ; names of data structures
   ; determined from an ncl_filedump
   ;sat_tcol      = "RetrievedCOTotalColumn"
-  sat_tcol     = "RetrievedCOTotalColumn_WGT"
-  ;sat_tcol      = "RetrievedX_CO"
+  ;sat_tcol     = "RetrievedCOTotalColumn_WGT"
+  sat_tcol      = "RetrievedX_CO"
 
    
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL".or.loc.eq."MSEA") then
     timearray     = "time"
     sat_err       = "AvgError"
     ;sat_num       = "RetrievedCOtcolRegionStats"
@@ -196,7 +197,7 @@ print(mopitt_files)
     mopitt_err     = mopitt_in[:]->$sat_err$
     mopitt_rand    = mopitt_in[:]->$sat_rand$
 
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL".or.loc.eq."MSEA") then
     mopitt_num     = mopitt_in[:]->$sat_num$(:,7)
     mopitt_date    = str_split_by_length(tostring(mopitt_time),4)
     years = tointeger(mopitt_date(:,0))
@@ -355,8 +356,8 @@ if (PLOT) then
     ;res@trYMinF             = 55
     ;res@trYMaxF             = 110
 
-    res@trYMinF             = 0
-    res@trYMaxF             = 4
+    ;res@trYMinF             = 0
+    ;res@trYMaxF             = 4
 
     ;res@trYMinF             = 1e18
     ;res@trYMaxF             = 3.2e18
@@ -383,11 +384,12 @@ if (PLOT) then
 
     res@tiMainString         = ""
     res@tiXAxisString        = ""
-    res@tiYAxisString        = "CO Column"
+    ;res@tiYAxisString        = "CO Column"
+    res@tiYAxisString        = "X_CO"
     ;res@gsnLeftString        = "molec. cm~S2~-2"
     ;res@tiYAxisString        = "CO"
-    ;res@gsnLeftString        = "column average VMR (ppb)"
-    res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
+    res@gsnLeftString        = "column average VMR (ppb)"
+    ;res@gsnRightString       = "~F34~4~F21~10~S2~18   molec. cm~S2~-2" 
  
     res@pmLegendDisplayMode      = "Always"        ; turn on legend
     res@lgPerimOn                = False           ; Turn off perimeter
@@ -440,8 +442,8 @@ if (PLOT) then
 
     ;res@trYMinF             = -15
     ;res@trYMaxF             = 25
-    res@trYMinF             = -1
-    res@trYMaxF             = 1
+    ;res@trYMinF             = -1
+    ;res@trYMaxF             = 1
     ;res@trYMinF                  = ymin-0.05e18
     ;res@trYMaxF                  = ymax+0.05e18
     ;res@tmYLValues               = (/-0.5e18, 0e18, 0.5e18/)
@@ -522,7 +524,8 @@ end if ; PLOT
 if (CSV) then
 
 ;---Create dummy mixed data to write to CSV file
-  fields = (/"time",     "tcol_co",  "anomaly_co"/)
+  ;fields = (/"time",     "tcol_co",  "anomaly_co"/)
+  fields = (/"time",     "x_co",  "anomaly_co"/)
   dq = str_get_dq()                ; double quote character
   fields = dq + fields + dq                      ; Pre/append quotes to field names
   header = [/str_join(fields,",")/]              ; Header is field names separated

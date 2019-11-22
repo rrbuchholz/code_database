@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "BBCanada"
+  location = "MSEA_stats"
 
   ;------------
   ; select daytime 
@@ -97,38 +97,39 @@ begin
   swath_index    = "SwathIndex"+suff
   snr_calc       = "Level1RadiancesandErrors"+suff
 
-   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
-                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH_thinned_2_5", "SH_thinned"/)
+   ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+   ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+   ;                 "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+   ;                  "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+   ;                 "BBMSEA", "BBNWAu","BBEAu", "NH_monthly", "SH_monthly"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
-                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
-                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
-                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-                     (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
-                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-                     (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
-                     (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
-                     (/-10.,   8.,        95.,     125./),\  ;BBMSEA
-                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
-                     (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,      -180.,     180./),\  ;NH
-                     (/-60.,   0.,      -180.,     180./) /) ;SH
+   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+   ;                  (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+   ;                  (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+   ;                  (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+   ;                  (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
+   ;                  (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+   ;                  (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
+   ;                  (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+   ;                  (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
+   ;                  (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
+   ;                  (/-10.,   8.,        95.,     125./),\  ;BBMSEA
+   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
+   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
+   ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
+   ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   ;region_names := (/"CONTRAIL","TEST"/)
+   region_names := (/"CONTRAIL","MSEA_stats","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   ;region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
-   ;                   (/-60.,   0.,      -180.,     180./) /)   ; TEST
+   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+                      (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
+                      (/ -60.,   0.,      -180.,     180./) /)  ; TEST
 
    ind_region = ind(region_names.eq.location)
 
@@ -145,7 +146,7 @@ begin
   ; -------------------------------
   if (surface.eq."land") then           ; land left
      s_id = 1
-  else if (surface.eq."water") then       ; ocean left
+  else if (surface.eq."water") then     ; ocean left
      s_id = 0
   end if
   end if
@@ -161,10 +162,10 @@ do y = ystart,yend ; loop through years
      if (COLAVG_VMR) then
         outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
         if (PIXELS) then
-        print("Collecting pixel " +pixel_number_select)
-        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
+          print("Collecting pixel " +pixel_number_select)
+          outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
                        pixel_number_select+".nc"
-        print("Will write to " +outname)
+          print("Will write to " +outname)
         end if
      end if
   end if
@@ -199,6 +200,7 @@ do y = ystart,yend ; loop through years
   ; loop over
   ; months
   ;------------
+  ;do m=0,11
   do m=0,11
     ; counter for counting number of files with selected values
     dcount = 0
@@ -248,6 +250,7 @@ do y = ystart,yend ; loop through years
          location.eq."SH_thinned") then
        region := ind(sza.le.dayflag.and.\
                  ;pixel_num.eq.pixel_number_select.and.\
+                 pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
@@ -261,7 +264,7 @@ do y = ystart,yend ; loop through years
                  mod(count_array,mod_array).eq.0)
      else
        region := ind(sza.le.dayflag.and.\
-                 ;surf_type.eq.s_id.and.\
+                 surf_type.eq.s_id.and.\
                  pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
@@ -486,6 +489,118 @@ do y = ystart,yend ; loop through years
               dryair_selected,err_selected,rande_selected,smoothe_selected,\
               m_apriori_selected,m_profile_selected,ak_selected,vmr_ak_selected/])
 
+if (location.eq."NH_monthly".or.\
+    location.eq."SH_monthly") then
+
+        outname      = outfolder+location+"_"+version+"subset_"+yearmonth_string(m)+\
+                      "monthavg_VMR.nc"
+;--------------------------------------------
+; Write out to a netCDF file
+;--------------------------------------------
+if (netCDF) then
+  ; saves MOPITT subset
+    print("Creating file...")
+    fout = addfile(outname, "c")
+    ;------------
+    ; File 
+    ; Attributes
+    ;------------
+    setfileoption(fout, "DefineMode",True)
+    fAtt                      = True
+      fAtt@title              = "Subset of month average MOPITT CO for " +location+"_"+year
+      fAtt@source             = "MOPITT level 2, version 8, TIR retrievals"
+      fAtt@creation_date      = systemfunc ("date")
+      fAtt@conventrions       = "CF"
+
+     fileattdef(fout, fAtt)
+     setfileoption(fout, "DefineMode",False)
+
+
+  ;------------
+  ; Variables
+  ;------------
+   month_tcol!0              = "time"
+   month_tcol&time           = yearmonth
+   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+   month_stats!0               = "time"
+   month_stats&time            = yearmonth
+   month_stats@average_op_ncl  = "monthly spatial statistics over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+   month_stats@definitions ="[0] Mean, [1] StdDev, [2] Min, [3] LowQuartile, [4] Median, "+cr+\
+       "[5] HighQuartile, [6] Max, [7] Total n, [8] Used n, [9] Missing, "+cr+\
+       "[10] Lower 5.0% (for n > 1000), [11] Upper 5.0% (for n > 1000)"
+
+   month_5_95!0               = "time"
+   month_5_95&time            = yearmonth
+   month_5_95@average_op_ncl  = "monthly 5th and 95th percentiles over "+location+": "+\
+                                    topboundary+" to "+bottomboundary+ " Lat, "+\
+                                    leftboundary+" to "+rightboundary+" Lon"
+
+   month_apriori!0               = "time"
+   month_apriori&time            = yearmonth
+
+   if (COLAVG_VMR) then
+     ;--- total column
+       fout->RetrievedX_CO       = month_tcol
+     ;--- stats
+       fout->RetrievedX_CORegionStats    = month_stats
+       fout->RetrievedX_CORegion5th95th  = month_5_95
+       fout->AvgAPrioriX_CO              = month_apriori
+   else
+     ;--- total column
+       fout->RetrievedCOTotalColumn        = month_tcol
+     ;--- stats
+       fout->RetrievedCOtcolRegionStats    = month_stats
+       fout->RetrievedCOtcolRegion5th95th  = month_5_95
+       fout->AvgAPrioriCOTotalColumn      = month_apriori
+   end if
+   ;--- 1D vars
+   month_dofs!0               = "time"
+   month_dofs&time            = yearmonth
+     fout->AvgDegreesofFreedomforSignal = month_dofs
+   month_psurf!0               = "time"
+   month_psurf&time            = yearmonth
+     fout->AvgSurfacePressure           = month_psurf
+   month_dryair!0               = "time"
+   month_dryair&time            = yearmonth
+     fout->AvgDryAirColumn              = month_dryair
+   month_err!0               = "time"
+   month_err&time            = yearmonth
+     fout->AvgError                     = month_err
+   month_rande!0               = "time"
+   month_rande&time            = yearmonth
+     fout->AvgRandomError               = month_rande
+   month_smoothe!0               = "time"
+   month_smoothe&time            = yearmonth
+     fout->AvgSmoothingError            = month_smoothe
+
+   ;--- 2D vars
+   month_prior!0               = "time"
+   month_prior&time            = yearmonth
+   month_prior!1               = "lev"
+     fout->AvgAPrioriCOMixingRatioProfile = month_prior
+   month_prof!0               = "time"
+   month_prof&time            = yearmonth
+   month_prof!1               = "lev"
+     fout->AvgRetrievedCOMixingRatioProfile = month_prof
+   month_colak!0               = "time"
+   month_colak&time            = yearmonth
+   month_colak!1               = "lev"
+     fout->AvgTotalColumnAveragingKernel = month_colak
+
+   ;--- 3D vars
+   month_vmrak!0               = "time"
+   month_vmrak&time            = yearmonth
+     fout->AvgRetrievalAveragingKernelMatrix = month_vmrak
+
+
+end if ;NETCDF
+end if ;Monthly saving for large regions
+
+
   end do ; month loop
 
 
@@ -493,6 +608,12 @@ do y = ystart,yend ; loop through years
 ; Write out to a netCDF file
 ;--------------------------------------------
 if (netCDF) then
+
+   if (location.eq."NH_monthly".or.\
+    location.eq."SH_monthly") then
+    continue ; already saved as month files
+   end if
+
   ; saves MOPITT subset
     print("Creating file...")
     fout = addfile(outname, "c")
