@@ -24,14 +24,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2000
-  yend = 2019
+  ystart = 2002
+  yend = 2017
   reso = "0.9x1.25"
 
   machine = "cheyenne"        ; modeling1, modeling2, cheyenne
-  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
 
-  ANTHRO = False
+
+  ANTHRO = True
 
   ;tracers = (/"HCN"/)
   ;sm_tracers = (/"hcn"/)
@@ -53,7 +54,14 @@ begin
 ;              "HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","NH3","NO","NO2","num_bc_a4","num_pom_a4",\
 ;              "num_so4_a1","OC","pom_a4","SO2","so4_a1","SOAG","SVOC","TERPENES","TOLUENE","XYLENES"/)
  ; tracers = (/"SVOC","MTERP","TOLUENE","XYLENES"/)
-  tracers = (/"CO", "CO2"/)
+ ; tracers = (/"BENZENE","BIGALK","C2H2","C2H4","C2H5OH","C2H6","C3H6","C3H8","CH2O","CH3CHO",\
+ ;             "CH3CN","CH3COCH3","CH3COCHO","CH3COOH","CH3OH","CRESOL","DMS"/)
+ ; tracers = (/"BIGENE", "GLYALD","HCN","HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","SVOC","C10H16","TOLUENE","XYLENE"/)
+ ; tracers = (/"MACR","MEK","MVK", "TERPENES","TOLUENE","XYLENES"/)
+
+  tracers = (/"HCN", "CO"/)
+
+  ;tracers = (/"bc_a4","pom_a4","so4_a1"/)
 
 
   sm_tracers = tracers
@@ -144,11 +152,34 @@ do t = 0, dimsizes(tracers)-1
   else if (machine.eq."cheyenne") then 
     top_dir = "/glade/work/buchholz/"
 
+    if (ANTHRO) then
+      if (repository.eq."CMIP6") then
+        cmipdir = "/glade/work/emmons/emis/cmip6_2000_2017/"
+        e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"*anthro_surface_2000-2017_0.9x1.25*.nc")
+        ;cmipdir = "/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/"
+        ;e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"_anthro_surface_1750-2015_0.9x1.25_c20170322.nc")
+        ;e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"_anthro_surface_1750-2015_0.9x1.25_c20170608.nc")
+        ;cmipdir = "/glade/work/buchholz/emis/cmip_extended/"
+        ;e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"*anthro_surface_2018-2019_0.9x1.25.nc")
+      else if (repository.eq."CAMS") then
+        ;emis_dir = "/glade/p/acom/acom-climate/tilmes/emis/CAMS_Anthro_f09_f09/2000_2020/"
+        emis_dir = "/glade/p/acom/acom-climate/tilmes/emis/CAMS_Anthro_f09_f09/2000_2020/"
+        e_file_in = systemfunc ("ls "+emis_dir+"CAMS-GLOB-ANT_Glb_0.9x1.25_anthro_surface_"+tracer+"_v3.1_c20200120.nc")
+      else if (repository.eq."SSP585") then
+        emis_dir = "/gpfs/fs1/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/emissions_ssp585/"
+        e_file_in = systemfunc ("ls "+emis_dir+"emissions-cmip6-ScenarioMIP_IAMC-REMIND-MAGPIE-ssp585-1-1_"+tracer+"_anthro_surface_mol_175001-210101_0.9x1.25_c20190224.nc")
+      end if
+      end if
+      end if
+    
+    else ; if not anthro
+
     if (repository.eq."FINN_NRT") then
      emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
     else if (repository.eq."FINN1.5") then
      emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
+     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2015_2018_daily_1deg/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
      emis_dir = "/glade/p_old/work/emmons/emis/finn1.6/cesm_format/"
@@ -163,11 +194,19 @@ do t = 0, dimsizes(tracers)-1
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+".nc")
     else if (repository.eq."QFED/FINN") then
      ;emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2018_1x1/"
-     emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2019_1x1/"
+     ;emis_dir = top_dir+ "emis/qfed2.5_finn_min_2013_2017_1x1/"
+     ;emis_dir = top_dir+ "emis/qfed2.5_finn_max_2013_2017_1x1/"
+     ;emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2019_1x1/"
+     emis_dir = top_dir+ "emis/qfed2.5_finn_2000_2020_1x1/"
+     ;emis_dir = top_dir+ "emis/qfed2.5_finn_2012_2016_1x1_newEF/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+"*.nc")
     else if (repository.eq."CMIP6") then
      cmipdir = "/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/"
-     e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"*anthro_surface_1750-2015_0.9x1.25_c20170608.nc")
+
+     e_file_in = systemfunc ("ls "+cmipdir+"*"+tracer+"_bb_surface_1750-2015_0.9x1.25_c20170322.nc")
+    else if (repository.eq."GFAS") then
+     emis_dir = top_dir+ "emis/gfas_finn_2014_2017_1x1/"
+     e_file_in = systemfunc ("ls "+emis_dir+"gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_2014_2017.nc")
     end if
     end if
     end if
@@ -175,6 +214,9 @@ do t = 0, dimsizes(tracers)-1
     end if
     end if
     end if
+    end if
+
+    end if; Anthro or not loop
 
     outpath = top_dir+ "data_processing/CAM-chem/emissions/"
 
@@ -228,7 +270,11 @@ do t = 0, dimsizes(tracers)-1
       emiss           = "emiss_anthro"
     end if
   else
-    emiss           = "bb"
+    if (ANTHRO) then
+      emiss           = "emiss_anthro"
+    else
+      emiss           = "bb"
+    end if
   end if
   end if
   end if
@@ -253,6 +299,7 @@ do t = 0, dimsizes(tracers)-1
    end do
 
 ;********************************************
+
 ; load files and extract
   if (repository.eq."QFED_native") then
     fin = addfiles(e_file_in, "r")
@@ -310,9 +357,16 @@ do t = 0, dimsizes(tracers)-1
          tracer.eq."C10H16".or.\
          tracer.eq."MTERP") then
        mw = 136.228
+     else if (tracer.eq."HCOOH") then
+       mw = 46.03
      else if (tracer.eq."CH3CN") then
        mw = 41.054
-     else if (tracer.eq."BENZ") then
+     else if (tracer.eq."HCN") then
+       mw = 27.0253
+     else if (tracer.eq."C2H2") then
+       mw = 26.0376
+     else if (tracer.eq."BENZ".or.\
+              tracer.eq."BENZENE") then
        mw = 78.1134
      else if (tracer.eq."XYLENE".or.\
               tracer.eq."XYLENES") then
@@ -323,6 +377,9 @@ do t = 0, dimsizes(tracers)-1
        mw = 12.011
      else
        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
+     end if
+     end if
+     end if
      end if
      end if
      end if
@@ -340,7 +397,8 @@ do t = 0, dimsizes(tracers)-1
      ; g cm-2 d-1
      tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
 
-     if (repository.eq."CMIP6") then           ; d-1 -> m-1
+     if (repository.eq."CMIP6".or.repository.eq."CAMS".or.\
+         repository.eq."SSP585") then           ; d-1 -> m-1
        month_days = days_in_month(yyyy,mm)
        month_days_array = conform(tracer_emiss, month_days, 0)
        tracer_emiss = tracer_emiss*month_days_array
@@ -424,8 +482,8 @@ do t = 0, dimsizes(tracers)-1
       end do
     end do
 
-     ;print("Month, emissions of "+tracer+" (Tg)")
-     ;print(month_array+" "+month_sum_array)
+     print("Month, emissions of "+tracer+" (Tg)")
+     print(month_array+" "+month_sum_array)
 
     ;------------------
     ; Total average
@@ -494,15 +552,14 @@ do t = 0, dimsizes(tracers)-1
     region_year_sum_array = new((/dimsizes(year_array),dimsizes(region_names)/), float)
     do i = 0, dimsizes(year_array)-1
       year_ind := ind(regsum&time.gt.(year_array(i)*10000).and.\
-                 ;regsum&time.lt.(year_array(i)*10000+900))
-                 regsum&time.lt.(year_array(i)+1)*10000)
+                      regsum&time.lt.((year_array(i)+1)*10000))
       region_year_sum_array(i,:) = dim_sum_n(regsum(:,year_ind),1)
     end do
 
-     print("Year, regiobnal emissions of "+tracer+" (Tg)")
-    do j = 0, dimsizes(region_names)-1
-     print(year_array+" "+region_names(j)+" "+region_year_sum_array(:,j))
-    end do
+  ;   print("Year, regional emissions of "+tracer+" (Tg)")
+  ;  do j = 0, dimsizes(region_names)-1
+  ;   print(year_array+" "+region_names(j)+" "+region_year_sum_array(:,j))
+  ;  end do
 
      regsum&time := time
        ;printVarSummary(regsum)

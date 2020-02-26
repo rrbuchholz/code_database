@@ -1,19 +1,20 @@
 ;=======================================================;
-;  sum_CAMchem_output_regions.ncl
+;  sum_CAMchem_output_GFEDregions.ncl
 ;=======================================================;
 ;
 ; Concepts illustrated:
 ;   - load CAM files
+;    - load GFED mask file
 ;   - calculate total column
-;   - sum over regions
-;   - write region sum timeseries to netCDF
+;   - average over GFED regions
+;   - write region average timeseries to netCDF
 ;   
 ;   To run type:
-;         ncl sum_CAMchem_output_regions.ncl
+;         ncl sum_CAMchem_output_GFEDregions.ncl
 ;
 ;   Requires:
 ;         concatenated otuput file
-;                                  RRB 18 June, 2018
+;                                  RRB 23 January, 2020
 ;=======================================================;
 ; load the libraries
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
@@ -34,7 +35,7 @@ begin
 
 
   tracers = (/"CO"/)
-  sm_tracers = (/"co"/)
+
   ;tracers = (/"CH3OH","CO"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
@@ -44,25 +45,20 @@ begin
   ; no MW data: XYLENE, BENZ
 
   ; -------------------------------
-  ; begin a tracer loop
-  ; -------------------------------
-do t = 0, dimsizes(tracers)-1
-
-  tracer = tracers(t)
-  sm_tracer = sm_tracers(t)
-
-  ; -------------------------------
   ; files and path setup
   ; -------------------------------
-   runtype = "gfasBBCO"
-   dir_in = "/glade2/work/buchholz/CAM_chem_output/fire_uncert/"+runtype+"/"
-   outpath = dir_in
-   e_file_in = systemfunc ("ls "+dir_in + "*1deg_*2014.nc")
+   runtype = "qfedBBmin"
+   dir_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/atm/hist/"
+   outpath = "/glade2/work/buchholz/CAM_chem_output/fire_uncert/"+runtype+"/"
+   e_file_in = systemfunc ("ls "+dir_in + "*h1.2014-01-3*.nc")
 
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   NETCDF = True
+   NETCDF = False
+   PLOT = True
+    mapType = "x11"
+    mapName = "GFED_regions"
 
   ; -------------------------------
   ; MOZART molecular weights
@@ -70,17 +66,17 @@ do t = 0, dimsizes(tracers)-1
   molwts = "/glade/u/home/buchholz/data/species_molwts.txt"
   ;molwts = "~/data/species_molwts.txt"
 
+  ; -------------------------------
+  ; GFED region file
+  ; -------------------------------
+  GFEDmask = "/glade/u/home/buchholz/data/GFED_mask.csv"
+
 ;--------------------------------------------
 ; end user input
 ;--------------------------------------------
 
 ;********************************************
 ; set up
-  ; -------------------------------
-  ; names of data structures
-  ; "anthro", "bb", "ocean"
-  ; -------------------------------
-    tracer           = "CO"
 
   ; -------------------------------
   ; constants
@@ -97,9 +93,11 @@ do t = 0, dimsizes(tracers)-1
 
    montharray = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
 
-   ; load molecular weights (g/mol) from a MOZART file,
-   ; augmented with additional values for:
-   ; CO2, OC and BC copied from OC1 and CB1
+  ; -------------------------------
+  ; load molecular weights (g/mol) from a MOZART file,
+  ; augmented with additional values for:
+  ; CO2, OC and BC copied from OC1 and CB1
+  ; -------------------------------
    mw_dummy  = asciiread(molwts,-1,"string")
    mw_dummy2 = mw_dummy(2:)
    mol_wts = new((/dimsizes(mw_dummy2),2/), string)
@@ -107,8 +105,46 @@ do t = 0, dimsizes(tracers)-1
      mol_wts(s,:) = str_split(mw_dummy2(s)," ")
    end do
 
+  ; -------------------------------
+  ; Load GFED mask
+  ; -------------------------------
+   ;---Read the values in as 1D, since we don't know rows and columns yet.
+   lines  := asciiread(GFEDmask,-1,"string")
+   delim  = ","
+   ncols  := dimsizes(str_split(lines(3),delim))
+   nlines := dimsizes(lines)
+   print("Lines:"+nlines+", Columns:"+ncols)
+
+   ;---Reshape as 2D array, and convert to float for ppm/ppb/ppt.
+   fields := new((/nlines,ncols/),float)
+    do nf=0,ncols-1                    ;Remember that fields start at 1, not 0.
+      fields(:,nf) = tofloat(str_get_field(lines(0:),nf+1,delim)) 
+    end do
+      fields!0 = "lon"
+      fields!1 = "lat"
+
+    region_mask = fields(lat|:,lon|:)
+
+    region_colors = (/"blue", "dodgerblue1", "steelblue2", "lightskyblue", "red2", "pink1", "orange", "lightgoldenrod2",\
+                      "yellow", "yellow3", "yellow4","seagreen1", "seagreen3", "forestgreen", "darkolivegreen1",\
+                      "green", "limegreen", "maroon1", "maroon3", "maroon4", "mediumorchid", "mediumpurple",\
+                      "royalblue", "darkslateblue", "navy", "cyan", "lightblue2", \
+                      "darkslategray4", "darkslategray", "gray", "dimgray"/)
+
+    region_levels = (/0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15/)
+
+
+; -------------------------------
+; begin a tracer loop
+; -------------------------------
+do t = 0, dimsizes(tracers)-1
+
+  tracer = tracers(t)
+
 ;********************************************
 ; load files and extract
+
+; Load CAM-chem
     fin = addfiles(e_file_in, "r")
     ListSetType (fin, "cat") 
       tracer_in          = fin[:]->$tracer$
@@ -247,9 +283,15 @@ print(max(tcol_all(0,:,0)))
      print(ystart+" to "+yend+", average yearly total column of "+tracer+" (molec/cm^2): " + total_avg)
 
 
-
   ;********************************************
   ; Extract regional timeseries
+  ; copy coords to regions
+    lat@units = "degrees_north"
+    lon@units = "degrees_east"
+    region_mask&lat = lat
+    region_mask&lon = lon
+    printVarSummary(region_mask)
+
    region_names = (/"Maritime SEA", "Australasia", \
                     "Southern Africa", "South America",\
                     "Siberia", "North America" /)
@@ -282,6 +324,52 @@ print(max(tcol_all(0,:,0)))
        regsum&time = time
 
        ;printVarSummary(regsum)
+
+
+;********************************************
+; MAP PLOT
+;********************************************
+  if (PLOT) then
+    wks = gsn_open_wks(mapType,mapName)
+
+    gsn_define_colormap(wks,"cmp_haxby")        ; change colour map
+    ;-----------------------------------
+    ; define resources to use for plotting
+    ;-----------------------------------
+    mapres = True
+    mapres@gsnDraw		    = False	                ; don't draw it yet
+    mapres@gsnFrame                 = False                     ; don't advance frame
+
+    mapres@cnFillOn                  = True
+    mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
+    mapres@cnLineLabelsOn            = False               ; turn off countour labels
+    mapres@cnLinesOn                 = False
+
+    mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
+      ;mapres@cnLevels                = region_levels   ; set the contour levels
+      mapres@cnFillColors            = region_colors
+      mapres@cnMinLevelValF          = 0.
+      mapres@cnMaxLevelValF          = 15.
+      mapres@cnLevelSpacingF         = 1        ; set the interval between contours
+
+   mapres@lbLabelStrings             = region_levels 
+   mapres@lbLabelFontHeightF         = 0.01
+   mapres@lbLabelPosition            = "Bottom"
+   mapres@lbLabelAlignment           = "BoxCenters"
+   mapres@pmLabelBarWidthF           = 1.  
+   mapres@lbTitleString              = "GFED defined regions"
+   mapres@lbTitlePosition            = "Bottom"
+   mapres@lbTitleFontHeightF         = 0.015
+   ;mapres@lbBoxLinesOn               = False
+
+
+    map = gsn_csm_contour_map_ce(wks,region_mask,mapres)
+
+
+  draw(map)
+  frame(wks)
+
+  end if    ; PLOT
 
 
 ;********************************************
