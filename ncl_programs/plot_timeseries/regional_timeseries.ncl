@@ -55,7 +55,7 @@ print(timeseries_files)
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "png"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
@@ -76,7 +76,8 @@ print(timeseries_files)
      tes_infile = "/IASI/home/buchholz/TES/TES_xCO_monthly_n_s_V007.txt"
 
    ADD_CRIS      = True
-     cris_infile = "/IASI/home/buchholz/CrIS/CrIS_20191017.txt"
+     ;cris_infile = "/IASI/home/buchholz/CrIS/CrIS_20191017.txt"
+     cris_infile = "/IASI/home/buchholz/CrIS/CrIS_PASS1_and_PASS220191118.csv"
 
 ;--------------------------------------------
 ; end user input
@@ -144,6 +145,9 @@ print(timeseries_files)
      timeseries(:,2) = timeseries_dummy(:,0)-timeseries_dummy(:,1)
    name_array = (/"MOPITT", "+std_dev","-std_dev"/)
 
+;print(time +" "+ sprintf("%7.4f",timeseries_dummy(:,0)/1e-09)+" "+ sprintf("%7.4f",timeseries_dummy(:,1)/1e-09)+" "+ timeseries_dummy(:,7))
+
+
    if (ADD_IASI) then
 
      print(dimsizes(iasia_infiles))
@@ -175,11 +179,15 @@ print(timeseries_files)
        iasia_psurf = fields(:,3:ncols-1:6)
        iasia_psurf!0 = "row"
        iasia_psurf!1 = "col"
+       iasia_num = fields(:,5:ncols-1:6)
+       iasia_num!0 = "row"
+       iasia_num!1 = "col"
      else
        tempyyyymm := iasia_yyyymm
        temp_iasia_tcol := iasia_tcol
        temp_iasia_tcol_sd := iasia_tcol_sd
        temp_iasia_psurf := iasia_psurf
+       temp_iasia_num := iasia_num
 
        dummy_yyyymm := fields(0,0:ncols-1:6)
        iasia_yyyymm := array_append_record(tempyyyymm,dummy_yyyymm,0)
@@ -199,9 +207,15 @@ print(timeseries_files)
        dummy_iasia_psurf!1 = "col"
        iasia_psurf := table_attach_columns(temp_iasia_psurf,dummy_iasia_psurf,0)
 
+       dummy_iasia_num := fields(:,5:ncols-1:6)
+       dummy_iasia_num!0 = "row"
+       dummy_iasia_num!1 = "col"
+       iasia_num := table_attach_columns(temp_iasia_num,dummy_iasia_num,0)
+
      end if
 
     end do
+
 
 ; collect IASI_B data
    do filenum=0,dimsizes(iasib_infiles)-1
@@ -230,11 +244,15 @@ print(timeseries_files)
        iasib_psurf = fields(:,3:ncols-1:6)
        iasib_psurf!0 = "row"
        iasib_psurf!1 = "col"
+       iasib_num = fields(:,5:ncols-1:6)
+       iasib_num!0 = "row"
+       iasib_num!1 = "col"
      else
        tempyyyymm := iasib_yyyymm
        temp_iasib_tcol := iasib_tcol
        temp_iasib_tcol_sd := iasib_tcol_sd
        temp_iasib_psurf := iasib_psurf
+       temp_iasib_num := iasib_num
 
        dummy_yyyymm := fields(0,0:ncols-1:6)
        iasib_yyyymm := array_append_record(tempyyyymm,dummy_yyyymm,0)
@@ -254,6 +272,11 @@ print(timeseries_files)
        dummy_iasib_psurf!1 = "col"
        iasib_psurf := table_attach_columns(temp_iasib_psurf,dummy_iasib_psurf,0)
 
+       dummy_iasib_num := fields(:,5:ncols-1:6)
+       dummy_iasib_num!0 = "row"
+       dummy_iasib_num!1 = "col"
+       iasib_num := table_attach_columns(temp_iasib_num,dummy_iasib_num,0)
+
      end if
 
     end do
@@ -269,19 +292,21 @@ print(timeseries_files)
        ; Convert to X_CO
        iasia_xco = new((/3, dimsizes(yfrac_iasia)/),float)
        iasia_xco(0,:) = iasia_tcol(iasia_region_loc,:)/colum_air_vmr_a(iasia_region_loc,:)
-       iasia_xco(1,:) = (iasia_tcol(iasia_region_loc,:)+iasia_tcol_sd(iasia_region_loc,:))\
-                        /colum_air_vmr_a(iasia_region_loc,:)
+       iasia_xco(1,:) = iasia_tcol_sd(iasia_region_loc,:)/colum_air_vmr_a(iasia_region_loc,:)
        iasia_xco(2,:) = (iasia_tcol(iasia_region_loc,:)-iasia_tcol_sd(iasia_region_loc,:))\
                         /colum_air_vmr_a(iasia_region_loc,:)
 
        iasib_xco = new((/3, dimsizes(yfrac_iasib)/),float)
        iasib_xco(0,:) = iasib_tcol(iasib_region_loc,:)/colum_air_vmr_b(iasib_region_loc,:)
-       iasib_xco(1,:) = (iasib_tcol(iasib_region_loc,:)+iasib_tcol_sd(iasib_region_loc,:))\
-                        /colum_air_vmr_b(iasib_region_loc,:)
+       iasib_xco(1,:) = iasib_tcol_sd(iasib_region_loc,:)/colum_air_vmr_b(iasib_region_loc,:)
        iasib_xco(2,:) = (iasib_tcol(iasib_region_loc,:)-iasib_tcol_sd(iasib_region_loc,:))\
                         /colum_air_vmr_b(iasib_region_loc,:)
   
    end if
+
+;print(iasia_yyyymm +" "+ sprintf("%7.4f",iasia_xco(0,:)/1e-09)+" "+ sprintf("%7.4f",iasia_xco(1,:)/1e-09)+" "+ sprinti("%7.0i",toint(iasia_num(iasia_region_loc,:))))
+
+;print(iasib_yyyymm +" "+ sprintf("%7.4f",iasib_xco(0,:)/1e-09)+" "+ sprintf("%7.4f",iasib_xco(1,:)/1e-09)+" "+ sprinti("%7.0i",toint(iasib_num(iasib_region_loc,:))))
 
 
    if (ADD_AIRS) then
@@ -309,10 +334,13 @@ printVarSummary(lines)
      airs_co = fields(:,4)*1e17
      airs_sd = fields(:,5)*1e17
      airs_psurf = fields(:,2)
+     airs_num = fields(:,1)
        airs_air_vmr = vmr_const * airs_psurf * NAv
        airs_xco = airs_co/airs_air_vmr
        airs_xco_sd = airs_sd/airs_air_vmr
    end if
+
+;print(airs_yyyymm +" "+ sprintf("%7.4f",airs_xco/1e-09)+" "+ sprintf("%7.4f",airs_xco_sd/1e-09)+" "+ sprinti("%7.0i",toint(airs_num)))
 
 
 
@@ -339,12 +367,15 @@ printVarSummary(lines)
         yfrac_tes = yyyymm_to_yyyyfrac(toint(tes_yyyymm), 0.5)
      if (location.eq."NH") then
         tes_xco = tofloat(fields(:,2))*1e-09
+        tes_xco_num = tofloat(fields(:,3))
      else
         tes_xco = tofloat(fields(:,5))*1e-09
+        tes_xco_num = tofloat(fields(:,6))
      end if
 
    end if
 
+;print(tes_yyyymm +" "+ sprintf("%7.4f",tes_xco/1e-09)+" "+ sprintf("%7.4f",-9999)+" "+ sprinti("%7.0i",toint(tes_xco_num)))
 
    if (ADD_CRIS) then
 
@@ -353,7 +384,8 @@ printVarSummary(lines)
      ;---Read the values in as 1D, since we don't know rows and columns yet.
      lines  := asciiread(cris_infile,-1,"string")
 printVarSummary(lines)
-     delim  := " "
+     ;delim  := " "
+     delim  := ","
      ncols  := dimsizes(str_split(lines(3),delim))
      nlines := dimsizes(lines)
      print("Columns:"+ncols+", Lines:"+nlines)
@@ -366,13 +398,25 @@ printVarSummary(lines)
      cris_yyyymm = tofloat(fields(:,1))*100+tofloat(fields(:,0))
         yfrac_cris = yyyymm_to_yyyyfrac(toint(cris_yyyymm), 0.5)
 
+     ;if (location.eq."NH") then
+     ;   cris_xco = tofloat(fields(:,5))*1e-09
+     ;else
+     ;   cris_xco = tofloat(fields(:,6))*1e-09
+     ;end if
+
      if (location.eq."NH") then
-        cris_xco = tofloat(fields(:,5))*1e-09
+        cris_xco = tofloat(fields(:,3))*1e-09
+        cris_xco_sd = tofloat(fields(:,4))*1e-09
+        cris_num = tofloat(fields(:,7))
      else
-        cris_xco = tofloat(fields(:,6))*1e-09
+        cris_xco = tofloat(fields(:,5))*1e-09
+        cris_xco_sd = tofloat(fields(:,6))*1e-09
+        cris_num = tofloat(fields(:,8))
      end if
 
    end if
+
+;print(cris_yyyymm +" "+ sprintf("%7.4f",cris_xco/1e-09)+" "+ sprintf("%7.4f",-9999)+" "+ sprinti("%7.0i",toint(cris_num)))
 
 
 ;--------------------------------------------
@@ -627,6 +671,18 @@ print(iasia_norm_average)
      airs_se_perc = (airs_rc@std_rc/airs_yave)* 100
    end if
 
+   if (ADD_IASI) then
+     ;airs_rc   = regline(yfrac_airs,airs_runave_norm)
+     iasia_xco_sd = iasia_xco(1,:)
+     iasia_rc   = regline_weight(yfrac_iasia,iasia_anomaly,iasia_xco_sd,1)
+     iasia_xave = avg(yfrac_iasia)
+     iasia_yave = avg(iasia_runave)
+     iasia_ols_trendplot = (iasia_rc*(yfrac_iasia) + iasia_rc@yintercept)/1e-09 ;* iasia_norm_average
+     iasia_ave = avg(iasia_runave)
+     iasia_rc_perc = (iasia_rc/iasia_yave)* 100
+     iasia_se_perc = (iasia_rc@std_rc/iasia_yave)* 100
+   end if
+
 print(airs_rc)
 print(airs_rc_perc)
 print(airs_se_perc)
@@ -804,6 +860,15 @@ if (PLOT) then
     res@pmLegendOrthogonalPosF   = -1.210
     res@xyExplicitLegendLabels   := (/"AIRS: "+sprintf("%4.2g",airs_rc_perc)+" ~F34~1 ~F21~"+sprintf("%4.1g",airs_se_perc)+"% p.y."/)
       plot_t3 = gsn_csm_xy(wks,yfrac_airs,airs_ols_trendplot/scale_factor,res)
+      overlay(plot,plot_t3)
+    end if
+
+    if (ADD_IASI) then
+    res@pmLegendDisplayMode = "Always"        ; turn on legend
+    res@xyLineColors        := (/"green"/)
+    res@pmLegendOrthogonalPosF   = -1.150
+    res@xyExplicitLegendLabels   := (/"IASI: "+sprintf("%4.2g",iasia_rc_perc)+" ~F34~1 ~F21~"+sprintf("%4.1g",iasia_se_perc)+"% p.y."/)
+      plot_t3 = gsn_csm_xy(wks,yfrac_iasia,iasia_ols_trendplot/scale_factor,res)
       overlay(plot,plot_t3)
     end if
 

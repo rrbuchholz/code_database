@@ -1,11 +1,11 @@
 #!/usr/bin/perl -w
 
 #======================================================#
-#--- This Perl script renames ncl files for KORUS   ---#
+#--- This Perl script renames files                 ---#
 #---                               rrb Apr 03, 2016 ---#
 #======================================================#
 
-$dir = "/amadeus-data/cam-chem/2018";
+$dir = "/amadeus-data/cam-chem/2019";
 $matchstring = "branch02.";
 $replacestring = "";
 

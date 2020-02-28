@@ -31,31 +31,26 @@ begin
   yend = 2014
   reso = "0.9x1.25"
 
-  machine = "cheyenne"         ; modeling1, modeling2, cheyenne
-
-
   tracers = (/"CO"/)
 
-  ;tracers = (/"CH3OH","CO"/)
-  ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
-  ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
-  ;            "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
-  ;            "GLYALD", "HCN", "HCOOH", "HYAC", "ISOP", "MACR", "MEK", "MVK", \
-  ;            "NH3", "NO", "OC1", "OC2", "SO2", "TOLUENE"/)
+  ;tracers = (/"CH3OH", "C2H6","O3 "NO2", "HCN"/)
   ; no MW data: XYLENE, BENZ
 
   ; -------------------------------
   ; files and path setup
   ; -------------------------------
-   runtype = "qfedBBmin"
-   dir_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/atm/hist/"
-   outpath = "/glade2/work/buchholz/CAM_chem_output/fire_uncert/"+runtype+"/"
-   e_file_in = systemfunc ("ls "+dir_in + "*h1.2014-01-3*.nc")
+   runtype = "cmip_smoothed"
+   ;dir_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/atm/hist/"
+   dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip/atm/hist/"
+   e_file_in = systemfunc ("ls "+dir_in + "*h1."+ystart+"-01-3*.nc")
 
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   NETCDF = False
+   SAT_SMOOTH = True
+     sat_path = "/MOPITT/V8J/Archive/L3/"
+   NETCDF = True
+    outpath = "/net/modeling1/data16a/buchholz/CAM_chem_output/EF_processed/"
    PLOT = True
     mapType = "x11"
     mapName = "GFED_regions"
@@ -63,13 +58,12 @@ begin
   ; -------------------------------
   ; MOZART molecular weights
   ; -------------------------------
-  molwts = "/glade/u/home/buchholz/data/species_molwts.txt"
-  ;molwts = "~/data/species_molwts.txt"
+  molwts = "~/data/species_molwts.txt"
 
   ; -------------------------------
   ; GFED region file
   ; -------------------------------
-  GFEDmask = "/glade/u/home/buchholz/data/GFED_mask.csv"
+  GFEDmask = "~/data/GFED_mask.csv"
 
 ;--------------------------------------------
 ; end user input
@@ -131,8 +125,25 @@ begin
                       "royalblue", "darkslateblue", "navy", "cyan", "lightblue2", \
                       "darkslategray4", "darkslategray", "gray", "dimgray"/)
 
-    region_levels = (/0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15/)
+    region_levels = (/0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14./)
 
+    region_names     = (/"Ocean","BONA","TENA","CEAM","NHSA","SHSA","EURO","MIDE", \
+                         "NHAF","SHAF","BOAS","CEAS","SEAS","EQAS","AUST" /)
+    ;;class_0 :	Ocean
+    ;;class_1 :	BONA (Boreal North America)
+    ;;class_2 :	TENA (Temperate North America
+    ;;class_3 :	CEAM (Central America)
+    ;;class_4 :	NHSA (Northern Hemisphere South America)
+    ;;class_5 :	SHSA (Southern Hemisphere South America)
+    ;;class_6 :	EURO (Europe)
+    ;;class_7 :	MIDE (Middle East)
+    ;;class_8 :	NHAF (Northern Hemisphere Africa)
+    ;;class_9 :	SHAF (Southern Hemisphere Africa)
+    ;;class_10 :	BOAS (Boreal Asia)
+    ;;class_11 :	CEAS (Central Asia)
+    ;;class_12 :	SEAS (Southeast Asia)
+    ;;class_13 :	EQAS (Equatorial Asia)
+    ;;class_14 :	AUST (Australia and New Zealand)
 
 ; -------------------------------
 ; begin a tracer loop
@@ -201,7 +212,34 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   ; pressure weighted average
   ; -------------------------------
+  if (SAT_SMOOTH) then
+    ; smooth the model data by satellite measured Averaging Kernels and a priori
+     tcol_all = new((/dimsizes(time), dimsizes(lat), dimsizes(lon)/), float)
+     tcol_meas = new((/dimsizes(time), dimsizes(lat), dimsizes(lon)/), float)
+
+   ; list satellite files
+   sat_files = systemfunc ("ls "+sat_path + ystart+"*/*/MOP03J-"+ystart+"*.he5")
+
+   ; open one by one
+   do f = 0, dimsizes(sat_files)-1
+
+    ; smooth model data and create total column
+    ; horizontal regrid
+
+    ; vertical regrid
+
+    ; apply AK
+
+   end do
+
+printVarSummary(tcol_all)
+exit
+
+  else
+  ; calculate model output tcol
    tcol_all  = dim_sum_n((tracer_in*xp_const*delta_p)/100,1)  ; dp Pa -> hPa
+   end if
+
      tcol_all!0         = "time"
      tcol_all!1         = "lat"
      tcol_all!2         = "lon"
@@ -211,9 +249,8 @@ do t = 0, dimsizes(tracers)-1
      tcol_all&lat       = tracer_in&lat
      tcol_all&lon       = tracer_in&lon
 
-printVarSummary(tcol_all)
-print(tcol_all(0,0:10,0))
-print(max(tcol_all(0,:,0)))
+
+
   ;********************************************
   ; Calculate averages
      ; weight by gridbox area
@@ -291,17 +328,13 @@ print(max(tcol_all(0,:,0)))
     region_mask&lat = lat
     region_mask&lon = lon
     printVarSummary(region_mask)
-
-   region_names = (/"Maritime SEA", "Australasia", \
-                    "Southern Africa", "South America",\
-                    "Siberia", "North America" /)
-  ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
-                     (/-50., -10.,     110.,     180./),\ ;Australasia
-                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
-                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
-                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
-                     (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+    region_mask_extend = conform(tcol_all, (/region_mask/), (/1,2/))
+    region_mask_extend!0 = "time"
+    region_mask_extend!1 = "lat"
+    region_mask_extend!2 = "lon"
+    region_mask_extend&time = time
+    region_mask_extend&lat = lat
+    region_mask_extend&lon = lon
 
      ; -------------------------------
      ; sums
@@ -310,20 +343,17 @@ print(max(tcol_all(0,:,0)))
      ; overwrite -89.999 and 89.999 so subset works correctly.
       wgt&lat = lat
      do r = 0, dimsizes(region_names)-1
-       tracer_region := tcol_all(:,{region_select(r,0):region_select(r,1)},\
-                                    {region_select(r,2):region_select(r,3)})
-       wgt_region := wgt({region_select(r,0):region_select(r,1)},\
-                         {region_select(r,2):region_select(r,3)})
+       print(region_names(r))
+       tracer_region = where(region_mask_extend.eq.r,tcol_all,tcol_all@_FillValue)
+         tracer_region!0 = "time"
+         tracer_region!1 = "lat"
+         tracer_region!2 = "lon"
+         tracer_region&time = time
+         tracer_region&lat = lat
+         tracer_region&lon = lon
+
+       wgt_region := where(region_mask.eq.r,wgt,wgt@_FillValue)
        regsum(r,:)= wgt_areaave2(tracer_region,wgt_region,0)
-     end do
-
-       regsum@units = "molec/cm^2"
-       regsum!0 = "region"
-       regsum&region = region_names
-       regsum!1 = "time"
-       regsum&time = time
-
-       ;printVarSummary(regsum)
 
 
 ;********************************************
@@ -346,30 +376,38 @@ print(max(tcol_all(0,:,0)))
     mapres@cnLinesOn                 = False
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-      ;mapres@cnLevels                = region_levels   ; set the contour levels
-      mapres@cnFillColors            = region_colors
-      mapres@cnMinLevelValF          = 0.
-      mapres@cnMaxLevelValF          = 15.
-      mapres@cnLevelSpacingF         = 1        ; set the interval between contours
+      mapres@cnMinLevelValF          = 0.4e18
+      mapres@cnMaxLevelValF          = 2.8e18
+      mapres@cnLevelSpacingF         = 0.20e18        ; set the interval between contours
 
-   mapres@lbLabelStrings             = region_levels 
+   ;mapres@lbLabelStrings             = region_levels 
    mapres@lbLabelFontHeightF         = 0.01
    mapres@lbLabelPosition            = "Bottom"
    mapres@lbLabelAlignment           = "BoxCenters"
    mapres@pmLabelBarWidthF           = 1.  
-   mapres@lbTitleString              = "GFED defined regions"
+   mapres@lbTitleString              = "CO column within GFED regions"
    mapres@lbTitlePosition            = "Bottom"
    mapres@lbTitleFontHeightF         = 0.015
    ;mapres@lbBoxLinesOn               = False
 
-
-    map = gsn_csm_contour_map_ce(wks,region_mask,mapres)
+    map = gsn_csm_contour_map_ce(wks,tracer_region(1,:,:),mapres)
 
 
   draw(map)
   frame(wks)
 
   end if    ; PLOT
+
+
+     end do
+
+       regsum@units = "molec/cm^2"
+       regsum!0 = "region"
+       regsum&region = region_names
+       regsum!1 = "time"
+       regsum&time = time
+
+       printVarSummary(regsum)
 
 
 ;********************************************

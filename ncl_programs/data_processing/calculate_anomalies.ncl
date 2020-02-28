@@ -35,8 +35,9 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  loc = "MSEA" ; Australasia, SAmerica, SAfrica, Indonesia
-  region_name = "MSEA"
+  loc = "CSAf" ; Australasia, SAmerica, SAfrica, Indonesia
+  region_name = "CSAf"
+  data_type = "XCO"
 
   version = "V8"
   retrieval = "T"
@@ -45,7 +46,9 @@ begin
   ;mopitt_general = "/IASI/home/buchholz/MOPITT_subset/"+version+"/stations/timeseries/"
   mopitt_general = "/IASI/home/buchholz/MOPITT_subset/regions_v8/"
   ;mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_stats_"+version+"*all_land.nc")
-  mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_stats_"+version+retrieval+"subset*.nc")
+  mopitt_files = systemfunc ("ls "+mopitt_general+loc+"_"+version+retrieval+"subset*.nc")
+  ;mopitt_files = systemfunc ("ls "+mopitt_general+"MYS_land/"+loc+"_stats_land_"+version+retrieval+"subset*.nc")
+print(mopitt_files)
 
 
   if (loc.eq."Indonesia") then
@@ -55,7 +58,7 @@ begin
 
   location_title = loc
     year_s = 2001
-    year_e = 2018
+    year_e = 2019
 
   ;------------
   ; scale of outside sd
@@ -68,7 +71,7 @@ begin
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "png"
     ;plttype@wkPaperSize = "A4"
      ;plttype@wkWidth = 1200
      ;plttype@wkHeight = 1200 
@@ -109,7 +112,8 @@ begin
   sat_tcol      = "RetrievedX_CO"
 
    
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL".or.loc.eq."MSEA") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL"\
+      .or.loc.eq."MSEA".or.loc.eq."MYS".or.data_type.eq."XCO") then
     timearray     = "time"
     sat_err       = "AvgError"
     ;sat_num       = "RetrievedCOtcolRegionStats"
@@ -197,7 +201,8 @@ begin
     mopitt_err     = mopitt_in[:]->$sat_err$
     mopitt_rand    = mopitt_in[:]->$sat_rand$
 
-  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL".or.loc.eq."MSEA") then
+  if (loc.eq."BBCanada".or.loc.eq."BBSiberia".or.loc.eq."CONTRAIL"\
+      .or.loc.eq."MSEA".or.loc.eq."MYS".or.data_type.eq."XCO") then
     mopitt_num     = mopitt_in[:]->$sat_num$(:,7)
     mopitt_date    = str_split_by_length(tostring(mopitt_time),4)
     years = tointeger(mopitt_date(:,0))
@@ -214,7 +219,6 @@ begin
   end if
 
     doy            = day_of_year(years,months,days)
-
 
   ;--------------------------------------------
   ; calculate averages - separate into weeks, 
@@ -342,7 +346,7 @@ print(max(rel_err))
 ;--------------------------------------------
 if (PLOT) then
 
-  wks = gsn_open_wks(plttype,pltname)        
+  wks = gsn_open_wks(plttype,data_folder+"/"+version+"/anomalies/"+pltname)        
   gsn_define_colormap(wks,"BlAqGrYeOrRe")  
    
   res                       = True                  ; plot mods desired
@@ -525,7 +529,7 @@ if (CSV) then
 
 ;---Create dummy mixed data to write to CSV file
   ;fields = (/"time",     "tcol_co",  "anomaly_co"/)
-  fields = (/"time",     "x_co",  "anomaly_co"/)
+  fields = (/"time", "x_co", "anomaly_co", "x_co climatology", "num_obs"/)
   dq = str_get_dq()                ; double quote character
   fields = dq + fields + dq                      ; Pre/append quotes to field names
   header = [/str_join(fields,",")/]              ; Header is field names separated
@@ -533,9 +537,9 @@ if (CSV) then
 
   month_co_avg@_FillValue         = -999.99
 
-  alist  = [/toint(climate_time),new_month_co_avg/scale_factor,month_anomaly/scale_factor/]   ; List of variables to write.
+  alist  = [/toint(climate_time),new_month_co_avg/scale_factor,month_anomaly/scale_factor,climate_co_ext/scale_factor,mopitt_num/]   ; List of variables to write.
 ;; Note: if you don't want spaces in CSV file, use the following format string.
- format = "%d,%g,%g"
+ format = "%d,%g,%g,%g,%g"
 
   system("rm -rf " + outname)               ; Remove file in case it exists.
 

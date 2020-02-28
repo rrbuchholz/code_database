@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "MSEA_stats"
+  location = "SSAf"
 
   ;------------
   ; select daytime 
@@ -124,12 +124,23 @@ begin
    ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
    ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   region_names := (/"CONTRAIL","MSEA_stats","TEST"/)
+   region_names := (/"CONTRAIL","MSEA_stats_all","MYS_stats","MYS_pen",\
+                     "CSAm","SSAm","CSAf","SSAf",\
+                     "NAus","SAus","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
                       (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
-                      (/ -60.,   0.,      -180.,     180./) /)  ; TEST
+                      (/   0.5,   7.5,      99.5,    119.5/),\  ;MYS_stats
+                      (/   0.5,   7.5,      99.5,    115.0/),\  ;MYS_pen
+                      (/ -25.,   -5.,      -83.,     -32./),\   ;CSAm
+                      (/ -58.,  -25.,      -80.,     -32./),\   ;SSAm
+                      (/ -25.,  -10.,        0.,      59./),\   ;CSaf
+                      (/ -40.,  -25.,        0.,      59./),\   ;SSAf
+                      (/ -25.,  -10.,      112.,     181./),\   ;NAus
+                      (/ -48.,  -25.,      112.,     181./),\   ;SAus
+                      (/ -60.,    0.,     -180.,     180./) /)  ; TEST
+
 
    ind_region = ind(region_names.eq.location)
 

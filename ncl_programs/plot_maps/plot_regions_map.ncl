@@ -53,10 +53,10 @@ begin
   ; -------------------------------
   ; plotting parameters
   ; -------------------------------
-      latmin                         = -80.               ; World
-      latmax                         = 80.
-      lonmin                         = -170.
-      lonmax                         = 185.
+    ;  latmin                         = -80.               ; World
+    ;  latmax                         = 80.
+    ;  lonmin                         = -170.
+    ;  lonmax                         = 185.
       ;centerlon                      = 0
 
     ;  latmin                         =-50               ; zoom to Indonesia
@@ -70,10 +70,10 @@ begin
     ;  lonmax                         = 360.
     ;  centerlon                      = 180
 
-    ;  latmin                         = 35.               ; USA
-    ;  latmax                         = 70.
-    ;  lonmin                         = -130.
-    ;  lonmax                         = -70.
+      latmin                         = 20.               ; USA
+      latmax                         = 70.
+      lonmin                         = -150.
+      lonmax                         = -70.
 
     ;  latmin                         = 30.               ; Boreal Asia
     ;  latmax                         = 70.
@@ -108,32 +108,39 @@ begin
    ;                  (/ 5.,  25.,       -55.,      -15./), \ ;TNA
    ;                  (/ 70.,  70.25,     120.,    240./)/) ;AO
 
-   region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
-                    "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
-                    "BBCAmerica", "BBSAmerica","BBSAmOcean",\
-                     "BBCAfrica", "BBSAfrica","BBSAfOcean", \
-                    "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
+   ;region_names = (/"AnthChina", "AnthIndi", "AnthEuro", "AnthUSA",\
+   ;                 "BBUSA", "BBCanada", "BBSiberia", "BBWRus",\
+   ;                 "BBCAmerica", "BBSAmerica","BBSAmOcean",\
+   ;                  "BBCAfrica", "BBSAfrica","BBSAfOcean", \
+   ;                 "BBMSEA", "BBNWAu","BBEAu", "NH", "SH"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
-                     (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
-                     (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
-                     (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
-                     (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
-                     (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
-                     (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
-                     (/ 35.,  50.,       40.,       85./),\  ;BBWRus
-                     (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
-                     (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
-                     (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
-                     (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
-                     (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
-                     (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
-                     (/-10.,   8.,        95.,     125./),\  ;BBMSEA
-                     (/-25., -10.,       115.,     140./),\  ;BBNWAu
-                     (/-45., -10.,       140.,     155./),\  ;BBEAu
-                     (/  0.,  60.,      -180.,     180./),\  ;NH
-                     (/-60.,   0.,      -180.,     180./) /) ;SH
+   ;region_select = (/(/ 30.,  40.,      110.,      123./),\  ;AnthChina
+   ;                  (/ 20.,  30.,       70.,       95./),\  ;AnthIndi
+   ;                  (/ 45.,  55.,        0.,       15./),\  ;AnthEuro
+   ;                  (/ 35.,  40.,      -95.,      -75./),\  ;AnthUSA
+   ;                  (/ 38.,  50.,     -125.,     -105./),\  ;BBUSA
+   ;                  (/ 50.,  60.,     -125.,      -90./),\  ;BBCanada
+   ;                  (/ 50.,  60.,       90.,      140./),\  ;BBSiberia
+   ;                  (/ 35.,  50.,       40.,       85./),\  ;BBWRus
+   ;                  (/ 10.,  23.5,    -105.,      -70./),\  ;BBCAmerica
+   ;                  (/-25.,  -5.,      -75.,      -50./),\  ;BBSAmerica
+   ;                  (/-35., -15.,      -40.,      -25./),\  ;BBSAmericaOcean
+   ;                  (/  5.,  15.,      -20.,       38./),\  ;BBCAfrica
+   ;                  (/-20.,  -5.,       10.,       40./),\  ;BBSAfrica
+   ;                  (/-15.,   0.,      -10.,       10./),\  ;BBSAfOcean
+   ;                  (/-10.,   8.,        95.,     125./),\  ;BBMSEA
+   ;                  (/-25., -10.,       115.,     140./),\  ;BBNWAu
+   ;                  (/-45., -10.,       140.,     155./),\  ;BBEAu
+   ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
+   ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
+
+   region_names = (/"PNW", "Central Mountain USA", "East USA"/)
+
+   ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/ 38.,  60.,     -130.,     -110./),\ ;PNW
+                     (/ 37.,  45.,     -110.,     -95./),\  ;Central Mountain USA
+                     (/ 30.,  42.,      -95.,     -75./) /) ;East USA
 
 
    ; Tagged simulations

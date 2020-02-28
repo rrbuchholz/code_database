@@ -28,14 +28,18 @@ begin
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
-  index = "tna"
+; oni, soi, nino34m, dmi, meiv2
+  index = "oni"
 
-  if (index.eq."dmi_2") then
+  if (index.eq."dmi_2".or.index.eq."nino34m".or.\
+      index.eq."soi") then
     ;index_file = "/gpfs/u/home/buchholz/data/dmi.nc"
-    index_file = "/IASI/home/buchholz/Climate_Indices/dmi.nc"
+    ;index_file = "/IASI/home/buchholz/Climate_Indices/20191111/dmi.nc"
+    index_file = "/IASI/home/buchholz/Climate_Indices/20200224/"+index+".nc"
   else
-    ;index_file = "/IASI/home/buchholz/Climate_Indices/"+index+".txt"
-    index_file = "/IASI/home/buchholz/Climate_Indices/"+index+"_month_avg.csv"
+    index_file = "/IASI/home/buchholz/Climate_Indices/20200224/"+index+".txt"
+    ;index_file = "/IASI/home/buchholz/Climate_Indices/20191111/"+index+".txt"
+    ;index_file = "/IASI/home/buchholz/Climate_Indices/20191111/"+index+"_month_avg.csv"
   end if
 
   ;------------
@@ -47,26 +51,27 @@ begin
       plttype@wkWidth = 1200
       plttype@wkHeight = 1200
     year_s = 2001
-    year_e = 2018
-    index_name = "TNA"
+    year_e = 2019
+    index_name = "ONI"
     sub_label = ""
-    ymin       = -1.8
-    ymax       = 1.8
-    minlab     = -1.5
-    maxlab     = 1.5
-    ylab_min   = "-1.5"
-    ylab_max   = "1.5"
+    ymin       = -2.7
+    ymax       = 2.7
+    minlab     = -2.5
+    maxlab     = 2.5
+    ylab_min   = "-2.5"
+    ylab_max   = "2.5"
     spacing    = 1.5
     units      = "(~F34~0~F~C)"
     ;units      = "(hPa)"
+    ;units      = ""
 
 
-  CSV            = False
+  CSV            = True
   if (CSV) then
-     outname      = index+"_month_avg.csv"
+     outname      = "/IASI/home/buchholz/" + index+"_month_avg.csv"
   end if
 
-  NETCDF            = True
+  NETCDF            = False
   if (NETCDF) then
      nc_outname      = index+"_index_month_avg.nc"
   end if
@@ -108,13 +113,28 @@ begin
   ; -------------------------------
   ;---Read the values in as 1D, since we don't know rows and columns yet.
   lines  = asciiread(index_file,-1,"string")
-  ;delim  = " "
-  delim  = ","
+  delim  = " "
+  ;delim  = ","
 
-  if (index.eq."dmi_2") then
+  if (index.eq."dmi_2".or.index.eq."nino34m".or.\
+      index.eq."soi") then
+    
+    if (index.eq."dmi_2") then
+      variable = "DMI"
+      time_var = "WEDCEN2"
+    else if (index.eq."nino34m") then
+      variable = "NINO34"
+      time_var = "WEDCEN2"
+    else if (index.eq."soi") then
+      variable = "SOI"
+      time_var = "TSAXIS"
+    end if
+    end if
+    end if
+    
     fin = addfile(index_file, "r")            ; read in
-    index_anomaly_dummy    = fin->$"DMI"$
-    index_date_dummy       = fin->$"WEDCEN2"$
+    index_anomaly_dummy    = fin->$variable$
+    index_date_dummy       = fin->$time_var$
     index_time_dummy  = cd_calendar(index_date_dummy,0)
       ; MONTH AVERAGES and ANOMALIES
       startyear = index_time_dummy(0,0)
@@ -151,11 +171,12 @@ begin
       fields(:,nf) = tofloat(str_get_field(lines(1:),nf+1,delim)) 
     end do
 
+
     if (index.eq."nino34") then
-      ;index_date    = fields(:,0)*100 +fields(:,1)
+      index_date    = fields(:,0)*100 +fields(:,1)
       ;index_anomaly = fields(:,4)
-      index_date    = toint(fields(:,0))+15
-      index_anomaly = tofloat(fields(:,1))
+      ;index_date    = toint(fields(:,0))+15
+      index_anomaly = tofloat(fields(:,9))
 
     else if (index.eq."satl") then
       index_date    = fields(:,0)*100 +fields(:,1)
@@ -192,21 +213,29 @@ begin
 
     else if (index.eq."aao".or.index.eq."amo".or.index.eq."tsa".or.\
             index.eq."ao".or.index.eq."tna".or.index.eq."dmi") then
-      ;index_date    = fields(:,0)*100 +fields(:,1)
+      index_date    = fields(:,0)*100 +fields(:,1)
+      index_anomaly = fields(:,5)
       ;index_anomaly = fields(:,2)
-      index_date    = toint(fields(:,0))+15
-      index_anomaly = tofloat(fields(:,1))
+      ;index_date    = toint(fields(:,0))+15
+      ;index_anomaly = tofloat(fields(:,1))
       ;index_anomaly_dummy = fields(:,1::)
       ;index_anomaly = ndtooned(index_anomaly_dummy)
       ;index_date = yyyymm_time(toint(fields(0,0)),toint(fields(nlines-1,0)),"float")
+
+    else if (index.eq."meiv2".or.index.eq."oni") then
+      index_anomaly_dummy = fields(:,1::)
+      index_anomaly = ndtooned(index_anomaly_dummy)
+      index_yyyy    = toint(fields(:,0))
+      index_date = yyyymm_time(toint(index_yyyy(0)),toint(index_yyyy(dimsizes(index_yyyy)-1)),"float")
+    end if
     end if
     end if
     end if
     end if
   end if
 
-  ;index_time = yyyymm_to_yyyyfrac(index_date,0)
-  index_time = yyyymmdd_to_yyyyfrac(index_date,0)
+  index_time = yyyymm_to_yyyyfrac(index_date,0)
+  ;index_time = yyyymmdd_to_yyyyfrac(index_date,0)
 
 ;print(dimsizes(index_time))
 ;print(dimsizes(index_anomaly))
