@@ -24,15 +24,15 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2002
-  yend = 2017
+  ystart = 2017
+  yend = 2018
   reso = "0.9x1.25"
 
   machine = "cheyenne"        ; modeling1, modeling2, cheyenne
-  repository = "CMIP6"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
+  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
 
 
-  ANTHRO = True
+  ANTHRO = False
 
   ;tracers = (/"HCN"/)
   ;sm_tracers = (/"hcn"/)
@@ -59,9 +59,9 @@ begin
  ; tracers = (/"BIGENE", "GLYALD","HCN","HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","SVOC","C10H16","TOLUENE","XYLENE"/)
  ; tracers = (/"MACR","MEK","MVK", "TERPENES","TOLUENE","XYLENES"/)
 
-  tracers = (/"HCN", "CO"/)
+  ;tracers = (/"PM25", "HCN", "CO", "NO", "NO2"/)
 
-  ;tracers = (/"bc_a4","pom_a4","so4_a1"/)
+  tracers = (/"bc_a4","pom_a4","CO", "so4_a1"/)
 
 
   sm_tracers = tracers
@@ -373,10 +373,15 @@ do t = 0, dimsizes(tracers)-1
        mw = 106.167
      else if (tracer.eq."IVOC".or.\
               tracer.eq."SVOC".or.\
-              tracer.eq."SOAG") then
+              tracer.eq."SOAG".or.\
+              tracer.eq."bc_a4".or.\
+              tracer.eq."pom_a4") then
        mw = 12.011
+     else if (tracer.eq."NOx") then
+       mw = 30.0061
      else
        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
+     end if
      end if
      end if
      end if
@@ -495,19 +500,25 @@ do t = 0, dimsizes(tracers)-1
 
   ;********************************************
   ; Extract regional timeseries
-   region_names = (/"Maritime SEA", "Australasia", "EastAustralia",\
-                    "Southern Africa", "Northern Africa", "South America",\
-                    "Siberia", "North West America", "North America"/)
+  ; region_names = (/"Maritime SEA", "Australasia", "EastAustralia",\
+  ;                  "Southern Africa", "Northern Africa", "South America",\
+  ;                  "Siberia", "North West America", "North America"/)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
-                     (/-50., -10.,     110.,     180./),\ ;Australasia
-                     (/-50., -20.,     140.,     160./),\ ;Eaust
-                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
-                     (/  5.,  30., 360.-20.,      55./),\ ;NAfrica
-                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
-                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
-                     (/ 30.,  60.,360.-135.,360. -105./),\ ;NWAmerica
-                     (/ 25.,  70.,360.-170.,360. -53./)/) ;NAmerica
+  ; region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+  ;                   (/-50., -10.,     110.,     180./),\ ;Australasia
+  ;                   (/-50., -20.,     140.,     160./),\ ;Eaust
+  ;                   (/-40.,   5.,       0.,      60./),\ ;SAfrica
+  ;                   (/  5.,  30., 360.-20.,      55./),\ ;NAfrica
+  ;                   (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
+  ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
+  ;                   (/ 30.,  60.,360.-135.,360. -105./),\ ;NWAmerica
+  ;                   (/ 25.,  70.,360.-170.,360. -53./)/) ;NAmerica
+
+   region_names = (/"Colorado", "PNW"/)
+  ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/37.,    41.,    251.,    258./),\ ;Colorado
+                     (/32.5,   60,     227.5,   251./)/) ;PNW
+
 
    ;region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
    ;                 "Siberia", "North America", "India" /)
@@ -551,15 +562,17 @@ do t = 0, dimsizes(tracers)-1
     ;------------------
     region_year_sum_array = new((/dimsizes(year_array),dimsizes(region_names)/), float)
     do i = 0, dimsizes(year_array)-1
-      year_ind := ind(regsum&time.gt.(year_array(i)*10000).and.\
-                      regsum&time.lt.((year_array(i)+1)*10000))
+      ;year_ind := ind(regsum&time.gt.(year_array(i)*10000).and.\
+      ;                regsum&time.lt.((year_array(i)+1)*10000))
+      year_ind := ind(regsum&time.gt.(year_array(i)*10000+600).and.\
+                      regsum&time.lt.((year_array(i))*10000)+1100)
       region_year_sum_array(i,:) = dim_sum_n(regsum(:,year_ind),1)
     end do
 
-  ;   print("Year, regional emissions of "+tracer+" (Tg)")
-  ;  do j = 0, dimsizes(region_names)-1
-  ;   print(year_array+" "+region_names(j)+" "+region_year_sum_array(:,j))
-  ;  end do
+     print("Year, regional emissions of "+tracer+" (Tg)")
+    do j = 0, dimsizes(region_names)-1
+     print(year_array+" "+region_names(j)+" "+region_year_sum_array(:,j))
+    end do
 
      regsum&time := time
        ;printVarSummary(regsum)
