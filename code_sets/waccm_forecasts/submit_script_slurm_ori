@@ -1,0 +1,96 @@
+#!/bin/tcsh
+#SBATCH --job-name=waccm_plot          ### job name
+#SBATCH --output=waccm_job.out.%j      ### combine error and output files
+#SBATCH --account=P19010000            ### project code
+#SBATCH --time=00:40:00                ### wall-clock time (hrs:mins:secs)
+#SBATCH --partition=dav                ### queue
+### Request one chunk with ncpus and mpiprocs set to
+### the number of lines in the command file
+#SBATCH --ntasks=25
+#SBATCH --ntasks-per-node=4
+
+###---------------------------------------
+### HOW TO RUN:
+### > sbatch submit_script_slurm
+### TO CANCEL:
+### > scancel {job_number}
+###---------------------------------------
+
+umask 002
+cd /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts
+
+setenv TMPDIR /glade/scratch/$USER/temp
+mkdir -p $TMPDIR
+
+###---------------------------------------
+### load NCL
+### source /glade/u/apps/opt/lmod/4.2.1/init/tcsh
+module load ncl
+module list
+
+### link the updated colormap
+setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/colormaps:$NCARG_ROOT/lib/ncarg/colormaps
+
+###---------------------------------------
+  set run_folder = "/glade/u/home/buchholz/code_database/code_sets/waccm_forecasts"
+
+###  Hardcode date
+###     set current_date = "2019-07-22"
+###     set forecast_date = 20190722
+
+### determine dates of run
+### Jerome's forecast
+###  set folder = "/glade/scratch/barre/archive/KORUS_forecast_3inst/atm/hist/"
+###  set files = "KORUS_forecast_3inst.cam_0001.h1."
+
+### Shawn's WACCM forecast
+  set folder_base = "/glade/scratch/shawnh/GEOS5_frcst_data"
+### Set date
+  set current_date = `date +%Y-%m-%d`
+  set forecast_date = `date +%Y%m%d`
+### Set folder
+  set folder = ${folder_base}/${forecast_date}/model_files/finn/
+  set files = "f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3."
+
+  echo "Start plot: `date`"
+
+###---------------------------------------
+### set up a command file
+set j = 0
+### while ( $j <= 0 )
+ while ( $j <= 5 )
+   echo "Submitting: `date --date='$current_date +$j day' +%Y-%m-%d`"
+   set date_run = `date --date="$current_date +$j day" +%Y-%m-%d`
+
+   if ($j == 0) then
+     echo 0 ncl \'filename=\"$folder$files$date_run-00000.nc\"\' \'file_prefix=\"$folder$files\"\' STATION=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo 1 ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo 2 ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo 3 ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo 4 ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+   else
+     echo `expr 1 + $j \* 4` ncl \'filename=\"$folder$files$date_run-00000.nc\"\' CURTAIN=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo `expr 2 + $j \* 4` ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo `expr 3 + $j \* 4` ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_WUS=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+     echo `expr 4 + $j \* 4` ncl \'filename=\"$folder$files$date_run-00000.nc\"\' LATLON_SEUS=True forecast_date=$forecast_date $run_folder/plot_wrapper.ncl >> /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+   endif
+
+   @ j++
+ end
+
+###---------------------------------------
+### run the NCL plotting in parallel
+### Use the multiple program flag to specify command file job
+ srun --multi-prog /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+
+###---------------------------------------
+### clean up
+### delete command file
+ rm -f /glade/u/home/buchholz/code_database/code_sets/waccm_forecasts/cmd_file.txt
+
+  echo "Successfully plotted all tracers"
+  echo "End plot: `date`"
+  echo "END OF PLOT ROUTINES"
+
+
+###---------------------------------------

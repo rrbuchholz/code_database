@@ -41,7 +41,7 @@ begin
   ; toggles
   ;------------
   PLOTREGIONS    = True
-     WITHKOPPEN  = False
+     WITHKOPPEN  = True
      WITHCO      = False
 
 ;--------------------------------------------
@@ -507,7 +507,8 @@ begin
                           region_select(j,0)/)
          gsn_polyline(wks2,map1,regions_lon,regions_lat,boxres)
        else
-       boxres@gsLineColor      = "forestgreen"
+       ;boxres@gsLineColor      = "forestgreen"
+       boxres@gsLineColor      = "red"
        boxres@gsLineDashPattern  = 0 
          regions_lon := (/region_select(j,2), region_select(j,2), \
                           region_select(j,3) , region_select(j,3), \
