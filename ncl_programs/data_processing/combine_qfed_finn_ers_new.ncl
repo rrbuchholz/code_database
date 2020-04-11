@@ -62,7 +62,7 @@ begin
     MAX_EF         = False
   else
     if (.not. isvar("year")) then      ; is year=<value> from command line?
-       year = 2018
+       year = 2016
     end if
     qfed_version = "v2.5"
     outres = "0.9x1.25"
@@ -73,7 +73,7 @@ begin
     ; toggles
     ;------------
     MIN_EF         = False
-    MAX_EF         = False
+    MAX_EF         = True
   end if
 
   ; -------------------------------
@@ -98,10 +98,12 @@ begin
   ; FINN emission ratios
   ; -------------------------------
   if (MAX_EF)
-    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_max_jun2017.csv"
+    ;finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_max_jun2017.csv"
+    finn_emiss = "/net/modeling1/home/buchholz/data/EmissionFactors_20200408_uncert_max.csv"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"_max/"
   else if (MIN_EF)
-    finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_min_jun2017.csv"
+    ;finn_emiss = "/net/modeling1/home/buchholz/data/Base_emissionfactors_speciation_min_jun2017.csv"
+    finn_emiss = "/net/modeling1/home/buchholz/data/EmissionFactors_20200408_uncert_min.csv"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"_min/"
   else
     finn_emiss = "/net/modeling1/home/buchholz/data/BASEEmissionFactors_20190318.csv"
@@ -542,6 +544,11 @@ begin
    ; apply VOC speciation
    ; -------------------------------
    nmoc_ind = ind(var_names.eq."NMOC")    ; get index of nmoc
+    if (ismissing(nmoc_ind)) then
+      ; no VOC scaling
+      print("No VOC speciation...")
+      exit
+    end if ;Skip the VOC scaling
 
    do voctype = 0,dimsizes(voc_spec)-1
    ;do voctype = 0,0
@@ -723,7 +730,6 @@ begin
     end if ;NetCDF
 
    end do ; VOC loop
-
 
 
   ;********************************************

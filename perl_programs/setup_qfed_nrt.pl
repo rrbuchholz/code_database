@@ -147,13 +147,19 @@ if ($processed == 0 && $proc_file == 1){
 
    #------------------------------
    #send to glade after 1am
-   if ($time >= 1 && $min >= 01 && $processed == 1){
+   if ($time >= 1 && $min >= 01){
    `scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
        print OUT "Sent to cheyenne. \n";
    }
 }
 elsif ($processed == 1 && $proc_file == 1){
     print OUT "Processed and email already sent. \n";
+   #------------------------------
+   #send to glade after 1am
+   if ($time >= 1 && $min >= 01 && $time<=8){
+   `rsync -t /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+       print OUT "Sent to cheyenne at $time. \n";
+   }
 }
 else{
     print OUT "Not processed yet. \n";
