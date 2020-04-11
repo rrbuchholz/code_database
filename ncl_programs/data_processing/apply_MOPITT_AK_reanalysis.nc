@@ -363,9 +363,9 @@ do l = 0, dimsizes(meas_lat)-1
 ;print(logmodel_ak)
 ;end if
 
- ;     print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l)+", Smooth3: "+model_smooth_calc_c(m,l))
+      print("Ret:"+tcol_gas_orig(m,l)+", A priori:" + apriori_col(m,l)+ ", Smooth: "+model_smooth_calc(m,l)+", Smooth2: "+model_smooth_calc_b(m,l)+", Smooth3: "+model_smooth_calc_c(m,l))
       ; SOMETHING WEIRD HAPPENING WITH MISSING VALUES IN LOWER LAYERS
-
+exit
     end if
   end do
 end do

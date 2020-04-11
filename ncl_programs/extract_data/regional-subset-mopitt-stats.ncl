@@ -32,13 +32,13 @@ begin
 ;--------------------------------------------
   ystart = 2001
   yend = 2018
-  version = "V8T"
+  version = "V8J"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
 
   ;------------
   ; select location
   ;------------
-  location = "SSAf"
+  location = "EastUSA"
 
   ;------------
   ; select daytime 
@@ -124,22 +124,29 @@ begin
    ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
    ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   region_names := (/"CONTRAIL","MSEA_stats_all","MYS_stats","MYS_pen",\
-                     "CSAm","SSAm","CSAf","SSAf",\
-                     "NAus","SAus","TEST"/)
+   ;region_names := (/"CONTRAIL","MSEA_stats_all","MYS_stats","MYS_pen",\
+   ;                  "CSAm","SSAm","CSAf","SSAf",\
+   ;                  "NAus","SAus","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
-                      (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
-                      (/   0.5,   7.5,      99.5,    119.5/),\  ;MYS_stats
-                      (/   0.5,   7.5,      99.5,    115.0/),\  ;MYS_pen
-                      (/ -25.,   -5.,      -83.,     -32./),\   ;CSAm
-                      (/ -58.,  -25.,      -80.,     -32./),\   ;SSAm
-                      (/ -25.,  -10.,        0.,      59./),\   ;CSaf
-                      (/ -40.,  -25.,        0.,      59./),\   ;SSAf
-                      (/ -25.,  -10.,      112.,     181./),\   ;NAus
-                      (/ -48.,  -25.,      112.,     181./),\   ;SAus
-                      (/ -60.,    0.,     -180.,     180./) /)  ; TEST
+   ;region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+   ;                   (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
+   ;                   (/   0.5,   7.5,      99.5,    119.5/),\  ;MYS_stats
+   ;                   (/   0.5,   7.5,      99.5,    115.0/),\  ;MYS_pen
+   ;                   (/ -25.,   -5.,      -83.,     -32./),\   ;CSAm
+   ;                   (/ -58.,  -25.,      -80.,     -32./),\   ;SSAm
+   ;                   (/ -25.,  -10.,        0.,      59./),\   ;CSaf
+   ;                   (/ -40.,  -25.,        0.,      59./),\   ;SSAf
+   ;                   (/ -25.,  -10.,      112.,     181./),\   ;NAus
+   ;                   (/ -48.,  -25.,      112.,     181./),\   ;SAus
+   ;                   (/ -60.,    0.,     -180.,     180./) /)  ; TEST
+
+   region_names = (/"PNW", "CentralUSA", "EastUSA"/)
+
+   ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/ 38.,  60.,     -130.,     -110./),\ ;PNW
+                     (/ 35.,  49.,     -110.,     -95./),\  ;Central Mountain USA
+                     (/ 32.5,  42.,     -95.,     -75./) /) ;East USA
 
 
    ind_region = ind(region_names.eq.location)
@@ -171,7 +178,7 @@ do y = ystart,yend ; loop through years
      outfolder = "~/MOPITT_subset/regions_v8/"
      outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg.nc"
      if (COLAVG_VMR) then
-        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
+        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_DFSgt1.nc"
         if (PIXELS) then
           print("Collecting pixel " +pixel_number_select)
           outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
@@ -220,7 +227,7 @@ do y = ystart,yend ; loop through years
     ; -------------------------------
     ; MOPITT
     ; -------------------------------
-    all_files := systemfunc ("ls "+infolder+yearmonth_string(m)+"/*/MOP02T-"+year+"*.he5")
+    all_files := systemfunc ("ls "+infolder+yearmonth_string(m)+"/*/MOP02J-"+year+"*.he5")
     ; number of files to be read
     ndates = dimsizes(all_files)
 
@@ -245,6 +252,7 @@ do y = ystart,yend ; loop through years
       lon          := fin->$longitude$
       diag_anom    := fin->$diag_2$
       time         := fin->$date$
+      dofs         := fin->$deg_freedom$
         ;units value presumes use of TAI93 (International Atomic Time) format
         time@units = "seconds since 1993-1-1 00:00:00"
 
@@ -282,6 +290,7 @@ do y = ystart,yend ; loop through years
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\
                  lon.le.rightboundary.and.\
+                 dofs.gt.1.and.\
                  diag_anom(:,0).ne.1.and.\
                  diag_anom(:,1).ne.1.and.\
                  diag_anom(:,2).ne.1.and.\

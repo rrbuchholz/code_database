@@ -139,8 +139,8 @@ begin
 
    ;                   minlat, maxlat, minlon, maxlon
    region_select = (/(/ 38.,  60.,     -130.,     -110./),\ ;PNW
-                     (/ 37.,  45.,     -110.,     -95./),\  ;Central Mountain USA
-                     (/ 30.,  42.,      -95.,     -75./) /) ;East USA
+                     (/ 35.,  49.,     -110.,     -95./),\  ;Central Mountain USA
+                     (/ 32.5,  42.,     -95.,     -75./) /) ;East USA
 
 
    ; Tagged simulations
