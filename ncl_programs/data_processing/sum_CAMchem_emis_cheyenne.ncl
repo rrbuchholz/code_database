@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2017
+  ystart = 2015
   yend = 2018
   reso = "0.9x1.25"
 
   machine = "cheyenne"        ; modeling1, modeling2, cheyenne
-  repository = "QFED/FINN"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
+  repository = "FINN1.5"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
 
 
   ANTHRO = False
@@ -54,15 +54,17 @@ begin
 ;              "HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","NH3","NO","NO2","num_bc_a4","num_pom_a4",\
 ;              "num_so4_a1","OC","pom_a4","SO2","so4_a1","SOAG","SVOC","TERPENES","TOLUENE","XYLENES"/)
  ; tracers = (/"SVOC","MTERP","TOLUENE","XYLENES"/)
- ; tracers = (/"BENZENE","BIGALK","C2H2","C2H4","C2H5OH","C2H6","C3H6","C3H8","CH2O","CH3CHO",\
+ ; tracers = (/"BENZ","BIGALK","BIGENE","C2H2","C2H4","C2H5OH","C2H6","C3H6","C3H8","CH2O","CH3CHO",\
  ;             "CH3CN","CH3COCH3","CH3COCHO","CH3COOH","CH3OH","CRESOL","DMS"/)
- ; tracers = (/"BIGENE", "GLYALD","HCN","HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","SVOC","C10H16","TOLUENE","XYLENE"/)
+ ; tracers = (/"GLYALD","HCN","HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","SVOC","C10H16","TOLUENE","XYLENE"/)
  ; tracers = (/"MACR","MEK","MVK", "TERPENES","TOLUENE","XYLENES"/)
 
   ;tracers = (/"PM25", "HCN", "CO", "NO", "NO2"/)
+  ;tracers = (/"bc_a4", "pom_a4", "CO", "NO", "NO2"/)
 
-  tracers = (/"bc_a4","pom_a4","CO", "so4_a1"/)
+  ;tracers = (/"BIGENE", "DMS","MEK","GLYALD","TOLUENE","XYLENES"/)
 
+  tracers = (/"CO","C2H6"/)
 
   sm_tracers = tracers
 
@@ -178,14 +180,18 @@ do t = 0, dimsizes(tracers)-1
      emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
     else if (repository.eq."FINN1.5") then
-     emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
-     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2015_2018_daily_1deg/"
+     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
+     emis_dir = "/glade/work/emmons/emis/finn1.5/2015_2018_daily_1deg/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
      emis_dir = "/glade/p_old/work/emmons/emis/finn1.6/cesm_format/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"-"+yend+"_"+reso+".nc")
      ;emis_dir = "/glade/work/emmons/emis/finn1.6_v20180630/"
      ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"_"+reso+".nc")
+    else if (repository.eq."FINN2.2") then
+     ;emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f09/"
+     emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f05/"
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb_surface_2019_"+reso+".nc")
     else if (repository.eq."QFED_native") then
      emis_dir = "/glade/work/buchholz/emis/qfed2.5_2014_2017_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc")
@@ -207,6 +213,7 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."GFAS") then
      emis_dir = top_dir+ "emis/gfas_finn_2014_2017_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_2014_2017.nc")
+    end if
     end if
     end if
     end if
@@ -258,7 +265,7 @@ do t = 0, dimsizes(tracers)-1
   ; "anthro", "bb", "ocean"
   ; -------------------------------
   if (repository.eq."FINN".or.repository.eq."FINN1.5"\
-      .or.repository.eq."FINN1.6") then
+      .or.repository.eq."FINN1.6".or.repository.eq."FINN2.2") then
     emiss           = "fire"
     ;emiss           = "bb"
   else if (repository.eq."QFED_native") then
@@ -487,8 +494,8 @@ do t = 0, dimsizes(tracers)-1
       end do
     end do
 
-     print("Month, emissions of "+tracer+" (Tg)")
-     print(month_array+" "+month_sum_array)
+     ;print("Month, emissions of "+tracer+" (Tg)")
+     ;print(month_array+" "+month_sum_array)
 
     ;------------------
     ; Total average

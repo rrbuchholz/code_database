@@ -26,16 +26,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2014
-  yend = 2014
+  ystart = 2018
+  yend = 2018
   reso = "0.9x1.25"
 
   machine = "cheyenne"         ; modeling1, modeling2, cheyenne
 
 
-  tracers = (/"CO"/)
-  sm_tracers = (/"co"/)
-  ;tracers = (/"CH3OH","CO"/)
+  tracers = (/"O3"/)
+  sm_tracers = (/"o3"/)
+  ;tracers = (/"CH3OH","CO","O3","PM25"/)
   ;tracers = (/"BIGALD", "BIGALK", "BIGENE", "C10H16", "C2H2", "C2H4", "C2H5OH", \
   ;            "C2H6", "C3H6", "C3H8", "CB1", "CB2", "CH2O", "CH3CHO", "CH3CN", \
   ;            "CH3COCH3", "CH3COCHO", "CH3COOH", "CH3OH", "CO", "CO2", "CRESOL", \
@@ -54,10 +54,21 @@ do t = 0, dimsizes(tracers)-1
   ; -------------------------------
   ; files and path setup
   ; -------------------------------
-   runtype = "gfasBBCO"
-   dir_in = "/glade2/work/buchholz/CAM_chem_output/fire_uncert/"+runtype+"/"
-   outpath = dir_in
-   e_file_in = systemfunc ("ls "+dir_in + "*1deg_*2014.nc")
+   ;runtype = "qfedBB"
+   ;dir_in = "/glade/work/buchholz/CAM_chem_output/fire_uncert/"+runtype+"/"
+   ;outpath = dir_in
+   ;e_file_in = systemfunc ("ls "+dir_in + "*1deg_*2014.nc")
+
+   runtype = "noanth"
+   dir_in = "/glade/scratch/tasullivan/archive/noanth/atm/hist/"
+   outpath = "/glade/work/buchholz/CAM_chem_output/tsp_fire_2018/"
+   e_file_in = systemfunc ("ls "+dir_in + "*h1*2018*-10800.nc")
+
+;/glade/scratch/tasullivan/archive/nofire
+;/glade/scratch/tasullivan/archive/noanth
+;/glade/scratch/tasullivan/archive/controlcomp
+   print(e_file_in)
+
 
   ; -------------------------------
   ; toggles
@@ -80,7 +91,7 @@ do t = 0, dimsizes(tracers)-1
   ; names of data structures
   ; "anthro", "bb", "ocean"
   ; -------------------------------
-    tracer           = "CO"
+    tracer           = "O3"
 
   ; -------------------------------
   ; constants
@@ -116,9 +127,13 @@ do t = 0, dimsizes(tracers)-1
         lat = tofloat(tracer_in&lat)
         lon = tofloat(tracer_in&lon)
 
+
       yyyymmdd := cd_calendar(time,-2)
        yyyymmdd!0 = "time"
        yyyymmdd&time = time
+      yyyymmddhh := cd_calendar(time,-3)
+       yyyymmddhh!0 = "time"
+       yyyymmddhh&time = time
       date = cd_calendar(time,0)
       yyyy = tointeger(date(:,0))
       mm = tointeger(date(:,1))
@@ -202,6 +217,7 @@ print(max(tcol_all(0,:,0)))
       wgt!1 = "lon"
       wgt&lon = lon
 
+     ; AVERAGE over the region
      globsum  = wgt_areaave2(tcol_all,wgt,0)  ; g -> Tg
        globsum@units = "molec/cm^2"
        globsum!0 = "time"
@@ -250,29 +266,45 @@ print(max(tcol_all(0,:,0)))
 
   ;********************************************
   ; Extract regional timeseries
-   region_names = (/"Maritime SEA", "Australasia", \
-                    "Southern Africa", "South America",\
-                    "Siberia", "North America" /)
+  ; region_names = (/"Maritime SEA", "Australasia", \
+  ;                  "Southern Africa", "South America",\
+  ;                  "Siberia", "North America" /)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
-                     (/-50., -10.,     110.,     180./),\ ;Australasia
-                     (/-40.,   5.,       0.,      60./),\ ;SAfrica
-                     (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
-                     (/ 50.,  85.,      91.,     190./),\ ;Siberia
-                     (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+  ; region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+  ;                   (/-50., -10.,     110.,     180./),\ ;Australasia
+  ;                   (/-40.,   5.,       0.,      60./),\ ;SAfrica
+  ;                   (/-60.,   4., 360.-80., 360.-40./),\ ;SAmerica
+  ;                   (/ 50.,  85.,      91.,     190./),\ ;Siberia
+  ;                   (/ 25.,  70.,360.-170.,360.-53./) /) ;NAmerica
+
+  ; region_names = (/"PNW", "CentralUSA", "EastUSA"/)
+
+   ;                       minlat, maxlat, minlon, maxlon
+  ; region_select = (/(/ 38.,     60.,     360.-130.,   360.-110./),\ ;PNW
+  ;                   (/ 35.,     49.,     360.-110.,   360. -95./),\  ;Central Mountain USA
+  ;                   (/ 32.5,    42.,     360. -95.,   360. -75./) /) ;East USA
+
+   region_names = (/"Colorado", "PNW"/)
+  ;                   minlat, maxlat, minlon, maxlon
+   region_select = (/(/37.,    41.,    251.,    258./),\ ;Colorado
+                     (/32.5,   60,     227.5,   251./)/) ;PNW
 
      ; -------------------------------
      ; sums
      ; -------------------------------
      regsum = new((/dimsizes(region_names), dimsizes(yyyymmdd)/), float)
+     regsum_surf = new((/dimsizes(region_names), dimsizes(yyyymmdd)/), float)
      ; overwrite -89.999 and 89.999 so subset works correctly.
       wgt&lat = lat
      do r = 0, dimsizes(region_names)-1
        tracer_region := tcol_all(:,{region_select(r,0):region_select(r,1)},\
                                     {region_select(r,2):region_select(r,3)})
+       tracer_surf:= tracer_in(:,55,{region_select(r,0):region_select(r,1)},\
+                                    {region_select(r,2):region_select(r,3)})
        wgt_region := wgt({region_select(r,0):region_select(r,1)},\
                          {region_select(r,2):region_select(r,3)})
        regsum(r,:)= wgt_areaave2(tracer_region,wgt_region,0)
+       regsum_surf(r,:)= wgt_areaave2(tracer_surf,wgt_region,0)
      end do
 
        regsum@units = "molec/cm^2"
@@ -280,6 +312,12 @@ print(max(tcol_all(0,:,0)))
        regsum&region = region_names
        regsum!1 = "time"
        regsum&time = time
+
+       regsum_surf@units = "mol/mol"
+       regsum_surf!0 = "region"
+       regsum_surf&region = region_names
+       regsum_surf!1 = "time"
+       regsum_surf&time = time
 
        ;printVarSummary(regsum)
 
@@ -327,12 +365,14 @@ if (NETCDF) then
       ; Variables
       ;------------
        ;--- date
-         fout->date             = yyyymmdd
+         fout->date             = yyyymmddhh
 
       do n = 0, dimsizes(region_names)-1
          bb_name = "total_column_"+n
+         bb_name_surf = "surface_"+n
        ;--- emissions
          fout->$bb_name$             = regsum(n, :)
+         fout->$bb_name_surf$        = regsum_surf(n, :)
       end do
 
     end if ;NetCDF

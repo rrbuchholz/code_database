@@ -26,16 +26,16 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "C2H6"
+  tracer = "CO"
   year = 2014
-  repository = "QFED"
+  repository = "CMIP6"
   timeslice = ""
 
   ; -------------------------------
   ; emission files
   ; -------------------------------
   ;e_file_1 = "/data14b/buchholz/qfed/cam_1.9x2.5/2012/qfed.emis_"+tracer+"_1.9x2.5_mol_2012.nc"
-  e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/2014/qfed.emis_"+tracer+"_0.9x1.25_mol_2014.nc"
+  ;e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/v2.5/2014/qfed.emis_"+tracer+"_0.9x1.25_mol_2014.nc"
   ;e_file_1 = "/data14b/buchholz/qfed/cam_0.9x1.25/regridded/allyears/qfed.emis_"+tracer+"_0.9x1.25_mol_2014_2016.nc"
   ;e_file_1 = "/data14b/buchholz/gfas/cam_0.9x1.25/from_co2/2014/gfas.emis_fromgrib_"+tracer+"_0.9x1.25_mol_2014new.nc"
 
@@ -47,16 +47,18 @@ begin
 
 ;CHEYENNE
 ;QFED & GFAS
-   ;emis_dir = "/glade/p/work/buchholz/"
-    ;emis_dir = "/glade/p/work/buchholz/emis/qfed2.5_finn_2000_2018_1x1/"
-    ;emis_dir = "/glade/p/work/buchholz/emis/gfas_finn_2014_2017_1x1/"
+   ;emis_dir = "/glade/work/buchholz/"
+    ;emis_dir = "/glade/work/buchholz/emis/qfed2.5_finn_2000_2018_1x1/"
+    ;emis_dir = "/glade/work/buchholz/emis/gfas_finn_2014_2017_1x1/"
     ;e_file_1 = systemfunc("ls "+emis_dir+"*"+tracer+"_*.nc")
 ;FINN
-   ;emis_dir = "/glade/p/work/emmons/emis/finn1.6/cesm_format/"
+   ;emis_dir = "/glade/work/emmons/emis/finn1.6/cesm_format/"
    ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_2017*.nc")
-   ;emis_dir = "/glade/p/work/emmons/emis/finn1.6_v20180630/"
-   ;emis_dir = "/glade/p/work/emmons/emis/finn1.5/2002_2017_1deg/"
+   ;emis_dir = "/glade/work/emmons/emis/finn1.6_v20180630/"
+   ;emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
    ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
+;CMIP
+  e_file_1 = systemfunc ("ls /glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/emissions-cmip6_CO_bb_surface_1750-2015_0.9x1.25_c20170322.nc")
 
 print(e_file_1)
 
@@ -238,7 +240,8 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
     ;-------------------
     mapres = True
     mapres@tiMainString              = ""                  ; changing main large title
-    mapres@gsnLeftString             = ""                  ; change left 
+  ;  mapres@gsnLeftString             = ""                  ; change left 
+    mapres@gsnLeftString             = repository
   ;  mapres@gsnRightString            = emiss_diff@units    ; change right title
     mapres@gsnRightString            = ""                   ; change right title
     mapres@gsnFrame                  = False               ; do not advance frame
@@ -269,9 +272,9 @@ emiss_tg = where(ismissing(emiss_tg),0,emiss_tg)
       ;mapres@cnMaxLevelValF          = 5e11                ; set the maximum contour level
       ;mapres@cnLevelSpacingF         = 5e10                ; set the interval between contours
 
-      ;mapres@cnMinLevelValF          = 0.                 ; set the minimum contour level
-      ;mapres@cnMaxLevelValF          = 0.2               ; set the maximum contour level
-      ;mapres@cnLevelSpacingF         = 0.01               ; set the interval between contours
+      mapres@cnMinLevelValF          = 0.                 ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 0.2               ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 0.01               ; set the interval between contours
 
 
     ;-------------------

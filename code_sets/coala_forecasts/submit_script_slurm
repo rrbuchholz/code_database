@@ -46,7 +46,7 @@ setenv NCARG_COLORMAPS /glade/u/home/buchholz/code_database/code_sets/coala_fore
 ###  set files = "KORUS_forecast_3inst.cam_0001.h1."
 
 ### Shawn's WACCM forecast
-  set folder_base = "/glade/scratch/shawnh/GEOS5_frcst_data"
+  set folder_base = "/glade/scratch/shawnh/GEOS5_frcst_data_Beta/"
 ### Set date
   set current_date = `date +%Y-%m-%d`
   set forecast_date = `date +%Y%m%d`

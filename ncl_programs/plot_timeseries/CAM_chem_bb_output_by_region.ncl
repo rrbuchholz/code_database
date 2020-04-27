@@ -20,10 +20,10 @@ begin
 ; =========================================
 ; USER DEFINED
 ; =========================================
-  tracer = "CO"
+  tracer = "O3"
   reso = "0.9x1.25"
-  ystart = 2014
-  yend = 2015
+  ystart = 2018
+  yend = 2019
   
   PLOT = True
     plottype = "x11"
@@ -33,40 +33,56 @@ begin
       ;plottype@wkPaperHeightF = 20  ;for pdf
     plotname = "~/BB_tcol_all_uncert"
 
-uncert1 = True
-uncert2 = True
+uncert1 = False
+uncert2 = False
 
 ; =========================================
 ; SET UP
 ; =========================================
 
   ;order = (/"QFED x CO", "QFED x CO2", "QFED", "FINN"/)
-  order = (/ "qfed", "finn", "gfas"/)
+  ;order = (/ "qfed", "finn", "gfas"/)
   ; -------------------------------
   ; emission files
   ; -------------------------------
-   top_dir = "/glade/work/buchholz/CAM_chem_output/fire_uncert/"
-   e_file_in = (/ ;"cmip/cmip_CO_regional_2014.nc",\
-                   "qfedBBCO/qfedBBCO_CO_regional_2014.nc",\
-                   "finnBBCO/finnBBCO_CO_regional_2014.nc",\
-                   "gfasBBCO/gfasBBCO_CO_regional_2014.nc",\
-                   "qfedBBCOmin/qfedBBCOmin_CO_regional_2014.nc",\
-                   "qfedBBCOmax/qfedBBCOmax_CO_regional_2014.nc",\ 
-                   "qfedBB/qfedBB_CO_regional_2014.nc",\
-                   "qfedBBmin/qfedBBmin_CO_regional_2014.nc",\
-                   "qfedBBmax/qfedBBmax_CO_regional_2014.nc"/)
-                 ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\/)  
-print(top_dir+e_file_in(0))
+  ; top_dir = "/glade/work/buchholz/CAM_chem_output/fire_uncert/"
+  ; e_file_in = (/ ;"cmip/cmip_CO_regional_2014.nc",\
+  ;                 "qfedBBCO/qfedBBCO_CO_regional_2014.nc",\
+  ;                 "finnBBCO/finnBBCO_CO_regional_2014.nc",\
+  ;                 "gfasBBCO/gfasBBCO_CO_regional_2014.nc",\
+  ;                 "qfedBBCOmin/qfedBBCOmin_CO_regional_2014.nc",\
+  ;                 "qfedBBCOmax/qfedBBCOmax_CO_regional_2014.nc",\ 
+  ;                 "qfedBB/qfedBB_CO_regional_2014.nc",\
+  ;                 "qfedBBmin/qfedBBmin_CO_regional_2014.nc",\
+  ;                 "qfedBBmax/qfedBBmax_CO_regional_2014.nc"/)
+  ;               ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\/) 
+
+  order = (/ "ctrl", "no fire", "no anth"/)
+   top_dir = "/glade/work/buchholz/CAM_chem_output/tsp_fire_2018/"
+   e_file_in = (/  "ctrl_O3_regional_2018.nc",\
+                   "nofire_O3_regional_2018.nc",\
+                   "noanth_O3_regional_2018.nc"/)
+                 ;qfed_dir+"regridded/region_sums/qfed.emis_"+tracer+"_Tg_regional_2016.nc",\/) 
+
+;/glade/work/buchholz/CAM_chem_output/tsp_fire_2018/ 
+;print(top_dir+e_file_in(0))
   ; -------------------------------
   ; data names (from ncl_filedump)
   ; here they specify different regions
   ; -------------------------------
-   emiss1           = "total_column_0"
-   emiss2           = "total_column_1"
-   emiss3           = "total_column_2"
-   emiss4           = "total_column_3"
-   emiss5           = "total_column_4"
-   emiss6           = "total_column_5"
+  ; emiss1           = "total_column_0"
+  ; emiss2           = "total_column_1"
+  ; emiss3           = "total_column_0"
+  ; emiss4           = "total_column_1"
+  ; emiss5           = "total_column_0"
+  ; emiss6           = "total_column_1"
+
+   emiss1           = "surface_0"
+   emiss2           = "surface_1"
+   emiss3           = "surface_0"
+   emiss4           = "surface_1"
+   emiss5           = "surface_0"
+   emiss6           = "surface_1"
 
    ;region_names = (/"Maritime SEA", "Australasia", \
    ;                 "Southern Africa", "South America",\
@@ -90,6 +106,7 @@ print(top_dir+e_file_in(0))
    emiss_in4 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in5 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
    emiss_in6 = new((/dimsizes(e_file_in),dimsizes(time)/), float)
+
 
   ; collect each file
   do i=0,dimsizes(e_file_in)-1
@@ -148,12 +165,15 @@ printVarSummary(emiss_in1)
    time_weekly_avg@units = time@units
  yfrac2 = tofloat(cd_calendar(time_weekly_avg,4))
 
- emiss1_weekly_avg = dim_avg_n(emiss1_4d,2)/1e18
- emiss2_weekly_avg = dim_avg_n(emiss2_4d,2)/1e18
- emiss3_weekly_avg = dim_avg_n(emiss3_4d,2)/1e18
- emiss4_weekly_avg = dim_avg_n(emiss4_4d,2)/1e18
- emiss5_weekly_avg = dim_avg_n(emiss5_4d,2)/1e18
- emiss6_weekly_avg = dim_avg_n(emiss6_4d,2)/1e18
+ emiss1_weekly_avg = dim_avg_n(emiss1_4d,2)/1e-09
+ emiss2_weekly_avg = dim_avg_n(emiss2_4d,2)/1e-09
+ emiss3_weekly_avg = dim_avg_n(emiss3_4d,2)/1e-09
+ emiss4_weekly_avg = dim_avg_n(emiss4_4d,2)/1e-09
+ emiss5_weekly_avg = dim_avg_n(emiss5_4d,2)/1e-09
+ emiss6_weekly_avg = dim_avg_n(emiss6_4d,2)/1e-09
+
+print(emiss_in1)
+
 
 
 ; =========================================
@@ -183,12 +203,14 @@ if (PLOT) then
       res@pmLegendOrthogonalPosF   = -1.1
       res@pmLegendParallelPosF     = 0.3
 
-   res@tmXBMode         = "Explicit"
-   res@tmXBValues       = (/2014.,2014.5,2015./)
-   res@tmXBLabels       = (/"201401","201406","201501"/)
+   ;res@tmXBMode         = "Explicit"
+   ;res@tmXBValues       = (/2014.,2014.5,2015./)
+   ;res@tmXBLabels       = (/"201401","201406","201501"/)
    res@tmXBLabelFontHeightF = 0.030
    res@tmYLLabelFontHeightF = 0.030
 
+    res@trYMinF             = 0.
+    res@trYMaxF             = 100.
 
 
   ;--------------------------
@@ -204,17 +226,17 @@ if (PLOT) then
   ; daily
    res@xyExplicitLegendLabels   = "daily " + order
     res@pmLegendOrthogonalPosF   = -1.8
-   res@trYMaxF          = 2.1
-  plot1  = gsn_csm_xy(wks,yfrac,emiss_in1(0:2,:)/1e18,res) ; create plot
+   res@trYMaxF          = 80
+  plot1  = gsn_csm_xy(wks,yfrac,emiss_in1(0:2,:)/1e-09,res) ; create plot
   res@pmLegendDisplayMode      = "Never"        ; turn on legend
-   res@trYMaxF          = 1.7
-  plot2  = gsn_csm_xy(wks,yfrac,emiss_in2(0:2,:)/1e18,res) ; create plot
-   res@trYMaxF          = 2.0
-  plot3  = gsn_csm_xy(wks,yfrac,emiss_in3(0:2,:)/1e18,res) ; create plot
-  plot4  = gsn_csm_xy(wks,yfrac,emiss_in4(0:2,:)/1e18,res) ; create plot
-   res@trYMaxF          = 2.1
-  plot5  = gsn_csm_xy(wks,yfrac,emiss_in5(0:2,:)/1e18,res) ; create plot
-  plot6  = gsn_csm_xy(wks,yfrac,emiss_in6(0:2,:)/1e18,res) ; create plot
+   res@trYMaxF          = 80
+  plot2  = gsn_csm_xy(wks,yfrac,emiss_in2(0:2,:)/1e-09,res) ; create plot
+   ;res@trYMaxF          = 2.0
+  plot3  = gsn_csm_xy(wks,yfrac,emiss_in3(0:2,:)/1e-09,res) ; create plot
+  plot4  = gsn_csm_xy(wks,yfrac,emiss_in4(0:2,:)/1e-09,res) ; create plot
+   ;res@trYMaxF          = 2.1
+  plot5  = gsn_csm_xy(wks,yfrac,emiss_in5(0:2,:)/1e-09,res) ; create plot
+  plot6  = gsn_csm_xy(wks,yfrac,emiss_in6(0:2,:)/1e-09,res) ; create plot
 
    res@xyMarkLineModes  := "Lines"                               ; choose which have markers
     res@xyLineThicknessF  = 10
@@ -455,8 +477,8 @@ end if
       panel_res@gsnPanelFigureStrings = (/emiss_in1@region, emiss_in2@region, emiss_in3@region, emiss_in4@region,emiss_in5@region,emiss_in6@region/)
       panel_res@gsnPanelFigureStringsJust = "TopLeft"
 
-    gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
-
+    ;gsn_panel(wks,(/plot1,plot2,plot3,plot4,plot5,plot6/),(/2,3/),panel_res)
+    gsn_panel(wks,(/plot1,plot2/),(/1,2/),panel_res)
 
 end if
 
