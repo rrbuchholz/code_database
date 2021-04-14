@@ -76,6 +76,11 @@ try:
 except ModuleNotFoundError:
     print("9. Could not import pyhdf")
 
+try:
+    import h5py
+    print("Imported h5py")
+except ModuleNotFoundError:
+    print("10. Could not import h5py")
 
 
 

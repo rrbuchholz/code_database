@@ -52,9 +52,11 @@ uncert2 = True
                   top_dir + "cmip.qfedBBCO_CO_regional_2014.nc",\
                   top_dir + "cmip.qfedBBCOmin_CO_regional_2014.nc",\
                   top_dir + "cmip.qfedBBCOmax_CO_regional_2014.nc",\ 
-                  top_dir + "cmip.qfedBB_CO_regional_2014.nc",\
-                  top_dir + "cmip.qfedBBmin_CO_regional_2014.nc",\
-                  top_dir + "cmip.qfedBBmax_CO_regional_2014.nc"/)
+                  top_dir + "cmip.qfedBB_32L_CO_regional_2014.nc",\
+                  top_dir + "cmip.qfedBBminCO_32L_CO_regional_2014.nc",\
+                  top_dir + "cmip.qfedBBmaxCO_32L_CO_regional_2014.nc",\
+                  top_dir + "cmip.qfedBBmin_32L_CO_regional_2014.nc",\
+                  top_dir + "cmip.qfedBBmax_32L_CO_regional_2014.nc"/)
 
 print(e_file_in)
 
@@ -115,6 +117,14 @@ printVarSummary(tracer_array_4d)
 
 printVarSummary(yfrac2)
 printVarSummary(tracer_array_weekly_avg)
+
+printVarSummary(tracer_array)
+yyyymm = cd_calendar(time,1)
+split_time = str_split_by_length(tostring(yyyymm), 4)
+month_val = toint(split_time(:,1))
+ind_select = ind(month_val.ge.7.and.month_val.le.9)
+rel_diff = dim_avg_n((tracer_array(:,0,ind_select)-tracer_array(:,6,ind_select))/tracer_array(:,6,ind_select),1)
+print(region_names + ": " +rel_diff)
 
 
 ; =========================================
@@ -225,9 +235,15 @@ if (PLOT) then
          yb1(2*dimsizes(yfrac2)-1-k) = tracer_array_weekly_avg(t,8,k)/1e18
          ya1(2*dimsizes(yfrac2)-1-k) = yfrac2(k)
        end do
-        gsres                          = True                ; poly res
-        gsres@gsFillColor            = "gray40"                ; color chosen
-        gsres@gsFillOpacityF         = 0.4                 
+      
+       ya2    = new( (/2*dimsizes(yfrac2)/), float )
+       yb2    = new( (/2*dimsizes(yfrac2)/), float )
+       do k=0,dimsizes(yfrac2)-1
+         ya2(k) = yfrac2(k)
+         yb2(k) = tracer_array_weekly_avg(t,9,k)/1e18
+         yb2(2*dimsizes(yfrac2)-1-k) = tracer_array_weekly_avg(t,10,k)/1e18
+         ya2(2*dimsizes(yfrac2)-1-k) = yfrac2(k)
+       end do          
 
       ; new base
       resVOC=res
@@ -238,17 +254,28 @@ if (PLOT) then
         resVOC@pmLegendParallelPosF   = 0.46
       plot_array_v(t)  = gsn_csm_xy(wks,yfrac2,tracer_array_weekly_avg(t,6,:)/1e18,resVOC) ; create plot
 
-        error_bar2 = gsn_add_polygon(wks,plot_array(t),ya1,yb1,gsres)
-        str2 = unique_string("error_bar2")
+        gsres                          = True                ; poly res
+        gsres@gsFillColor            = "gray10"                ; color chosen
+        gsres@gsFillOpacityF         = 0.4   
+        error_bar2 = gsn_add_polygon(wks,plot_array_v(t),ya1,yb1,gsres)
+
+        gsres                          = True                ; poly res
+        gsres@gsFillColor            = "gray50"                ; color chosen
+        gsres@gsFillOpacityF         = 0.4   
+        error_bar3 = gsn_add_polygon(wks,plot_array_v(t),ya2,yb2,gsres)
+
+        ;str2 = unique_string("err2")
+        str3 = unique_string("err3")
         dummy2_plot := plot_array(t)
-        dummy2_plot@$str2$ = error_bar2  
+        ;dummy2_plot@$str2$ = error_bar2  
+        dummy2_plot@$str3$ = error_bar3 
+
         plot_array(t) = dummy2_plot
 
       overlay(plot_array(t),plot_array_v(t))
 
     end if
    end do
-
 
 
   panel_res                       = True
@@ -259,11 +286,10 @@ if (PLOT) then
       panel_res@gsnMaximize = True
       panel_res@gsnPanelBottom = 0.045 
 
-    gsn_panel(wks,plot_array,(/4,4/),panel_res)  ; plots
+    ;gsn_panel(wks,plot_array,(/4,4/),panel_res)  ; plots
 
-
-  ;draw(plot_array(1))
-  ;frame(wks)
+  draw(plot_array(2))
+  frame(wks)
 
 end if
 

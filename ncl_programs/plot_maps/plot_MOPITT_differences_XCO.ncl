@@ -30,7 +30,9 @@ begin
 ;***************************************************************
     version = "V8J"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITTV8J_AS2002_2019.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITTV8J_DJ2002_2019.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_Nov_2002_2017.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
@@ -51,8 +53,12 @@ begin
    end if
 
    DIFF = True
-     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200802_Febdiff.nc"
-     diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201402_Febdiff.nc"
+     ;diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200802_Febdiff.nc"
+     ;diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201402_Febdiff.nc"
+     ;diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/DJV8J_diff.nc.nc"
+     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/ASV8J_diff.nc.nc"
+     ;diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/AugSep_V8J_PNWfire.nc"
+     diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/DecJan_V8J_Ausfire.nc"
 
 ;***************************************************************
 ; End User Input
@@ -77,16 +83,21 @@ begin
   fin = addfile(mopitt_file, "r")             ; load
 
   data = fin->$mopitt_tracer$      ; extract total column data (:,:)
+    data!0 = "lon"
+    data!1 = "lat"
   sat_psurf = fin->$"SurfacePressureDay"$        ; extract surface pressure (:,:)
+  dry_air = fin->$"DryAirColumnDay"$        ; extract surface pressure (:,:)
+    dry_air!0 = "lon"
+    dry_air!1 = "lat"
   latitude = fin->$"Latitude"$
   longitude = fin->$"Longitude"$
+
 
   ; -------------------------------
   ; rename coordinate variables
   ; -------------------------------
-  data!0 = "lon"
-  data!1 = "lat"
-  tracer = data(lat|:, lon|:)             ; reorder - NCL needs lon as rightmost coordinate
+
+  tracer = data(lat|:, lon|:)/dry_air(lat|:, lon|:)         ; reorder - NCL needs lon as rightmost coordinate
 
   sat_psurf!0 = "lon"
   sat_psurf!1 = "lat"
@@ -121,13 +132,19 @@ begin
 
   diff2_fin = addfile(diff_file2, "r")             ; load
   diff2_data = diff2_fin->$mopitt_tracer$      ; extract total column data (:,:)
+  dry_air2 = diff2_fin->$"DryAirColumnDay"$        ; extract dry air column
 
   diff2_data!0 = "lon"
   diff2_data!1 = "lat"
-  diff2_tracer = diff2_data(lat|:, lon|:)             ; reorder - NCL needs lon as rightmost coordinate
+  dry_air2!0 = "lon"
+  dry_air2!1 = "lat"
+  diff2_tracer = diff2_data(lat|:, lon|:)/dry_air2(lat|:, lon|:)          ; reorder - NCL needs lon as rightmost coordinate
 
 
 end if
+
+relative_diff = ((diff2_tracer - tracer)/tracer)*100
+copy_VarCoords(tracer,relative_diff)
 
 
 ;--------------------------------------------
@@ -168,12 +185,15 @@ end if
 
     mapres@lbTitleFontHeightF       = 0.022
     mapres@lbLabelFontHeightF       = 0.022
+    mapres@lbTitleFontHeightF       = 0.018
+    mapres@lbLabelFontHeightF       = 0.018
     mapres@lbTitlePosition          = "bottom"      ; Label Bar title
-    mapres@lbOrientation             = "Horizontal"     ; Label bar location
+    mapres@lbOrientation             = "Vertical"     ; Label bar location
     mapres@lbLabelAutoStride         = True
     mapres@lbBoxLinesOn              = False
-    mapres@lbBoxEndCapStyle           = "TriangleBothEnds"
-    mapres@pmLabelBarOrthogonalPosF  = .12            ; move whole thing down
+    mapres@lbBoxEndCapStyle          = "TriangleBothEnds"
+    mapres@pmLabelBarOrthogonalPosF  = .04            ; move whole thing down
+    ;mapres@pmLabelBarParallelPosF    = .8
 
     mapres@gsnStringFontHeightF        =0.022
     mapres@tmXBLabelFontHeightF        =0.022
@@ -186,10 +206,10 @@ end if
     mapres@cnMissingValPerimThicknessF  = 2.0      ; increase missing value perimeter thickness
 
     mapres@mpLimitMode               ="LatLon"
-    ;  mapres@mpMinLatF               = 15       ; zoom to USA
-    ;  mapres@mpMaxLatF               = 80
-    ;  mapres@mpMinLonF               = -180
-    ;  mapres@mpMaxLonF               = -50
+     ; mapres@mpMinLatF               = 5      ; zoom to USA
+     ; mapres@mpMaxLatF               = 60
+     ; mapres@mpMinLonF               = -140
+     ; mapres@mpMaxLonF               = -50
       ;-------------------------------------
      ; mapres@mpMinLatF               = -70       ; zoom to SH
      ; mapres@mpMaxLatF               = 15
@@ -203,11 +223,15 @@ end if
      ; mapres@mpMaxLonF               = 200
      ; mapres@mpCenterLonF            = 70
       ;-------------------------------------
+     ; mapres@mpMinLatF               = -85       ; zoom to +/- 80
+     ; mapres@mpMaxLatF               = 85
+     ; mapres@mpMinLonF               = -120
+     ; mapres@mpMaxLonF               = 185
+     ; mapres@mpCenterLonF            = 0
+      ;-------------------------------------
       mapres@mpMinLatF               = -85       ; zoom to +/- 80
-      mapres@mpMaxLatF               = 85
-      mapres@mpMinLonF               = -170
-      mapres@mpMaxLonF               = 185
-      mapres@mpCenterLonF            = 0
+      mapres@mpMaxLatF               = 65
+      mapres@mpCenterLonF            = -120
       ;-------------------------------------
       ;mapres@mpMinLatF               = -60       ; zoom to MSEA
       ;mapres@mpMaxLatF               = 40
@@ -222,29 +246,32 @@ end if
     ; ===================
     ; CO plot
     ; ===================
-    mapres@lbTitleString             = "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
     mapres@gsnRightString            = ""               ; change right title
-    mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    labels = fspan(0.9e18,2.5e18, 33)
-    print(labels)
-    labels_strings = (/"0.9","0.95","1.0","1.05","1.1","1.15","1.2","1.25","1.3","1.35",\
-                       "1.4","1.45","1.5","1.55","1.6","1.65","1.7","1.75","1.8","1.85",\
-                       "1.9","1.95","2.0","2.05","2.1","2.15","2.2","2.25","2.3","2.35",\
-                       "2.4","2.45","2.5" /); "2.6","2.7","2.8","2.9",\
+    ;mapres@cnLevelSelectionMode      = "ExplicitLevels"
+    ;labels = fspan(0.9e18,2.5e18, 33)
+    ;labels = fspan(0.9,2.5, 33)
+    ;print(labels)
+    ;labels_strings = (/"0.9","0.95","1.0","1.05","1.1","1.15","1.2","1.25","1.3","1.35",\
+    ;                   "1.4","1.45","1.5","1.55","1.6","1.65","1.7","1.75","1.8","1.85",\
+    ;                   "1.9","1.95","2.0","2.05","2.1","2.15","2.2","2.25","2.3","2.35",\
+    ;                   "2.4","2.45","2.5" /); "2.6","2.7","2.8","2.9",\
     ;                   "3.0"/)
-    mapres@cnLevels                  = labels
-    mapres@lbLabelStrings            = labels_strings
-    ;mapres@cnLevelSelectionMode      = "ManualLevels"
+    ;mapres@cnLevels                  = labels
+    ;mapres@lbLabelStrings            = labels_strings
+    mapres@cnLevelSelectionMode      = "ManualLevels"
      ;tcol
     ;  mapres@cnMinLevelValF          = 1e18          ; set the minimum contour level
     ;  mapres@cnMaxLevelValF          = 2.8e18           ; set the maximum contour level
     ;  mapres@cnLevelSpacingF         = 0.1e18          ; set the interval between contours
+    ;mapres@lbTitleString             = "x 10~S2~18   molec cm~S2~-2"             ; Label Bar title
       ;vmr
-    ;  mapres@cnMinLevelValF          = 50.          ; set the minimum contour level
-    ;  mapres@cnMaxLevelValF          = 220.         ; set the maximum contour level
-    ;  mapres@cnLevelSpacingF         = 5.          ; set the interval between contours
+      mapres@cnMinLevelValF          = 20.          ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 140.         ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 4.          ; set the interval between contours
+    mapres@lbTitleString             = "X~B2~CO     ppb"             ; Label Bar title
 
-    map = gsn_csm_contour_map_ce(wks,tracer(::-1,:),mapres)
+    ;map = gsn_csm_contour_map_ce(wks,tracer(::-1,:),mapres)
+    map = gsn_csm_contour_map_ce(wks,tracer/1e-09,mapres)
 
 
     ; ===================
@@ -257,14 +284,14 @@ end if
     ;                   "15","17.5","20","22.5","25",\
     ;                   "27.5","30","32.5","35","37.5","40"/)
     mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    labels := fspan(0.0e17,8.0e17, 17)
-print(labels) 
-    labels_strings := (/"0", "0.5", "1.0","1.5","2.0","2.5",\
-                       "3.0","3.5","4.0","4.5","5.0",\
-                       "5.5","6.0","6.5","7.0","7.5","8.0"/)
-    print(labels)
-    mapres@cnLevels                  := labels
-    mapres@lbLabelStrings            := labels_strings
+    ;labels := fspan(0.0e17,8.0e17, 17)
+;print(labels) 
+    ;labels_strings := (/"0", "0.5", "1.0","1.5","2.0","2.5",\
+    ;                   "3.0","3.5","4.0","4.5","5.0",\
+    ;                   "5.5","6.0","6.5","7.0","7.5","8.0"/)
+    ;print(labels)
+    ;mapres@cnLevels                  := labels
+    ;mapres@lbLabelStrings            := labels_strings
      ;tcol
     ;mapres@cnLevelSelectionMode      = "ManualLevels"
      ; mapres@cnMinLevelValF          = 0.2e17   ; set the minimum contour level
@@ -282,42 +309,52 @@ print(labels)
     ; ===================
     ; Difference plot
     ; ===================
-    cmap = read_colormap_file("BlWhRe")
+    ;cmap = read_colormap_file("BlWhRe")
+    cmap = read_colormap_file("BlueWhiteOrangeRed")
+
+    mapres@cnFillPalette       = cmap
+
 printVarSummary(cmap)
     ;colour_arr := (/cmap(40,:),cmap(48,:),cmap(50,:),cmap(50,:),cmap(51,:),cmap(52,:),\
     ;            cmap(54,:), cmap(56,:),cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
     ;             cmap(85,:),cmap(90,:),cmap(95,:),cmap(100,:)/)
-    colour_arr := (/cmap(40,:),cmap(48,:),cmap(49,:),cmap(51,:),cmap(52,:),\
+    colour_arr := (/cmap(32,:),cmap(40,:),cmap(48,:),cmap(49,:),cmap(51,:),cmap(52,:),\
                  cmap(54,:), cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
-                 cmap(85,:),cmap(95,:),cmap(100,:)/)
+                 cmap(95,:),cmap(100,:)/)
 
-    mapres@cnFillPalette       = colour_arr
-    mapres@cnLevelSelectionMode      = "ExplicitLevels"
-    mapres@lbTitleString             = "SD"             ; Label Bar title
-    mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
-    labels := fspan(-2.0e17,8.0e17, 11)
-print(labels)
-    labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
-                       "3.0","4.0","5.0","6.0","7.0","8.0"/)
+    ;mapres@cnFillPalette       = colour_arr
+    ;mapres@cnLevelSelectionMode      = "ExplicitLevels"
+    ;mapres@lbTitleString             = "SD"             ; Label Bar title
+    ;mapres@lbTitleString             := "x 10~S2~17   molec cm~S2~-2"             ; Label Bar title
+    ;labels := fspan(-2.0e17,8.0e17, 11)
+;print(labels)
+    ;labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
+    ;                   "3.0","4.0","5.0","6.0","7.0","8.0"/)
+    ;mapres@cnLevelSelectionMode      = "ExplicitLevels"
+    ;labels := fspan(-30.,70., 11)
+;print(labels)
+    ;labels_strings := (/"-30","-20","-100","0", "10.","20.",\
+    ;                   "30.","40.","50.","60.","70."/)
+    mapres@lbTitleString             := "% difference"             ; Label Bar title
 
     ;labels_strings := (/"-2.0","-1.0","0", "1.0","2.0",\
     ;                   "3.0","4.0","5.0","6.0","7.0","8.0",\
     ;                   "9.0","10.0","11.0","12.0","13.0"/)
-    print(labels)
-    mapres@cnLevels                  := labels
-    mapres@lbLabelStrings            := labels_strings
+    ;print(labels)
+    ;mapres@cnLevels                  := labels
+    ;mapres@lbLabelStrings            := labels_strings
      ;tcol
-    ;mapres@cnLevelSelectionMode      = "ManualLevels"
+    mapres@cnLevelSelectionMode      = "ManualLevels"
      ; mapres@cnMinLevelValF          = 0.2e17   ; set the minimum contour level
      ; mapres@cnMaxLevelValF          = 3.2e17    ; set the maximum contour level
      ; mapres@cnLevelSpacingF         = 0.25e17    ; set the interval between contours
       ;vmr
-    ;  mapres@cnMinLevelValF          = 5.          ; set the minimum contour level
-    ;  mapres@cnMaxLevelValF          = 30.         ; set the maximum contour level
-    ;  mapres@cnLevelSpacingF         = 0.5          ; set the interval between contours
+      mapres@cnMinLevelValF          = -40.          ; set the minimum contour level
+      mapres@cnMaxLevelValF          = 40.         ; set the maximum contour level
+      mapres@cnLevelSpacingF         = 2.          ; set the interval between contours
 
     map2 = gsn_csm_contour_map_ce(wks,diff_tracer(::-1,:),mapres)
-    map3 = gsn_csm_contour_map_ce(wks,diff2_tracer(::-1,:),mapres)
+    map3 = gsn_csm_contour_map_ce(wks,relative_diff,mapres)
 
     end if
 
@@ -460,9 +497,9 @@ print(labels)
       ;station_lat = (/-12.42, -34.41, -45.04/)
 
 
-      station_name = (/"Darwin"/)
-      station_lon = (/130.89/)
-      station_lat = (/-12.42/)
+      ;station_name = (/"Darwin"/)
+      ;station_lon = (/130.89/)
+      ;station_lat = (/-12.42/)
 
     ; ===================
     ; Locations
@@ -473,8 +510,8 @@ print(labels)
        pmres@gsMarkerSizeF    = 0.010
        pmres@gsMarkerColor    = "black"
 
-       gsn_polymarker(wks,map,station_lon,station_lat,pmres)
-       points = gsn_add_polymarker(wks,map,station_lon,station_lat,pmres)
+       ;gsn_polymarker(wks,map,station_lon,station_lat,pmres)
+       ;points = gsn_add_polymarker(wks,map,station_lon,station_lat,pmres)
 
     ; ===================
     ; Add locations names
@@ -486,7 +523,7 @@ print(labels)
       txres@txJust         = "TopRight"
       txres@txFontColor    = "black"
 
-      text = gsn_add_text(wks,map,station_name(0),station_lon(0)-2.5,station_lat(0)+1.0,txres)
+      ;text = gsn_add_text(wks,map,station_name(0),station_lon(0)-2.5,station_lat(0)+1.0,txres)
 
       txres@txJust         = "BottomLeft"
 
@@ -515,15 +552,19 @@ print(labels)
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStringsJust = "Bottomright"
-  panel_res@gsnPanelFigureStringsFontHeightF = 0.018
+  panel_res@gsnPanelFigureStringsJust = "Bottomleft"
+  panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True
-  panel_res@gsnPanelMainString    = "MOPITT total column CO, 2002-2017"
-  panel_res@gsnPanelMainFontHeightF = 0.024 
+  ;panel_res@gsnPanelMainString    = "MOPITT total column CO, 2002-2017"
+  panel_res@gsnPanelMainString    = ""
+  ;panel_res@gsnPanelMainFontHeightF = 0.024 
 
   if (DIFF) then
-    panel_res@gsnPanelFigureStrings = (/"Average February CO 2002-2017","Feb 2008 difference to average","Feb 2014 difference to average"/)
-    gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
+    ;panel_res@gsnPanelFigureStrings = (/"Average August-September CO 2002-2019","Aug. to Sep. 2020 difference from average","Feb 2014 difference to average"/)
+    panel_res@gsnPanelFigureStrings = (/"Average December-January CO 2002-2019","Dec. 2019 to Jan. 2020 difference from average","Feb 2014 difference to average"/)
+    ;gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
+    ;gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
+    gsn_panel(wks,(/map,map3/),(/2,1/),panel_res) ; All plots will be drawn.
   else 
     panel_res@gsnPanelFigureStrings = (/"Average CO","(b) CO Std. Dev."/)
     gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.

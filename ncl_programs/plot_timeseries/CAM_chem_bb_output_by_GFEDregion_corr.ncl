@@ -26,12 +26,12 @@ begin
   yend = 2015
   
   PLOT = True
-    plottype = "png"
+    plottype = "x11"
       plottype@wkWidth  = 1800
       plottype@wkHeight = 1800
       ;plottype@wkPaperWidthF  = 7.0 ;for pdf
       ;plottype@wkPaperHeightF = 20  ;for pdf
-    plotname = "~/BB_tcol_all_uncert"
+    plotname = "~/BB_tcol_all_corr"
 
 uncert1 = False
 uncert2 = True
@@ -46,9 +46,23 @@ uncert2 = True
   ; emission files
   ; -------------------------------
    top_dir = "/net/modeling1/data16a/buchholz/CAM_chem_output/EF_processed/"
-   e_file_in = (/ top_dir + "qfed_smoothed_CO_regional_2014.nc",\
-                  top_dir + "qfedmin_smoothed_CO_regional_2014.nc",\
-                  top_dir + "qfedmax_smoothed_CO_regional_2014.nc"/)
+   e_file_in = (/ top_dir + "cmip_smoothed_CO_regional_2014.nc",\
+                  top_dir + "finn_smoothed_CO_regional_2014.nc",\
+                  top_dir + "gfas_smoothed_CO_regional_2014.nc",\
+                  top_dir + "qfedCO_smoothed_CO_regional_2014.nc",\
+                  top_dir + "qfedBB_32L_smoothed_CO_regional_2014.nc",\
+                  top_dir + "qfedBBmin_32L_smoothed_CO_regional_2014.nc",\
+                  top_dir + "qfedBBmax_32L_smoothed_CO_regional_2014.nc"/)
+
+;qfedBB_32L_smoothed_CO_regional_2014.nc
+;qfedBBmax_32L_smoothed_CO_regional_2014.nc
+;qfedBBmin_32L_smoothed_CO_regional_2014.nc
+;qfedCO_smoothed_CO_regional_2014.nc
+;cmip_smoothed_CO_regional_2014.nc
+;finn_smoothed_CO_regional_2014.nc
+;gfas_smoothed_CO_regional_2014.nc
+
+
 
 print(e_file_in)
 
@@ -106,10 +120,10 @@ if (PLOT) then
    res@vpWidthF         = 0.8
    res@vpHeightF        = 0.8
 
-   res@trYMaxF          = 2.5
-   res@trYMinF          = 0.8
-   res@trXMaxF          = 2.5
-   res@trXMinF          = 0.8
+   res@trYMaxF          = 2.8
+   res@trYMinF          = 0.3
+   res@trXMaxF          = 2.8
+   res@trXMinF          = 0.3
 
 
    res@tiYAxisString            = "Model Column (x 10~S2~18   molec cm~S2~-2  )"
@@ -128,35 +142,39 @@ if (PLOT) then
    ;res@tmXBLabels       = (/"201401","201406","201501"/)
    ;res@tmXBLabelFontHeightF = 0.030
    ;res@tmYLLabelFontHeightF = 0.030
-
+   res@pmLegendDisplayMode      = "Never"        ; turn on legend
   ;--------------------------
   ; Do the plotting
   ;--------------------------
-   res@xyMarkLineModes  = (/"Markers", "Markers", "Markers", "Markers", "Markers", "Markers", "Markers"/)   ; choose which have markers
-    res@xyMarkers           := (/16,1,2,3,4,5,6/)               ; choose type of marker  
-    res@xyMarkerColors      := (/"black","mediumpurple4","darkgreen","red4"/)  ; Marker color
-    res@xyMarkerThicknessF  = 8
-    res@xyMarkerOpacityF    := (/0.75,0.25,0.25/)
-    res@xyMarkerSizes       := (/0.018,0.010,0.008,0.008/)    ; Marker size (default 0.01)
+   plot_array = new(dimsizes(region_names)/2,"graphic")
+   corr_array = new(dimsizes(region_names)/2,"graphic")
 
+   ; 1-1 plot
+   res@xyMarkLineModes := (/"Lines"/)   ; choose which have markers
+   res@xyLineThicknessF = 10.0
+   res@xyLineColors    := (/"grey","mediumpurple4","darkgreen","red4"/)  ; Marker color
+   do s = 0, (dimsizes(region_names)/2)-1
+     plot_array(s)  = gsn_csm_xy(wks,(/0,5/),(/0,5/),res) ; create plot
+   end do
+
+   res@xyMarkLineModes  := (/"Markers", "Markers", "Markers", "Markers", "Markers", "Markers", "Markers"/)   ; choose which have markers
+    res@xyMarkers           := (/16,16,16,16,16,16,16/)               ; choose type of marker  
+    res@xyMarkerColors      := (/"black","blue","darkgreen","red4","gray20"/)  ; Marker color
+    res@xyMarkerThicknessF  = 12
+    res@xyMarkerOpacityF    := (/0.85,0.85,0.85,0.85,0.85/)
+    res@xyMarkerSizes       := (/0.012,0.012,0.012,0.012,0.012/)    ; Marker size (default 0.01)
 
   ; correlation plot
-   res@pmLegendDisplayMode      = "Never"        ; turn on legend
+
    res@xyExplicitLegendLabels   = "daily " + order
    res@pmLegendOrthogonalPosF   = -1.8
    ;res@trYMaxF          = 2.1
-   plot_array = new(dimsizes(region_names),"graphic")
-   unity_array = new(dimsizes(region_names),"graphic")
+
    do s = 0, (dimsizes(region_names)/2)-1
-     plot_array(s)  = gsn_csm_xy(wks,meas_array(s,0,:)/1e18,tracer_array(s,0,:)/1e18,res) ; create plot
+     corr_array(s)  = gsn_csm_xy(wks,meas_array(s,0:4,:)/1e18,tracer_array(s,0:4,:)/1e18,res) ; create plot
+     overlay(plot_array(s), corr_array(s))
    end do
 
-   res@xyMarkLineModes := (/"Lines"/)   ; choose which have markers
-   res@xyLineColors    := (/"black","mediumpurple4","darkgreen","red4"/)  ; Marker color
-   do s = 0, (dimsizes(region_names)/2)-1
-     unity_array(s)  = gsn_csm_xy(wks,(/0,3/),(/0,3/),res) ; create plot
-     overlay(plot_array(s), unity_array(s))
-   end do
 
    do t = 0, (dimsizes(region_names)/2)-1
 
@@ -187,12 +205,15 @@ if (PLOT) then
     if (uncert2) then 
 
    gsres = True                                          ; add x error bars
-   gsres@gsLineColor      = "black"
-   gsres@gsLineThicknessF = 2.0
+   gsres@gsLineColor      = "gray40"
+   gsres@gsLineThicknessF = 8.0
+    res@xyMarkerThicknessF  = 8
+    res@xyMarkerOpacityF    := (/0.8/)
+    res@xyMarkerSizes       := (/0.008/)
 
        do k=0,dimsizes(time)-1
-         xpoints = (/meas_array(t,0,k)/1e18, meas_array(t,0,k)/1e18/)
-         ypoints = (/ tracer_array(t,1,k)/1e18, tracer_array(t,2,k)/1e18/)
+         xpoints = (/meas_array(t,4,k)/1e18, meas_array(t,4,k)/1e18/)
+         ypoints = (/ tracer_array(t,5,k)/1e18, tracer_array(t,6,k)/1e18/)
          error_bar2 = gsn_add_polyline(wks, plot_array(t), xpoints, ypoints, gsres )
          str2 = unique_string("error_bar2")
          dummy2_plot := plot_array(t)
@@ -213,11 +234,11 @@ if (PLOT) then
       panel_res@gsnMaximize = True
       panel_res@gsnPanelBottom = 0.045 
 
-    gsn_panel(wks,plot_array,(/3,5/),panel_res)  ; plots
+    ;gsn_panel(wks,plot_array,(/3,5/),panel_res)  ; plots
 
 
-  ;draw(plot_array(1))
-  ;frame(wks)
+  draw(plot_array(2))
+  frame(wks)
 
 end if
 

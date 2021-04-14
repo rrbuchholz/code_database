@@ -32,6 +32,7 @@ begin
   ystart = 2014
   yend = 2014
   reso = "0.9x1.25"
+  month_extract = "12"
 
   tracers = (/"CO"/)
 
@@ -41,12 +42,12 @@ begin
   ; -------------------------------
   ; files and path setup
   ; -------------------------------
-   runtype = "cmip.qfedBBmax_32L"
+   runtype = "qfedCO_smoothed"
    ;dir_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/atm/hist/"
-   dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200408."+runtype+"/atm/hist/"
-   ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615."+runtype+"/atm/hist/"
-   ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200120."+runtype+"/atm/hist/"
-   e_file_in = systemfunc ("ls "+dir_in + "*h1."+ystart+"*.nc")
+   ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip/atm/hist/"
+   ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBB/atm/hist/"
+   dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCO/atm/hist/"
+   e_file_in = systemfunc ("ls "+dir_in + "*h0."+ystart+"-"+month_extract+".nc")
 
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.finnBBCO/
@@ -56,17 +57,13 @@ begin
 ;fmerra.2.0.FCSD.1deg.chey180617.cmip.gfasBBCO/
 
 ;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/
-;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBmaxCO_32L/
-;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBminCO_32L/
 ;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmax_32L/
 ;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmin_32L/
-
-
 
   ; -------------------------------
   ; toggles
   ; -------------------------------
-   SAT_SMOOTH = False
+   SAT_SMOOTH = True
      sat_path = "/MOPITT/V8J/Archive/L3/"
    NETCDF = True
     outpath = "/net/modeling1/data16a/buchholz/CAM_chem_output/EF_processed/"
@@ -104,7 +101,6 @@ begin
    rad  = 4.0 * atan(1.0) / 180.0    ; Convert degrees to radians (pi radians per 180 deg)
    con  = re * rad                   ; constant for determining arc length 
 
-   montharray = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
 
   ; -------------------------------
   ; load molecular weights (g/mol) from a MOZART file,
@@ -180,19 +176,28 @@ do t = 0, dimsizes(tracers)-1
     fin = addfiles(e_file_in, "r")
     ListSetType (fin, "cat") 
       tracer_in          = fin[:]->$tracer$
-        time := tracer_in&time
+      time_bnds          = fin[:]->time_bnds
+      time_calc          = (time_bnds(:,1)+time_bnds(:,0))/2
+      time               = fin[:]->time
+      copy_VarAtts(time,time_calc)
+
+        ;time := tracer_in&time
         lat = tofloat(tracer_in&lat)
         lon = tofloat(tracer_in&lon)
 
-      yyyymmdd := cd_calendar(time,-2)
+      yyyymmdd := cd_calendar(time_calc,-2)
        yyyymmdd!0 = "time"
        yyyymmdd&time = time
+      yyyymm := cd_calendar(time_calc,-1)
+       yyyymm!0 = "time"
+       yyyymm&time = time
       date = cd_calendar(time,0)
       yyyy = tointeger(date(:,0))
       mm = tointeger(date(:,1))
       ttime = dimsizes(time)
       nlat = dimsizes(lat)
       mlon = dimsizes(lon)
+
 
       ps         = fin[:]->$"PS"$
       hyai       = fin[0]->$"hyai"$
@@ -240,7 +245,7 @@ do t = 0, dimsizes(tracers)-1
   ; Smooth the model data by satellite measured Averaging Kernels and a priori
   if (SAT_SMOOTH) then
    ; list satellite files
-   sat_files = systemfunc ("ls "+sat_path + ystart+"*/*/MOP03J-"+ystart+"*.he5")
+   sat_files = systemfunc ("ls "+sat_path + ystart+"*/month/MOP03JM-"+ystart+"*.he5")
    ; collect satellite dates
    do f = 0, dimsizes(sat_files)-1
    ;do f = dimsizes(sat_files)-5, dimsizes(sat_files)-1
@@ -253,27 +258,27 @@ do t = 0, dimsizes(tracers)-1
         sat_date     := new(dimsizes(sat_files),integer)
           starttime = sat_in@$fAtts(2)$
           starttime@units = "seconds since 1993-1-1 00:00:00"
-          sat_yyyymmdd := cd_calendar(starttime,-2)
-          sat_date(0) = sat_yyyymmdd
+          sat_yyyymm := cd_calendar(starttime,-1)
+          sat_date(0) = sat_yyyymm
         tcol_meas = new((/dimsizes(time), dimsizes(sat_lat), dimsizes(sat_lon)/), float)
         tcol_all = new((/dimsizes(time), dimsizes(sat_lat), dimsizes(sat_lon)/), float)
       else
         starttime := sat_in@$fAtts(2)$
         starttime@units = "seconds since 1993-1-1 00:00:00"
-        sat_yyyymmdd := cd_calendar(starttime,-2)
-        sat_date(f) = sat_yyyymmdd
+        sat_yyyymm := cd_calendar(starttime,-1)
+        sat_date(f) = sat_yyyymm
       end if
    end do
 
     do i=0, dimsizes(time)-1
-      ind_compare := ind(sat_date.eq.yyyymmdd(i))
+      ind_compare := ind(sat_date.eq.yyyymm(i))
      if (ismissing(ind_compare)) then
         ;---------------------------------------------------
-        print("No MOPITT data for model date: "+yyyymmdd(i))
+        print("No MOPITT data for model date: "+yyyymm(i))
         continue  ; skip all the next bit and go to next file
         ;---------------------------------------------------
      else
-      print("Found MOPITT data on "+sat_date(ind_compare)+" for model date: "+yyyymmdd(i))
+      print("Found MOPITT data on "+sat_date(ind_compare)+" for model date: "+yyyymm(i))
       ; smooth model data and create total column
       tcol_converted = mopitt_smooth_model_output(tracer_in(i,:,:,:),ps(i,:,:),P0,hyam,hybm,sat_files(ind_compare))
       tcol_meas(i,:,:) = tcol_converted[0]
@@ -283,9 +288,9 @@ do t = 0, dimsizes(tracers)-1
     end do 
 
     tcol_meas!0      = "time"
-    tcol_meas&time   = yyyymmdd
+    tcol_meas&time   = yyyymm
     tcol_all!0       = "time"
-    tcol_all&time    = yyyymmdd
+    tcol_all&time    = yyyymm
 
 
   ;---------------------------------------------------------------------
@@ -332,7 +337,7 @@ do t = 0, dimsizes(tracers)-1
      globsum  = wgt_areaave2(tcol_all,wgt,0)  ; g -> Tg
        globsum@units = "molec/cm^2"
        globsum!0 = "time"
-       globsum&time = yyyymmdd
+       globsum&time = yyyymm
 
 
     ;------------------
@@ -341,8 +346,13 @@ do t = 0, dimsizes(tracers)-1
     year_array = ispan(ystart,yend,1)
     year_sum_array = new((/dimsizes(year_array)/), float)
     do i = 0, dimsizes(year_array)-1
-      year_ind := ind(globsum&time.gt.year_array(i)*10000.and.\
-                 globsum&time.lt.(year_array(i)+1)*10000)
+      year_ind := ind(globsum&time.gt.year_array(i)*100.and.\
+                 globsum&time.lt.(year_array(i)+1)*100)
+print(year_array)
+print(year_array(i)*10000)
+print(globsum&time)
+print(year_ind)
+printVarSummary(year_sum_array)
       year_sum_array(i) = avg(globsum(year_ind))
     end do
 
@@ -410,10 +420,10 @@ do t = 0, dimsizes(tracers)-1
      ; -------------------------------
      ; sums
      ; -------------------------------
-     regsum = new((/dimsizes(region_names), dimsizes(yyyymmdd)/), float)
+     regsum = new((/dimsizes(region_names), dimsizes(yyyymm)/), float)
      if (SAT_SMOOTH) then
      ; collect measured tcol as well
-       meas_regsum = new((/dimsizes(region_names), dimsizes(yyyymmdd)/), float)
+       meas_regsum = new((/dimsizes(region_names), dimsizes(yyyymm)/), float)
      end if
      ; overwrite -89.999 and 89.999 so subset works correctly.
       wgt&lat = tcol_all&lat
@@ -507,7 +517,7 @@ if (NETCDF) then
       ; CAM-chem species
       ;-------------------
      if (SAT_SMOOTH) then
-      outfilename = runtype+"_smoothed_"+tracer+"_regional_"+ystart+".nc"
+      outfilename = runtype+"_"+tracer+"_regional_"+ystart+month_extract+".nc"
      else
       outfilename = runtype+"_"+tracer+"_regional_"+ystart+".nc"
      end if
@@ -545,7 +555,7 @@ if (NETCDF) then
       ; Variables
       ;------------
        ;--- date
-         fout->date             = yyyymmdd
+         fout->date             = yyyymm
 
       do n = 0, dimsizes(region_names)-1
          bb_name = "total_column_"+n
