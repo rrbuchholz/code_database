@@ -7,8 +7,8 @@
 #-------------------
 
 
-workdir=/gpfs/fs1/work/buchholz/emis/CMIP6   # working directory
-outdir=/gpfs/fs1/work/buchholz/emis/CMIP62012_2014   # working directory
+workdir=/gpfs/fs1/work/buchholz/emis/qfed2.5_finn_2000_2020_1x1   # working directory
+outdir=/gpfs/fs1/work/buchholz/emis/test   # working directory
 file_list="$(ls $workdir)"
 
 echo $file_list
