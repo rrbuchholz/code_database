@@ -1,0 +1,9 @@
+
+#specific code to ignore
+untracked_code
+code_sets
+code_sets/coala_forecasts
+code_sets/waccm_forecasts
+python/notebooks/.ipynb_checkpoints/
+python/notebooks/ignore/
+

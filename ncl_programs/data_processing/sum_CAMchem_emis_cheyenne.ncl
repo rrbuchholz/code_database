@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2015
-  yend = 2018
+  ystart = 2030
+  yend = 2030
   reso = "0.9x1.25"
 
   machine = "cheyenne"        ; modeling1, modeling2, cheyenne
-  repository = "FINN1.5"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
+  repository = "SSP245"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6, SSP585
 
 
   ANTHRO = False
@@ -64,7 +64,7 @@ begin
 
   ;tracers = (/"BIGENE", "DMS","MEK","GLYALD","TOLUENE","XYLENES"/)
 
-  tracers = (/"CO","C2H6"/)
+  tracers = (/"CO"/)
 
   sm_tracers = tracers
 
@@ -149,6 +149,11 @@ do t = 0, dimsizes(tracers)-1
      e_file_in = "emissions-cmip6_"+tracer+"_bb_surface_1750-2015_"+reso+"_c20170322.nc"
      indir = emis_dir+"/1750_2015/"
      outpath = emis_dir+"/region_sums/"
+    else if (repository.eq."SSP245") then
+    print("repository = " + repository)
+      emis_dir = "/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/emissions_ssp245/"
+      e_file_in = systemfunc ("ls "+emis_dir+"emissions-cmip6-ScenarioMIP_IAMC-MESSAGE-GLOBIOM-ssp245-1-1_"+tracer+"_bb_surface_mol_175001-210101_0.9x1.25_c20190222.nc")
+    end if
     end if
 
   else if (machine.eq."cheyenne") then 
@@ -180,8 +185,9 @@ do t = 0, dimsizes(tracers)-1
      emis_dir = "/glade/p/acd/fvitt/waccm_forecast_emis/forecast/"
      e_file_in = systemfunc ("ls "+emis_dir+"emissions-fcst_"+tracer+"_bb_surface_2017-2018_0.9x1.25.nc")
     else if (repository.eq."FINN1.5") then
-     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
-     emis_dir = "/glade/work/emmons/emis/finn1.5/2015_2018_daily_1deg/"
+     emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2018/"
+     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2015_2018_daily_1deg/"
+     ;emis_dir = "/glade/work/emmons/emis/finn1.5/2018_2019/"
      e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*.nc")
     else if (repository.eq."FINN1.6") then
      emis_dir = "/glade/p_old/work/emmons/emis/finn1.6/cesm_format/"
@@ -189,9 +195,10 @@ do t = 0, dimsizes(tracers)-1
      ;emis_dir = "/glade/work/emmons/emis/finn1.6_v20180630/"
      ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb*_"+ystart+"_"+reso+".nc")
     else if (repository.eq."FINN2.2") then
-     ;emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f09/"
-     emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f05/"
-     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb_surface_2019_"+reso+".nc")
+     emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f09/"
+     ;emis_dir = "/glade/p/acom/acom-weather/emmons/emissions/finn2/gridded/f05/"
+     ;e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb_surface_2019_"+reso+".nc")
+     e_file_in = systemfunc ("ls "+emis_dir+"*"+tracer+"_bb_surface_20150101-20191230_"+reso+".nc")
     else if (repository.eq."QFED_native") then
      emis_dir = "/glade/work/buchholz/emis/qfed2.5_2014_2017_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"qfed.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc")
@@ -213,6 +220,13 @@ do t = 0, dimsizes(tracers)-1
     else if (repository.eq."GFAS") then
      emis_dir = top_dir+ "emis/gfas_finn_2014_2017_1x1/"
      e_file_in = systemfunc ("ls "+emis_dir+"gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_2014_2017.nc")
+    else if (repository.eq."SSP245") then
+    print("repository = " + repository)
+      emis_dir = "/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/emissions_ssp245/"
+      #e_file_in = systemfunc ("ls "+emis_dir+"emissions-cmip6-ScenarioMIP_IAMC-MESSAGE-GLOBIOM-ssp245-1-1_"+tracer+"_bb_surface_mol_175001-210101_0.9x1.25_c20190222.nc")
+      e_file_in = systemfunc ("ls "+emis_dir+"emissions-cmip6-ScenarioMIP_IAMC-MESSAGE-GLOBIOM-ssp245-1-1_"+tracer+"_bb_surface_mol_175001-210101_0.9x1.25_c201200403.nc")
+
+    end if
     end if
     end if
     end if
@@ -241,6 +255,7 @@ do t = 0, dimsizes(tracers)-1
   end if
   end if
 
+print(e_file_in)
 
    ; if (.not.isfilepresent(indir+e_file_in)) then
    ;   print("No file for tracer:" + tracer)
@@ -271,7 +286,7 @@ do t = 0, dimsizes(tracers)-1
   else if (repository.eq."QFED_native") then
    ; emiss           = "biomass"
     emiss           = "bb"
-  else if (repository.eq."CMIP6") then
+  else if (repository.eq."CMIP6".or.repository.eq."SSP245") then
     emiss           = "emiss_bb"
     if (ANTHRO) then
       emiss           = "emiss_anthro"
@@ -410,7 +425,7 @@ do t = 0, dimsizes(tracers)-1
      tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
 
      if (repository.eq."CMIP6".or.repository.eq."CAMS".or.\
-         repository.eq."SSP585") then           ; d-1 -> m-1
+         repository.eq."SSP585".or.repository.eq."SSP245") then           ; d-1 -> m-1
        month_days = days_in_month(yyyy,mm)
        month_days_array = conform(tracer_emiss, month_days, 0)
        tracer_emiss = tracer_emiss*month_days_array
@@ -494,14 +509,14 @@ do t = 0, dimsizes(tracers)-1
       end do
     end do
 
-     ;print("Month, emissions of "+tracer+" (Tg)")
-     ;print(month_array+" "+month_sum_array)
+     print("Month, emissions of "+tracer+" (Tg)")
+     print(month_array+" "+month_sum_array)
 
     ;------------------
     ; Total average
     ;------------------
-     total_avg = avg(year_sum_array(0:dimsizes(year_sum_array)-2))
-     print(ystart+" to "+yend+", average yearly emissions of "+tracer+" (Tg): " + total_avg)
+     ;total_avg = avg(year_sum_array(0:dimsizes(year_sum_array)-2))
+     ;print(ystart+" to "+yend+", average yearly emissions of "+tracer+" (Tg): " + total_avg)
 
 
 
@@ -521,10 +536,17 @@ do t = 0, dimsizes(tracers)-1
   ;                   (/ 30.,  60.,360.-135.,360. -105./),\ ;NWAmerica
   ;                   (/ 25.,  70.,360.-170.,360. -53./)/) ;NAmerica
 
-   region_names = (/"Colorado", "PNW"/)
+   ;region_names = (/"Colorado", "PNW"/)
   ;                   minlat, maxlat, minlon, maxlon
-   region_select = (/(/37.,    41.,    251.,    258./),\ ;Colorado
-                     (/32.5,   60,     227.5,   251./)/) ;PNW
+   ;region_select = (/(/37.,    41.,    251.,    258./),\ ;Colorado
+   ;                  (/32.5,   60,     227.5,   251./)/) ;PNW
+		     
+
+   region_names = (/"Maritime SEA", "Australasia", "East Aus"/)
+
+   region_select = (/(/-10.,  10.,      90.,     160./),\ ;Maritime SEA
+                     (/-50., -10.,     110.,     180./),\ ;Australasia
+                     (/-50., -20.,     142.,     180./)/) ;E Australia		     
 
 
    ;region_names = (/"Northwest Canada", "Northwest USA","Southeast USA", \
@@ -563,6 +585,10 @@ do t = 0, dimsizes(tracers)-1
        regsum&region = region_names
        regsum!1 = "time"
        regsum&time = yyyymmdd
+       
+    ;do j = 0, dimsizes(region_names)-1
+    ; print(regsum&time+" "+region_names(j)+" "+regsum(j,:))
+    ;end do
 
     ;------------------
     ; Regional year sums

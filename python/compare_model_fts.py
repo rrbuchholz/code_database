@@ -81,7 +81,10 @@ try:
     print("Imported h5py")
 except ModuleNotFoundError:
     print("10. Could not import h5py")
+<<<<<<< HEAD
 
+=======
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 
 
 

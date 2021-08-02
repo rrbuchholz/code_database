@@ -10,7 +10,7 @@
 ;          - select land or ocean only pixels
 ;          - determine, mean, median, 5th, 
 ;            25th, 75th, 95th percentiles
-;            in month average values
+;            in week average values
 ;   - Write data out to netCDF
 ;
 ;   Files needed:
@@ -30,7 +30,7 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2001
+  ystart = 2004
   yend = 2019
   version = "V8J"
   infolder = "/MOPITT/"+version+"/Archive/L2/"
@@ -38,7 +38,7 @@ begin
   ;------------
   ; select location
   ;------------
-  location = "Northeast"
+  location = "MSEA_stats"
 
   ;------------
   ; select daytime 
@@ -124,32 +124,29 @@ begin
    ;                  (/  0.,  60.,      -180.,     180./),\  ;NH
    ;                  (/-60.,   0.,      -180.,     180./) /) ;SH
 
-   ;region_names := (/"CONTRAIL","MSEA_stats_all","MYS_stats","MYS_pen",\
-   ;                  "CSAm","SSAm","CSAf","SSAf",\
-   ;                  "NAus","SAus","TEST"/)
+   region_names := (/"CONTRAIL","MSEA_stats","MYS_stats","MYS_pen",\
+                     "CSAm","SSAm","CSAf","SSAf",\
+                     "NAus","SAus","TEST"/)
 
    ;                   minlat, maxlat, minlon, maxlon
-   ;region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
-   ;                   (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
-   ;                   (/   0.5,   7.5,      99.5,    119.5/),\  ;MYS_stats
-   ;                   (/   0.5,   7.5,      99.5,    115.0/),\  ;MYS_pen
-   ;                   (/ -25.,   -5.,      -83.,     -32./),\   ;CSAm
-   ;                   (/ -58.,  -25.,      -80.,     -32./),\   ;SSAm
-   ;                   (/ -25.,  -10.,        0.,      59./),\   ;CSaf
-   ;                   (/ -40.,  -25.,        0.,      59./),\   ;SSAf
-   ;                   (/ -25.,  -10.,      112.,     181./),\   ;NAus
-   ;                   (/ -48.,  -25.,      112.,     181./),\   ;SAus
-   ;                   (/ -60.,    0.,     -180.,     180./) /)  ; TEST
+   region_select := (/(/ -25.,  -10.,      145.,      151.5/),\ ;CONTRAIL
+                      (/ -10.,   10.,       90.,     160./),\   ;MSEA_stats
+                      (/   0.5,   7.5,      99.5,    119.5/),\  ;MYS_stats
+                      (/   0.5,   7.5,      99.5,    115.0/),\  ;MYS_pen
+                      (/ -25.,   -5.,      -83.,     -32./),\   ;CSAm
+                      (/ -58.,  -25.,      -80.,     -32./),\   ;SSAm
+                      (/ -25.,  -10.,        0.,      59./),\   ;CSaf
+                      (/ -40.,  -25.,        0.,      59./),\   ;SSAf
+                      (/ -25.,  -10.,      112.,     181./),\   ;NAus
+                      (/ -48.,  -25.,      112.,     181./),\   ;SAus
+                      (/ -60.,    0.,     -180.,     180./) /)  ; TEST
 
-   region_names = (/"PNW", "CentralUSA", "EastUSA", "Colorado", "Northeast"/)
+   ;region_names = (/"PNW", "CentralUSA", "EastUSA"/)
 
    ;                   minlat, maxlat, minlon, maxlon
    ;region_select = (/(/ 38.,  60.,     -130.,     -110./),\ ;PNW
-   region_select = (/(/ 38.,  57.,     -127.,     -110./),\ ;PNW new
-                     (/ 35.,  49.,     -110.,     -95./),\  ;Central Mountain USA
-                     (/ 32.5,  42.,     -95.,     -75./),\  ;East USA
-                     (/37.,    41.,    -109.,    -102./),\  ;Colorado
-                     (/ 41.,  53.,     -95.,     -74./) /)  ;Northeast
+   ;                  (/ 35.,  49.,     -110.,     -95./),\  ;Central Mountain USA
+   ;                  (/ 32.5,  42.,     -95.,     -75./) /) ;East USA
 
 
    ind_region = ind(region_names.eq.location)
@@ -179,12 +176,12 @@ do y = ystart,yend ; loop through years
   ; -------------------------------
   if (netCDF) then
      outfolder = "~/MOPITT_subset/regions_v8/"
-     outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg.nc"
+     outname      = outfolder+location+"_"+version+"subset_"+year+"weekavg.nc"
      if (COLAVG_VMR) then
-        outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR.nc"
+        outname      = outfolder+location+"_"+version+"subset_"+year+"weekavg_VMR.nc"
         if (PIXELS) then
           print("Collecting pixel " +pixel_number_select)
-          outname      = outfolder+location+"_"+version+"subset_"+year+"monthavg_VMR_p"+\
+          outname      = outfolder+location+"_"+version+"subset_"+year+"weekavg_VMR_p"+\
                        pixel_number_select+".nc"
           print("Will write to " +outname)
         end if
@@ -195,54 +192,96 @@ do y = ystart,yend ; loop through years
   ; -------------------------------
   ; SETUP ARRAYS 
   ; -------------------------------
-  yearmonth = yyyymm_time(year,year, "integer")
-  yearmonth_string = tostring(yearmonth)
-  month_stats = new((/dimsizes(yearmonth_string),12/), float)
-  month_5_95 = new((/dimsizes(yearmonth_string),2/), float)
-  month_tcol = new((/dimsizes(yearmonth_string)/), float)
-  month_err = new((/dimsizes(yearmonth_string)/), float)
-  month_rande = new((/dimsizes(yearmonth_string)/), float)
-  month_smoothe = new((/dimsizes(yearmonth_string)/), float)
-  month_dofs = new((/dimsizes(yearmonth_string)/), float)
-  month_apriori = new((/dimsizes(yearmonth_string)/), float)
-  month_psurf = new((/dimsizes(yearmonth_string)/), float)
-  month_dryair = new((/dimsizes(yearmonth_string)/), float)
-  month_ret_surf = new((/dimsizes(yearmonth_string),2/), float)
+   yeardays := yyyymmdd_time(year, year, "integer")
+    date_split := str_split_by_length(tostring(yeardays),4)
+    date_split2 := str_split_by_length(tostring(yeardays),2)
+    doy := day_of_year(toint(date_split(:,0)),toint(date_split2(:,2)),toint(date_split2(:,3)))
 
-  month_prior = new((/dimsizes(yearmonth_string), 10/), float)
-  month_prof = new((/dimsizes(yearmonth_string), 10/), float)
-  month_colak = new((/dimsizes(yearmonth_string), 10/), float)
+    week := ceil(doy/7.0)
+    week := where(week.eq.53, 52, week)
 
-  month_vmrak = new((/dimsizes(yearmonth_string), 10, 10/), float)
+  week_vals = ispan(1,52,1)
+  yearweek_string = year+""+sprinti("%2.2i",week_vals)
+  yearweek = toint(yearweek_string)
+  week_avg_day = year*1000+((week_vals*7)-3)
+  week_avg_time = yyyyddd_to_yyyymmdd(week_avg_day)
+
+;print(week_vals)
+;print(yearweek_string)
+;print(yearweek)
+;print(week_avg_day)
+;print("Day " + yeardays + " = Week " + week)
+
+
+  month_stats = new((/dimsizes(yearweek_string),12/), float)
+  month_5_95 = new((/dimsizes(yearweek_string),2/), float)
+  month_tcol = new((/dimsizes(yearweek_string)/), float)
+  month_err = new((/dimsizes(yearweek_string)/), float)
+  month_rande = new((/dimsizes(yearweek_string)/), float)
+  month_smoothe = new((/dimsizes(yearweek_string)/), float)
+  month_dofs = new((/dimsizes(yearweek_string)/), float)
+  month_apriori = new((/dimsizes(yearweek_string)/), float)
+  month_psurf = new((/dimsizes(yearweek_string)/), float)
+  month_dryair = new((/dimsizes(yearweek_string)/), float)
+
+  month_prior = new((/dimsizes(yearweek_string), 10/), float)
+  month_prof = new((/dimsizes(yearweek_string), 10/), float)
+  month_colak = new((/dimsizes(yearweek_string), 10/), float)
+
+  month_vmrak = new((/dimsizes(yearweek_string), 10, 10/), float)
 
 ;--------------------------------------------
 ; load file and extract
 ;--------------------------------------------
+   total_files := systemfunc ("ls "+infolder+year+"*/*/MOP02J-"+year+"*.he5")
+
   ;------------
   ; loop over
-  ; months
+  ; weeks
   ;------------
   ;do m=0,11
-  do m=0,11
+  do m=0,dimsizes(week_vals)-1
     ; counter for counting number of files with selected values
     dcount = 0
     print("==================================")
-    print("Collecting: "+ yearmonth_string(m))
+    print("Collecting: "+ yearweek_string(m))
+    if (isvar("all_files")) then       ; are we somewhat through analysis
+      delete(all_files)
+    end if
+
     ; -------------------------------
     ; MOPITT
     ; -------------------------------
-    all_files := systemfunc ("ls "+infolder+yearmonth_string(m)+"/*/MOP02J-"+year+"*.he5")
-    ; number of files to be read
-    ndates = dimsizes(all_files)
+    ; Find files of days in this week
+     ind_week := ind(week.eq.week_vals(m))
+     do i=0,dimsizes(ind_week)-1
 
-    if (all(ismissing(all_files))) then
+       file_ind = str_match_ind(total_files,tostring(yeardays(ind_week(i))))
+       if (.not.ismissing(file_ind)) then
+          ;print(total_files(file_ind))
+          if (isvar("all_files")) then      
+            dummy := all_files
+            dummy2 := total_files(file_ind)
+            all_files := array_append_record (dummy, dummy2, 0)
+          else
+            all_files = total_files(file_ind)
+          end if
+       end if
+     end do
+
+    if (.not.isvar("all_files")) then
       print("No MOPITT files for date: "+cd_calendar(time(i),2))
       continue  ; skip all the next bit and go to next file
+    else
+      print(all_files)
+      ; number of files to be read
+      ndates = dimsizes(all_files)
     end if
+
 
     ;------------
     ; loop over
-    ; files in month
+    ; files in week
     ;------------
     do i=0,ndates-1
       ; read data
@@ -251,9 +290,7 @@ do y = ystart,yend ; loop through years
       surf_type    := fin->$surface_index$
       pixel_num    := fin->$swath_index$(:,0)
       sn_5A        := fin->$snr_calc$(:,3,:)
-      sn_6A        := fin->$snr_calc$(:,9,:)
         snr_5A := sn_5A(:,0)/sn_5A(:,1)
-        snr_6A := sn_6A(:,0)/sn_6A(:,1)
       lat          := fin->$latitude$
       lon          := fin->$longitude$
       diag_anom    := fin->$diag_2$
@@ -262,47 +299,24 @@ do y = ystart,yend ; loop through years
         ;units value presumes use of TAI93 (International Atomic Time) format
         time@units = "seconds since 1993-1-1 00:00:00"
 
-     if (location.eq."NH_thinned_2_5".or.\
-         location.eq."SH_thinned") then
-       count_array := ispan(0, dimsizes(time)-1,1)
-       mod_array := count_array*0 + 32
-     end if
 
       ;--------------------------------------------
       ; Select region to bin (daytime retrievals)
       ;--------------------------------------------
-     if (location.eq."NH_thinned_2_5".or.\
-         location.eq."SH_thinned") then
        region := ind(sza.le.dayflag.and.\
-                 ;pixel_num.eq.pixel_number_select.and.\
+                 surf_type.eq.s_id.and.\
                  pixel_num.ne.3.and.\
                  snr_5A.gt.1000.and.\
                  lat.le.topboundary.and.\
                  lat.ge.bottomboundary.and.\
                  lon.ge.leftboundary.and.\
                  lon.le.rightboundary.and.\
-                 diag_anom(:,0).ne.1.and.\
-                 diag_anom(:,1).ne.1.and.\
-                 diag_anom(:,2).ne.1.and.\
-                 diag_anom(:,3).ne.1.and.\
-                 diag_anom(:,4).ne.1.and.\
-                 mod(count_array,mod_array).eq.0)
-     else
-       region := ind(sza.le.dayflag.and.\
-                 surf_type.eq.s_id.and.\
-                 pixel_num.ne.3.and.\
-                 snr_5A.ge.1000.and.\
-                 snr_6A.ge.400.and.\
-                 lat.le.topboundary.and.\
-                 lat.ge.bottomboundary.and.\
-                 lon.ge.leftboundary.and.\
-                 lon.le.rightboundary.and.\
+                 ;dofs.gt.1.and.\
                  diag_anom(:,0).ne.1.and.\
                  diag_anom(:,1).ne.1.and.\
                  diag_anom(:,2).ne.1.and.\
                  diag_anom(:,3).ne.1.and.\
                  diag_anom(:,4).ne.1)
-      end if
 
       if (all(ismissing(region))) then
         print("only one value from MOPITT at " + location +\
@@ -391,7 +405,6 @@ do y = ystart,yend ; loop through years
             err_selected     = region_err
             rande_selected   = region_rand_e
             smoothe_selected = region_smooth_e
-            ret_surf_selected = ret_surf
 
             ;--- 2D vars
             m_apriori_selected = region_prior
@@ -414,7 +427,6 @@ do y = ystart,yend ; loop through years
             temp6 := err_selected
             temp7 := rande_selected
             temp8 := smoothe_selected
-            temp8a := ret_surf_selected
             dofs_selected    := array_append_record(temp2,region_dofs,0)
             apriori_selected := array_append_record(temp3,region_apriori,0)
             psurf_selected   := array_append_record(temp4,region_psurf,0)
@@ -422,7 +434,6 @@ do y = ystart,yend ; loop through years
             err_selected     := array_append_record(temp6,region_err,0)
             rande_selected   := array_append_record(temp7,region_rand_e,0)
             smoothe_selected := array_append_record(temp8,region_smooth_e,0)
-            ret_surf_selected := array_append_record(temp8a,ret_surf,0)
 
             ;--- 2D vars
             temp9 := m_apriori_selected
@@ -448,7 +459,7 @@ do y = ystart,yend ; loop through years
       ; still no data
       if (.not.(isdefined("mopitt_selected"))) then
         print("No MOPITT data at " + location +\
-              " for " +", date: "+yearmonth_string(m))
+              " for " +", date: "+yearweek_string(m))
         continue  ; skip all the next bit and go to next file
       end if
 
@@ -479,7 +490,7 @@ do y = ystart,yend ; loop through years
       ;(0)	 [24]     Lower 5.0%=-9999   <------- n > 1000
       ;(0)	 [25]     Upper 5.0%=-9999   <------- n > 1000
     ;------------
-    ; collect month
+    ; collect week
     ; stats
     ;------------
     ; tcol
@@ -496,9 +507,8 @@ do y = ystart,yend ; loop through years
     ; errors are summed in quadrature
     month_err(m) = sqrt(dim_avg_n_Wrap(err_selected^2,0))
     month_rande(m) = sqrt(dim_avg_n_Wrap(rande_selected^2,0))
-    month_ret_surf(m,0) = dim_avg_n_Wrap(ret_surf_selected,0)
-    month_ret_surf(m,1) = dim_stddev_n(ret_surf_selected,0)
-    
+    month_smoothe(m) = sqrt(dim_avg_n_Wrap(smoothe_selected^2,0))
+
     ; 2D vars
     month_prior(m,:) = dim_avg_n_Wrap(m_apriori_selected,0)
     month_prof(m,:) = dim_avg_n_Wrap(m_profile_selected,0)
@@ -509,26 +519,25 @@ do y = ystart,yend ; loop through years
 
     records = num(mopitt_selected)
     print("Number of files checked = " + ndates)
-    print("Number of files with " +location+" info for "+ yearmonth_string(m)+" = " + dcount)
-    print("Number of retrievals in month values = " + records)
+    print("Number of files with " +location+" info for "+ yearweek_string(m)+" = " + dcount)
+    print("Number of retrievals in week values = " + records)
     
     ;------------
     ; release variable
     ;------------
       delete([/mopitt_selected,dofs_selected,apriori_selected,psurf_selected,\
               dryair_selected,err_selected,rande_selected,smoothe_selected,\
-              m_apriori_selected,m_profile_selected,ak_selected,vmr_ak_selected,\
-              ret_surf_selected/])
+              m_apriori_selected,m_profile_selected,ak_selected,vmr_ak_selected/])
 
-if (location.eq."NH_monthly".or.\
-    location.eq."SH_monthly") then
 
-        outname      = outfolder+location+"_"+version+"subset_"+yearmonth_string(m)+\
-                      "monthavg_VMR.nc"
+  end do ; week loop
+
+
 ;--------------------------------------------
 ; Write out to a netCDF file
 ;--------------------------------------------
 if (netCDF) then
+
   ; saves MOPITT subset
     print("Creating file...")
     fout = addfile(outname, "c")
@@ -538,7 +547,7 @@ if (netCDF) then
     ;------------
     setfileoption(fout, "DefineMode",True)
     fAtt                      = True
-      fAtt@title              = "Subset of month average MOPITT CO for " +location+"_"+year
+      fAtt@title              = "Subset of week average MOPITT CO for " +location+"_"+year
       fAtt@source             = "MOPITT level 2, version 8, TIR retrievals"
       fAtt@creation_date      = systemfunc ("date")
       fAtt@conventrions       = "CF"
@@ -551,13 +560,13 @@ if (netCDF) then
   ; Variables
   ;------------
    month_tcol!0              = "time"
-   month_tcol&time           = yearmonth
-   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
+   month_tcol&time           = week_avg_day
+   month_tcol@average_op_ncl = "weekly spatial average over "+location+": "+\
                                     topboundary+" to "+bottomboundary+ " Lat, "+\
                                     leftboundary+" to "+rightboundary+" Lon"
    month_stats!0               = "time"
-   month_stats&time            = yearmonth
-   month_stats@average_op_ncl  = "monthly spatial statistics over "+location+": "+\
+   month_stats&time            = week_avg_day
+   month_stats@average_op_ncl  = "weekly spatial statistics over "+location+": "+\
                                     topboundary+" to "+bottomboundary+ " Lat, "+\
                                     leftboundary+" to "+rightboundary+" Lon"
    month_stats@definitions ="[0] Mean, [1] StdDev, [2] Min, [3] LowQuartile, [4] Median, "+cr+\
@@ -565,14 +574,13 @@ if (netCDF) then
        "[10] Lower 5.0% (for n > 1000), [11] Upper 5.0% (for n > 1000)"
 
    month_5_95!0               = "time"
-   month_5_95&time            = yearmonth
-   month_5_95@average_op_ncl  = "monthly 5th and 95th percentiles over "+location+": "+\
+   month_5_95&time            = week_avg_day
+   month_5_95@average_op_ncl  = "weekly 5th and 95th percentiles over "+location+": "+\
                                     topboundary+" to "+bottomboundary+ " Lat, "+\
                                     leftboundary+" to "+rightboundary+" Lon"
 
    month_apriori!0               = "time"
-   month_apriori&time            = yearmonth
-
+   month_apriori&time            = week_avg_day
 
    if (COLAVG_VMR) then
      ;--- total column
@@ -591,165 +599,41 @@ if (netCDF) then
    end if
    ;--- 1D vars
    month_dofs!0               = "time"
-   month_dofs&time            = yearmonth
+   month_dofs&time            = week_avg_day
      fout->AvgDegreesofFreedomforSignal = month_dofs
    month_psurf!0               = "time"
-   month_psurf&time            = yearmonth
+   month_psurf&time            = week_avg_day
      fout->AvgSurfacePressure           = month_psurf
    month_dryair!0               = "time"
-   month_dryair&time            = yearmonth
+   month_dryair&time            = week_avg_day
      fout->AvgDryAirColumn              = month_dryair
    month_err!0               = "time"
-   month_err&time            = yearmonth
+   month_err&time            = week_avg_day
      fout->AvgError                     = month_err
    month_rande!0               = "time"
-   month_rande&time            = yearmonth
+   month_rande&time            = week_avg_day
      fout->AvgRandomError               = month_rande
    month_smoothe!0               = "time"
-   month_smoothe&time            = yearmonth
+   month_smoothe&time            = week_avg_day
      fout->AvgSmoothingError            = month_smoothe
-   month_ret_surf!0               = "time"
-   month_ret_surf&time            = yearmonth
-   month_ret_surf@definitions     = "[:,0] Mean [:,1] StdDev"
-     fout->AvgSurfaceVMR          = month_ret_surf
 
    ;--- 2D vars
    month_prior!0               = "time"
-   month_prior&time            = yearmonth
+   month_prior&time            = week_avg_day
    month_prior!1               = "lev"
      fout->AvgAPrioriCOMixingRatioProfile = month_prior
    month_prof!0               = "time"
-   month_prof&time            = yearmonth
+   month_prof&time            = week_avg_day
    month_prof!1               = "lev"
      fout->AvgRetrievedCOMixingRatioProfile = month_prof
    month_colak!0               = "time"
-   month_colak&time            = yearmonth
+   month_colak&time            = week_avg_day
    month_colak!1               = "lev"
      fout->AvgTotalColumnAveragingKernel = month_colak
 
    ;--- 3D vars
    month_vmrak!0               = "time"
-   month_vmrak&time            = yearmonth
-     fout->AvgRetrievalAveragingKernelMatrix = month_vmrak
-
-
-end if ;NETCDF
-end if ;Monthly saving for large regions
-
-
-  end do ; month loop
-
-
-;--------------------------------------------
-; Write out to a netCDF file
-;--------------------------------------------
-if (netCDF) then
-
-   if (location.eq."NH_monthly".or.\
-    location.eq."SH_monthly") then
-    continue ; already saved as month files
-   end if
-
-  ; saves MOPITT subset
-    print("Creating file...")
-    fout = addfile(outname, "c")
-    ;------------
-    ; File 
-    ; Attributes
-    ;------------
-    setfileoption(fout, "DefineMode",True)
-    fAtt                      = True
-      fAtt@title              = "Subset of month average MOPITT CO for " +location+"_"+year
-      fAtt@source             = "MOPITT level 2, version 8, TIR retrievals"
-      fAtt@creation_date      = systemfunc ("date")
-      fAtt@conventrions       = "CF"
-
-     fileattdef(fout, fAtt)
-     setfileoption(fout, "DefineMode",False)
-
-
-  ;------------
-  ; Variables
-  ;------------
-   month_tcol!0              = "time"
-   month_tcol&time           = yearmonth
-   month_tcol@average_op_ncl = "monthly spatial average over "+location+": "+\
-                                    topboundary+" to "+bottomboundary+ " Lat, "+\
-                                    leftboundary+" to "+rightboundary+" Lon"
-   month_stats!0               = "time"
-   month_stats&time            = yearmonth
-   month_stats@average_op_ncl  = "monthly spatial statistics over "+location+": "+\
-                                    topboundary+" to "+bottomboundary+ " Lat, "+\
-                                    leftboundary+" to "+rightboundary+" Lon"
-   month_stats@definitions ="[0] Mean, [1] StdDev, [2] Min, [3] LowQuartile, [4] Median, "+cr+\
-       "[5] HighQuartile, [6] Max, [7] Total n, [8] Used n, [9] Missing, "+cr+\
-       "[10] Lower 5.0% (for n > 1000), [11] Upper 5.0% (for n > 1000)"
-
-   month_5_95!0               = "time"
-   month_5_95&time            = yearmonth
-   month_5_95@average_op_ncl  = "monthly 5th and 95th percentiles over "+location+": "+\
-                                    topboundary+" to "+bottomboundary+ " Lat, "+\
-                                    leftboundary+" to "+rightboundary+" Lon"
-
-   month_apriori!0               = "time"
-   month_apriori&time            = yearmonth
-
-   if (COLAVG_VMR) then
-     ;--- total column
-       fout->RetrievedX_CO       = month_tcol
-     ;--- stats
-       fout->RetrievedX_CORegionStats    = month_stats
-       fout->RetrievedX_CORegion5th95th  = month_5_95
-       fout->AvgAPrioriX_CO              = month_apriori
-   else
-     ;--- total column
-       fout->RetrievedCOTotalColumn        = month_tcol
-     ;--- stats
-       fout->RetrievedCOtcolRegionStats    = month_stats
-       fout->RetrievedCOtcolRegion5th95th  = month_5_95
-       fout->AvgAPrioriCOTotalColumn      = month_apriori
-   end if
-   ;--- 1D vars
-   month_dofs!0               = "time"
-   month_dofs&time            = yearmonth
-     fout->AvgDegreesofFreedomforSignal = month_dofs
-   month_psurf!0               = "time"
-   month_psurf&time            = yearmonth
-     fout->AvgSurfacePressure           = month_psurf
-   month_dryair!0               = "time"
-   month_dryair&time            = yearmonth
-     fout->AvgDryAirColumn              = month_dryair
-   month_err!0               = "time"
-   month_err&time            = yearmonth
-     fout->AvgError                     = month_err
-   month_rande!0               = "time"
-   month_rande&time            = yearmonth
-     fout->AvgRandomError               = month_rande
-   month_smoothe!0               = "time"
-   month_smoothe&time            = yearmonth
-     fout->AvgSmoothingError            = month_smoothe
-   month_ret_surf!0               = "time"
-   month_ret_surf&time            = yearmonth
-   month_ret_surf@definitions     = "[:,0] Mean [:,1] StdDev"
-     fout->AvgSurfaceVMR          = month_ret_surf
-
-   ;--- 2D vars
-   month_prior!0               = "time"
-   month_prior&time            = yearmonth
-   month_prior!1               = "lev"
-     fout->AvgAPrioriCOMixingRatioProfile = month_prior
-   month_prof!0               = "time"
-   month_prof&time            = yearmonth
-   month_prof!1               = "lev"
-     fout->AvgRetrievedCOMixingRatioProfile = month_prof
-   month_colak!0               = "time"
-   month_colak&time            = yearmonth
-   month_colak!1               = "lev"
-     fout->AvgTotalColumnAveragingKernel = month_colak
-
-   ;--- 3D vars
-   month_vmrak!0               = "time"
-   month_vmrak&time            = yearmonth
+   month_vmrak&time            = week_avg_day
      fout->AvgRetrievalAveragingKernelMatrix = month_vmrak
 
 

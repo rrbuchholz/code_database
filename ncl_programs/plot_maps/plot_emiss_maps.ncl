@@ -28,7 +28,7 @@ begin
 ;--------------------------------------------
   tracer = "CO"
   year = 2014
-  repository = "CMIP6"
+  repository = "FINN"
   timeslice = ""
 
   ; -------------------------------
@@ -55,10 +55,10 @@ begin
    ;emis_dir = "/glade/work/emmons/emis/finn1.6/cesm_format/"
    ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_2017*.nc")
    ;emis_dir = "/glade/work/emmons/emis/finn1.6_v20180630/"
-   ;emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
-   ;e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
+   emis_dir = "/glade/work/emmons/emis/finn1.5/2002_2017_1deg/"
+   e_file_1 = systemfunc ("ls "+emis_dir+"*CO_*surface_*.nc")
 ;CMIP
-  e_file_1 = systemfunc ("ls /glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/emissions-cmip6_CO_bb_surface_1750-2015_0.9x1.25_c20170322.nc")
+  ;e_file_1 = systemfunc ("ls /glade/p/cesmdata/cseg/inputdata/atm/cam/chem/emis/CMIP6_emissions_1750_2015/emissions-cmip6_CO_bb_surface_1750-2015_0.9x1.25_c20170322.nc")
 
 print(e_file_1)
 
@@ -77,20 +77,20 @@ print(e_file_1)
     ;  lonmin                         = 100
     ;  lonmax                         = 160
 
-      latmin                         = 10               ; zoom to North America
-      latmax                         = 70
-      lonmin                         = 220
-      lonmax                         = 300
+    ;  latmin                         = 10               ; zoom to North America
+    ;  latmax                         = 70
+    ;  lonmin                         = 220
+    ;  lonmax                         = 300
 
     ;  latmin                         = -40               ; zoom to Amazon
     ;  latmax                         = 10
     ;  lonmin                         = 270
     ;  lonmax                         = 330
 
-    ;  latmin                         = -80               ; World
-    ;  latmax                         = 80
-    ;  lonmin                         = -170
-    ;  lonmax                         = 185
+      latmin                         = -80               ; World
+      latmax                         = 80
+      lonmin                         = -170
+      lonmax                         = 185
 
 ;--------------------------------------------
 ; end user input

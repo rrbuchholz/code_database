@@ -30,7 +30,8 @@ begin
 ;***************************************************************
     version = "V8J"
     ;mopitt_file = "/IASI/home/buchholz/MOPITT_subset/averages/MOPITT_ASON_2001_2016.nc"
-    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+    ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_2002_2017.nc"
+    mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/AugSep_V8J_Ausfire.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/MOPITT_Nov_2002_2017.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/MOPITT_subset/V7/averages/MOPITT_2014_01to12.nc"
     ;mopitt_file = "/net/mopfl/home/buchholz/burned_area/averages/burnarea_01to12_2014.nc"
@@ -51,7 +52,10 @@ begin
    end if
 
    DIFF = True
-     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200802_Febdiff.nc"
+     ;diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/200802_Febdiff.nc"
+     ;diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201402_Febdiff.nc"
+     ;diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/DJV8J_diff.nc.nc"
+     diff_file1 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/ASV8J_diff.nc.nc"
      diff_file2 = "/net/mopfl/home/buchholz/MOPITT_subset/V8/averages/201402_Febdiff.nc"
 
 ;***************************************************************
@@ -169,11 +173,12 @@ end if
     mapres@lbTitleFontHeightF       = 0.022
     mapres@lbLabelFontHeightF       = 0.022
     mapres@lbTitlePosition          = "bottom"      ; Label Bar title
-    mapres@lbOrientation             = "Horizontal"     ; Label bar location
+    mapres@lbOrientation             = "Vertical"     ; Label bar location
     mapres@lbLabelAutoStride         = True
     mapres@lbBoxLinesOn              = False
-    mapres@lbBoxEndCapStyle           = "TriangleBothEnds"
-    mapres@pmLabelBarOrthogonalPosF  = .12            ; move whole thing down
+    mapres@lbBoxEndCapStyle          = "TriangleBothEnds"
+    mapres@pmLabelBarOrthogonalPosF  = .04            ; move whole thing down
+    ;mapres@pmLabelBarParallelPosF    = .8
 
     mapres@gsnStringFontHeightF        =0.022
     mapres@tmXBLabelFontHeightF        =0.022
@@ -186,10 +191,10 @@ end if
     mapres@cnMissingValPerimThicknessF  = 2.0      ; increase missing value perimeter thickness
 
     mapres@mpLimitMode               ="LatLon"
-    ;  mapres@mpMinLatF               = 15       ; zoom to USA
-    ;  mapres@mpMaxLatF               = 80
-    ;  mapres@mpMinLonF               = -180
-    ;  mapres@mpMaxLonF               = -50
+      mapres@mpMinLatF               = 5      ; zoom to USA
+      mapres@mpMaxLatF               = 60
+      mapres@mpMinLonF               = -140
+      mapres@mpMaxLonF               = -50
       ;-------------------------------------
      ; mapres@mpMinLatF               = -70       ; zoom to SH
      ; mapres@mpMaxLatF               = 15
@@ -203,11 +208,15 @@ end if
      ; mapres@mpMaxLonF               = 200
      ; mapres@mpCenterLonF            = 70
       ;-------------------------------------
-      mapres@mpMinLatF               = -85       ; zoom to +/- 80
-      mapres@mpMaxLatF               = 85
-      mapres@mpMinLonF               = -170
-      mapres@mpMaxLonF               = 185
-      mapres@mpCenterLonF            = 0
+     ; mapres@mpMinLatF               = -85       ; zoom to +/- 80
+     ; mapres@mpMaxLatF               = 85
+     ; mapres@mpMinLonF               = -120
+     ; mapres@mpMaxLonF               = 185
+     ; mapres@mpCenterLonF            = 0
+      ;-------------------------------------
+     ; mapres@mpMinLatF               = -85       ; zoom to +/- 80
+     ; mapres@mpMaxLatF               = 65
+     ; mapres@mpCenterLonF            = -120
       ;-------------------------------------
       ;mapres@mpMinLatF               = -60       ; zoom to MSEA
       ;mapres@mpMaxLatF               = 40
@@ -283,6 +292,8 @@ print(labels)
     ; Difference plot
     ; ===================
     cmap = read_colormap_file("BlWhRe")
+
+
 printVarSummary(cmap)
     ;colour_arr := (/cmap(40,:),cmap(48,:),cmap(50,:),cmap(50,:),cmap(51,:),cmap(52,:),\
     ;            cmap(54,:), cmap(56,:),cmap(60,:),cmap(65,:),cmap(70,:),cmap(75,:),cmap(80,:),\
@@ -460,9 +471,9 @@ print(labels)
       ;station_lat = (/-12.42, -34.41, -45.04/)
 
 
-      station_name = (/"Darwin"/)
-      station_lon = (/130.89/)
-      station_lat = (/-12.42/)
+      ;station_name = (/"Darwin"/)
+      ;station_lon = (/130.89/)
+      ;station_lat = (/-12.42/)
 
     ; ===================
     ; Locations
@@ -473,8 +484,8 @@ print(labels)
        pmres@gsMarkerSizeF    = 0.010
        pmres@gsMarkerColor    = "black"
 
-       gsn_polymarker(wks,map,station_lon,station_lat,pmres)
-       points = gsn_add_polymarker(wks,map,station_lon,station_lat,pmres)
+       ;gsn_polymarker(wks,map,station_lon,station_lat,pmres)
+       ;points = gsn_add_polymarker(wks,map,station_lon,station_lat,pmres)
 
     ; ===================
     ; Add locations names
@@ -486,7 +497,7 @@ print(labels)
       txres@txJust         = "TopRight"
       txres@txFontColor    = "black"
 
-      text = gsn_add_text(wks,map,station_name(0),station_lon(0)-2.5,station_lat(0)+1.0,txres)
+      ;text = gsn_add_text(wks,map,station_name(0),station_lon(0)-2.5,station_lat(0)+1.0,txres)
 
       txres@txJust         = "BottomLeft"
 
@@ -515,15 +526,16 @@ print(labels)
   ;frame(wks)
 
   panel_res                       = True
-  panel_res@gsnPanelFigureStringsJust = "Bottomright"
-  panel_res@gsnPanelFigureStringsFontHeightF = 0.018
+  panel_res@gsnPanelFigureStringsJust = "Bottomleft"
+  panel_res@gsnPanelFigureStringsFontHeightF = 0.014
   panel_res@gsnPanelFigureStringsPerimOn = True
   panel_res@gsnPanelMainString    = "MOPITT total column CO, 2002-2017"
   panel_res@gsnPanelMainFontHeightF = 0.024 
 
   if (DIFF) then
-    panel_res@gsnPanelFigureStrings = (/"Average February CO 2002-2017","Feb 2008 difference to average","Feb 2014 difference to average"/)
-    gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
+    panel_res@gsnPanelFigureStrings = (/"Average August-September CO 2002-2019","Aug. to Sep. 2020 difference to average","Feb 2014 difference to average"/)
+    ;gsn_panel(wks,(/map,map2,map3/),(/3,1/),panel_res) ; All plots will be drawn.
+    gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.
   else 
     panel_res@gsnPanelFigureStrings = (/"Average CO","(b) CO Std. Dev."/)
     gsn_panel(wks,(/map,map2/),(/2,1/),panel_res) ; All plots will be drawn.

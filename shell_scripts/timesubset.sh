@@ -7,6 +7,7 @@
 #-------------------
 
 
+<<<<<<< HEAD
 #workdir=/gpfs/fs1/work/buchholz/emis/CMIP6   # working directory
 #outdir=/gpfs/fs1/work/buchholz/emis/CMIP62012_2014   # working directory
 #file_list="$(ls $workdir)"
@@ -15,6 +16,11 @@ outdir=/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_new
 file_list="$(ls $workdir/*2018_2020.nc)"
 arr=$(echo "$file_list" | sed 's/2018_2020*.nc//g')        # remove year specific to file
 #arr=$(echo "$file_list" | sed 's/'$year_of_interest'*.nc//g')        # remove year specific to file
+=======
+workdir=/gpfs/fs1/work/buchholz/emis/qfed2.5_finn_2000_2020_1x1   # working directory
+outdir=/gpfs/fs1/work/buchholz/emis/test   # working directory
+file_list="$(ls $workdir)"
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 
 for x in $arr ; do
    infile=${x}2018_2020.nc

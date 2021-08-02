@@ -7,7 +7,7 @@
 ;
 ;   To run type:
 ; To use call within another ncl program:
-;          > seasonal_cycle(data_array,time_array,ystart,yend)
+;          > calc_seasonal_cycle(data_array,time_array,ystart,yend)
 ;                                      RRB April 19, 2018
 ;=======================================================;
 undef("calc_seasonal_cycle")
@@ -20,7 +20,7 @@ function calc_seasonal_cycle(valIN[*]:numeric, timeIN[*]:numeric, ystartIN:numer
 ; Arguments:
 ;    valIN: Values associated with the time array
 ;
-;    timeIN: The native time array of the values, can be in yyyymmdd
+;    timeIN: The native time array of the values, can be in yyyymm
 ;
 ;    ystartIN: Year the average seasonal cycle starts 
 ;            
@@ -61,7 +61,9 @@ begin
 
     smooth_val         = runave(valIN,smoothIN,0)
     detrend_val_smooth = dtrend_msg_n (day_yfrac,smooth_val,False,True,0)
-    detrend_val = valIN - detrend_val_smooth@slope*(day_yfrac-ystart-ymid-0.5)
+    ;detrend_val = valIN - detrend_val_smooth@slope*(day_yfrac-ystart-ymid-0.5)
+    ; bypass detrending
+    detrend_val = valIN
 
  ; -------------------------------
   ; CLIMATOLOGICAL MONTH AVERAGES 

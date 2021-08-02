@@ -22,7 +22,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/IASI/home/buchholz/code_database/ncl_programs/buchholz_global_util/mopitt_smooth_model_output.ncl"
+;load "/IASI/home/buchholz/code_database/ncl_programs/buchholz_global_util/mopitt_smooth_model_output.ncl"
 
 begin
 
@@ -41,32 +41,23 @@ begin
   ; -------------------------------
   ; files and path setup
   ; -------------------------------
-   runtype = "cmip.qfedBBmax_32L"
+   runtype = "cmip.gfasBBCO"
    ;dir_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/atm/hist/"
-   dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200408."+runtype+"/atm/hist/"
+   dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180617."+runtype+"/atm/hist/"
    ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615."+runtype+"/atm/hist/"
    ;dir_in = "/net/modeling1/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200120."+runtype+"/atm/hist/"
    e_file_in = systemfunc ("ls "+dir_in + "*h1."+ystart+"*.nc")
 
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.finnBBCO/
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBB/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCO/
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmax/
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmin/
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmax
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmin
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBmax/
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBmin/
 ;fmerra.2.0.FCSD.1deg.chey180617.cmip.gfasBBCO/
-<<<<<<< HEAD
-=======
-
->>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
-;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/
-;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBmaxCO_32L/
-;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBminCO_32L/
-;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmax_32L/
-;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmin_32L/
-<<<<<<< HEAD
-=======
-
->>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
+;fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/
 
 
   ; -------------------------------
@@ -141,6 +132,8 @@ begin
     end do
       fields!0 = "lon"
       fields!1 = "lat"
+printVarSummary(fields)
+exit
 
     region_mask = fields(lat|:,lon|:)
 
@@ -154,21 +147,21 @@ begin
 
     region_names     = (/"Ocean","BONA","TENA","CEAM","NHSA","SHSA","EURO","MIDE", \
                          "NHAF","SHAF","BOAS","CEAS","SEAS","EQAS","AUST" /)
-    ;;class_0 :	Ocean
-    ;;class_1 :	BONA (Boreal North America)
-    ;;class_2 :	TENA (Temperate North America
-    ;;class_3 :	CEAM (Central America)
-    ;;class_4 :	NHSA (Northern Hemisphere South America)
-    ;;class_5 :	SHSA (Southern Hemisphere South America)
-    ;;class_6 :	EURO (Europe)
-    ;;class_7 :	MIDE (Middle East)
-    ;;class_8 :	NHAF (Northern Hemisphere Africa)
-    ;;class_9 :	SHAF (Southern Hemisphere Africa)
-    ;;class_10 :	BOAS (Boreal Asia)
-    ;;class_11 :	CEAS (Central Asia)
-    ;;class_12 :	SEAS (Southeast Asia)
-    ;;class_13 :	EQAS (Equatorial Asia)
-    ;;class_14 :	AUST (Australia and New Zealand)
+    ;;class_0 : Ocean
+    ;;class_1 : BONA (Boreal North America)
+    ;;class_2 : TENA (Temperate North America
+    ;;class_3 : CEAM (Central America)
+    ;;class_4 : NHSA (Northern Hemisphere South America)
+    ;;class_5 : SHSA (Southern Hemisphere South America)
+    ;;class_6 : EURO (Europe)
+    ;;class_7 : MIDE (Middle East)
+    ;;class_8 : NHAF (Northern Hemisphere Africa)
+    ;;class_9 : SHAF (Southern Hemisphere Africa)
+    ;;class_10 : BOAS (Boreal Asia)
+    ;;class_11 : CEAS (Central Asia)
+    ;;class_12 : SEAS (Southeast Asia)
+    ;;class_13 : EQAS (Equatorial Asia)
+    ;;class_14 : AUST (Australia and New Zealand)
 
     delete([/lines,fields/])
 
