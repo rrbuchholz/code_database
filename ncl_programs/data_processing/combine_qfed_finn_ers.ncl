@@ -54,11 +54,12 @@ begin
     end if
     splitdate = str_split_by_length(tostring(YYYYMMDD), 4)
     year = toint(splitdate(0))
-    year_range = "2018_2020"
+    year_range = "2020_2022"
     outres = "0.9x1.25"
     ratio_species = "co2"
     species = "CO2"
-    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+    ;outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt_new/"
     MIN_EF         = False
     MAX_EF         = False
   else
@@ -397,24 +398,43 @@ begin
       ; CAM-chem species
       ;-------------------
       if (NRT) then
+
         outfilename = "qfed.emis_"+var_names(tracer)+"_"+outres+"_mol_"+year_range+".nc"
-        template = addfile(outpath+outfilename, "r")            ; read in
+        ;outpath_template = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_template/"
+        ;template = addfile(outpath_template+outfilename, "r")   ; read in
+        template = addfile(outpath+outfilename, "r")   ; read in
            date_template = template->date
            bb_template = template->bb
-;printVarSummary(bb_template)
            bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
-           bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
-           delete(bb_template@_FillValue)
-           delete(bb_template@missing_value)
-           delete(bb_template@fmissing_value)
-           bb_template@_FillValue := 0.0
-           bb_template@missing_value := 0.0
-           bb_template@fmissing_value := 0.0
+           ;bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
+;printVarSummary(bb_template)
+;print(isatt(bb_template,"_FillValue"))
+;print(bb_template@_FillValue)
 
+           if (isatt(bb_template,"_FillValue")) then
+             delete(bb_template@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_template,"missing_value")) then
+             delete(bb_template@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_template,"fmissing_value")) then
+             delete(bb_template@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+
+;print(isatt(bb_template,"_FillValue"))
 ;printVarSummary(bb_template)
 ;exit
+      ;outpath_template = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_template/"
+      ;print("ncrcat -v bb -x "+outpath_template+outfilename+" "+outpath+outfilename)
+      ;system ("ncrcat -v bb -x "+outpath_template+outfilename+" "+outpath+outfilename)
+      fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
 
-        fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else if (MIN_EF)
         outfilename = "qfed.emis.min_"+var_names(tracer)+"_"+outres+"_mol_"+year+".nc"
         fout = addfile(outpath+outfilename, "c")
@@ -430,14 +450,25 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
-           delete(emiss_regrid@missing_value)
-           delete(emiss_regrid@fmissing_value)
            emiss_regrid = where(ismissing(emiss_regrid),0,emiss_regrid) ; replace missing with zeros for calculations
-           emiss_regrid@_FillValue := 0.0
-           emiss_regrid@missing_value := 0.0
-           emiss_regrid@fmissing_value := 0.0
            emiss_regrid@vmax   := tofloat(max(emiss_regrid))
            emiss_regrid@vmin   := tofloat(min(emiss_regrid))
+
+           if (isatt(emiss_regrid,"_FillValue")) then
+             delete(emiss_regrid@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(emiss_regrid,"missing_value")) then
+             delete(emiss_regrid@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(emiss_regrid,"fmissing_value")) then
+             delete(emiss_regrid@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
 
          emiss_overwrite = bb_template
          ten_forward = ind_overwrite+10
@@ -447,6 +478,9 @@ begin
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
            emiss_overwrite@long_name := dummy_var2(tracer)+" QFED/FINN fire emissions"
+
+printVarSummary(emiss_overwrite)
+print("******************")
 
        ;--- emissions
          fout->bb               = emiss_overwrite
@@ -626,17 +660,32 @@ begin
       ;-------------------
       if (NRT) then
         outfilename = "qfed.emis_"+voc_spec(voctype)+"_"+outres+"_mol_"+year_range+".nc"
+        ;outpath_template = "/data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_template/"
+        ;template = addfile(outpath_template+outfilename, "r")   ; read in
         template = addfile(outpath+outfilename, "r")            ; read in
            date_template = template->date
            bb_template = template->bb
            bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
-           ;bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
-           delete(bb_template@_FillValue)
-           delete(bb_template@missing_value)
-           delete(bb_template@fmissing_value)
-           bb_template@_FillValue := 0.0
-           bb_template@missing_value := 0.0
-           bb_template@fmissing_value := 0.0
+           if (isatt(bb_template,"_FillValue")) then
+             delete(bb_template@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_template,"missing_value")) then
+             delete(bb_template@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_template,"fmissing_value")) then
+             delete(bb_template@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+           ;bb_template@_FillValue := 0.0
+           ;bb_template@missing_value := 0.0
+           ;bb_template@fmissing_value := 0.0
+        ;print("ncrcat -v bb -x "+outpath_template+outfilename+" "+outpath+outfilename)
+        ;system ("ncrcat -v bb -x "+outpath_template+outfilename+" "+outpath+outfilename)
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else if (MIN_EF)
         outfilename = "qfed.emis.min_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
@@ -654,14 +703,25 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
-           delete(voc_emiss_regrid@missing_value)
-           delete(voc_emiss_regrid@fmissing_value)
            voc_emiss_regrid = where(ismissing(voc_emiss_regrid),0,voc_emiss_regrid) ; replace missing with zeros for calculations
-           voc_emiss_regrid@_FillValue := 0.0
-           voc_emiss_regrid@missing_value := 0.0
-           voc_emiss_regrid@fmissing_value := 0.0
            voc_emiss_regrid@vmax   := tofloat(max(voc_emiss_regrid))
            voc_emiss_regrid@vmin   := tofloat(min(voc_emiss_regrid))
+
+           if (isatt(voc_emiss_regrid,"_FillValue")) then
+             delete(voc_emiss_regrid@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(voc_emiss_regrid,"missing_value")) then
+             delete(voc_emiss_regrid@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(voc_emiss_regrid,"fmissing_value")) then
+             delete(voc_emiss_regrid@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
 
          emiss_overwrite = bb_template
          ten_forward = ind_overwrite+10
@@ -672,6 +732,8 @@ begin
            emiss_overwrite@vmax   := tofloat(max(emiss_overwrite))
            emiss_overwrite@vmin   := tofloat(min(emiss_overwrite))
            emiss_overwrite@long_name := voc_spec(voctype)+" QFED/FINN fire emissions"
+
+printVarSummary(emiss_overwrite)
 
        ;--- emissions
          fout->bb               = emiss_overwrite
@@ -713,7 +775,7 @@ begin
       ; Variables
       ;------------
       voc_emiss_regrid@long_name = voc_spec(voctype)+" QFED/FINN fire emissions"
-      emiss_regrid@_FillValue   := 0.0
+      ;emiss_regrid@_FillValue   := 0.0
       voc_emiss_regrid@vmax      = max(voc_emiss_regrid)
       voc_emiss_regrid@vmin      = min(voc_emiss_regrid)
       delete(voc_emiss_regrid@missing_value)

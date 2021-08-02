@@ -50,14 +50,15 @@ begin
 
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.finnBBCO/
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBB/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCO/
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmax
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmin
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBmax/
-;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBmin/
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmax/
+;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmin/
 ;fmerra.2.0.FCSD.1deg.chey180617.cmip.gfasBBCO/
-;fmerra.2.0.FCSD.1deg.chey200120.cmip.qfedBBmin/
+;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/
+;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBmaxCO_32L/
+;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBminCO_32L/
+;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmax_32L/
+;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmin_32L/
 
 
   ; -------------------------------

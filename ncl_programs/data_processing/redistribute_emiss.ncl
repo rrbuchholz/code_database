@@ -40,7 +40,7 @@ begin
 ; user input
 ;--------------------------------------------
     if (.not. isvar("year")) then      ; is year=<YYYY> from command line?
-       year = "2018_2020"
+       year = "2020"
     end if
 
     if (.not. isvar("tracer")) then    ; is tracer=<name> from command line?
@@ -59,7 +59,7 @@ begin
     end if
 
     if (.not. isvar("outres")) then     ; is outres=<name> from command line?
-         outres = "0.9x1.25"
+         outres = "0.9x1.25"            ; native_res, 0.9x1.25
     end if
 
     if (.not. isvar("emiss_type")) then  ; is emiss_type=<name> from command line?
@@ -78,7 +78,7 @@ begin
   top_dir = "/data14b/buchholz/"
    f_ext = "qfed.emis_"
   if (NRT) then
-    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt/"
+    emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+"nrt_new/"
   else if (MIN_EF) then
     emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"_min/"
     f_ext = "qfed.emis.min_"
@@ -92,6 +92,10 @@ begin
   else ; QFED setup
     if (emiss_type.eq."regridded") then
       emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/"+year+"/"
+    else if (outres.eq."native_res") then
+      emis_dir = top_dir+ "qfed/cam_hires/"+emiss_type+"/v2.5/"+year+"/"
+      ;emis_dir = top_dir+ "qfed/cam_hires/nrt/"+emiss_type+"/v2.5/"+year+"/"
+      outres = "hires"
     else
       emis_dir = top_dir+ "qfed/cam_"+outres+"/"+emiss_type+"/v2.5/"+year+"/"
     end if
@@ -99,8 +103,8 @@ begin
   end if
   end if
   end if
+  end if
 
-  
   ; OC/BC
   if (tracer.eq."OC".or.tracer.eq."BC")
     e_file_in = emis_dir+f_ext+tracer+"_"+outres+"_mol_"+year+".nc"
@@ -113,6 +117,10 @@ begin
    else
     specs_ivoc = (/"C3H6", "C3H8", "C2H6", "C2H4", "BIGENE", "BIGALK", "CH3COCH3", \
                    "MEK", "CH3CHO", "CH2O", "BENZENE", "TOLUENE", "XYLENES"/)
+    ; IVOCA
+    ;specs_ivoc := (/"C3H6", "C3H8", "C2H6", "C2H4", "BIGENE", "BIGALK"/)
+    ; IVOCB
+    ;specs_ivoc := (/"CH3COCH3","MEK", "CH3CHO", "CH2O", "BENZENE", "TOLUENE", "XYLENES"/)
     end if
     e_file_in = new(dimsizes(specs_ivoc), string)
     do i = 0, dimsizes(specs_ivoc)-1
@@ -136,6 +144,8 @@ begin
   end if
   end if
   end if
+
+  print(e_file_in)
 
   ;------------
   ; toggles
@@ -184,6 +194,10 @@ begin
     mw_svoc = 310.
     ;C3H6,C3H8,C2H6,C2H4,BIGENE,BIGALK,CH3COCH3,MEK,CH3CHO,CH2O,BENZENE,TOLUENE,XYLENES
     mws_voc = (/42., 44., 30., 28., 56., 72., 58., 72., 44., 30., 78., 92., 126./)
+    ;IVOCA: C3H6,C3H8,C2H6,C2H4,BIGENE,BIGALK
+    ;mws_voc = (/42., 44., 30., 28., 56., 72./)
+    ;IVOCB: CH3COCH3,MEK,CH3CHO,CH2O,BENZENE,TOLUENE,XYLENES
+    ;mws_voc = (/58., 72., 44., 30., 78., 92., 126./)
     mw_pom = 12.011
   ; SOAG
   else if (tracer.eq."SOAG") then
@@ -219,7 +233,19 @@ begin
       do i = 0, dimsizes(specs_ivoc)-1
         fin := addfile(e_file_in(i), "r")
         emiss_in_array(:,:,:,i) = fin->$fire_emiss$
+        print("loaded... "+specs_ivoc(i))
       end do
+      ; IVOCA and IVOCB for hires
+      ; ---- hack for big files
+      ;e_file_in := (/ emis_dir+f_ext+"IVOCA_"+outres+"_mol_"+year+".nc",\
+      ;                emis_dir+f_ext+"IVOCB_"+outres+"_mol_"+year+".nc"/)
+      ;finA = addfile(e_file_in(0), "r")
+      ;emiss_inA    = finA->$fire_emiss$
+      ;print("loaded... "+e_file_in(0))
+      ;finB = addfile(e_file_in(1), "r")
+      ;emiss_inB    = finB->$fire_emiss$
+      ;print("loaded... "+e_file_in(1))
+      ; ---- end hack for big files
     else if (tracer.eq."SOAG") then
       fin = addfile(e_file_in(0), "r")
       emiss_in         = fin->$fire_emiss$
@@ -228,6 +254,7 @@ begin
       do i = 0, dimsizes(specs_soag)-1
         fin := addfile(e_file_in(i), "r")
         emiss_in_array(:,:,:,i) = fin->$fire_emiss$
+        print("loaded "+ specs_soag(i))
       end do
     else if (tracer.eq."SO4") then
       fin = addfile(e_file_in, "r")
@@ -265,8 +292,17 @@ begin
     ; amufac = 1.65979e-23 = (1E-3kg/g)*(1E4cm2/m2)/Avog
     ; therefore number emissions files are also scaled by 1/amufac
     num_emiss = emiss_in * mw /mass_particle        ;(particles/cm2/s)(molecules/mole)(g/kg)
-    ; to write out
-    new_emiss = (/emiss_split_1, emiss_split_2, emiss_new, num_emiss/)
+    
+    if (outres.eq."hires") then
+      ;new_names = (/"OC1","OC2", "pom_a4", "num_pom_a4"/)
+      ;new_names = (/"CB1","CB2", "bc_a4", "num_bc_a4"/)
+      new_names := (/"num_bc_a4"/)
+      new_emiss = (/num_emiss/)
+    else
+      ; to write out
+      new_emiss = (/emiss_split_1, emiss_split_2, emiss_new, num_emiss/)
+    end if
+
   end if
 
 
@@ -281,15 +317,25 @@ begin
       mass_emiss_1 = emiss_in_array*0
     do i = 0, dimsizes(specs_ivoc)-1
       mass_emiss_1(:,:,:,i) = 0.2*emiss_in_array(:,:,:,i) * mws_voc(i) / mw_ivoc
+      print("scaled... "+specs_ivoc(i))
     end do
     emiss_comb_1 = dim_sum_n(mass_emiss_1,3)
+    ; Sum IVOCA and IVOCB
+    ; emiss_comb_1 = emiss_inA + emiss_inB
 
     ;SVOC
     emiss_comb_2 = 0.6 * emiss_in *mw_pom/mw_svoc
 
-    ; to write out
-    new_names = (/"IVOC","SVOC"/)
-    new_emiss = (/emiss_comb_1, emiss_comb_2/)
+    if (outres.eq."hires") then
+      new_names = (/"IVOC"/)   ; IVOCA and IVOCB first for big files
+      new_emiss = (/emiss_comb_1/)
+    else
+      ; to write out
+      new_names = (/"IVOC","SVOC"/)
+      new_emiss = (/emiss_comb_1, emiss_comb_2/)
+    end if
+
+
   end if
 
 
@@ -322,9 +368,17 @@ begin
     ; amufac = 1.65979e-23 = (1E-3kg/g)*(1E4cm2/m2)/Avog
     ; therefore number emissions files are also scaled by 1/amufac
     num_emiss = emiss_so4 * mw /mass_particle        ;(particles/cm2/s)(molecules/mole)(g/kg)
-    ; to write out
-    new_names = (/"SO2", "so4_a1", "num_so4_a1"/)
-    new_emiss = (/emiss_so2_new, emiss_so4, num_emiss/)
+
+    if (outres.eq."hires") then
+      ;new_names = (/"SO2", "so4_a1", "num_so4_a1"/)
+      new_names = (/"num_so4_a1"/)
+      new_emiss = (/num_emiss/)
+    else
+      ; to write out
+      new_names = (/"SO2", "so4_a1", "num_so4_a1"/)
+      new_emiss = (/emiss_so2_new, emiss_so4, num_emiss/)
+    end if
+
   end if
 
 ;--------------------------------------------
@@ -378,7 +432,7 @@ begin
         else if (new_names(i).eq."SVOC") then
           fout@molecular_weight := mw_svoc
           fout@data_summary     = "Lumped HCs precursor of SOA for VBS scheme. 0.6*pom_a4"
-        else if (new_names(i).eq."IVOC") then
+        else if (new_names(i).eq."IVOC".or.new_names(i).eq."IVOCA".or.new_names(i).eq."IVOCB") then
           fout@molecular_weight := mw_ivoc
           hist = str_join(specs_ivoc, " + ")
           fout@data_summary     = "Lumped HCs precursor of SOA for VBS scheme. 0.2*("+hist+")"
@@ -397,13 +451,33 @@ begin
       ;------------
         if (new_names(i).eq."SOAG") then
            bb_emissions := new_emiss(:,:,:) ; only one output
+        else if (outres.eq."native_res".or.outres.eq."hires")
+           bb_emissions := new_emiss(:,:,:) ; only one output because of segmentation fault
+           ;bb_emissions := new_emiss(i,:,:,:)
         else
            bb_emissions := new_emiss(i,:,:,:)
+        end if
         end if
         copy_VarAtts(emiss_in,bb_emissions)
         copy_VarCoords(emiss_in,bb_emissions)
         bb_emissions@long_name = new_names(i)+" "+repo+"/FINN fire emissions"
-        bb_emissions@_FillValue:= 0.
+        if (NRT) then
+           if (isatt(bb_emissions,"_FillValue")) then
+             delete(bb_emissions@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_emissions,"missing_value")) then
+             delete(bb_emissions@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_emissions,"fmissing_value")) then
+             delete(bb_emissions@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+        end if
         bb_emissions@vmax      := tofloat(max(bb_emissions))
         bb_emissions@vmin      := tofloat(min(bb_emissions))
         if (new_names(i).eq."num_pom_a4".or.new_names(i).eq."num_bc_a4".or.\
@@ -415,6 +489,21 @@ begin
       printVarSummary(bb_emissions)
 
        ;--- emissions
+           if (isatt(bb_emissions,"_FillValue")) then
+             delete(bb_emissions@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_emissions,"missing_value")) then
+             delete(bb_emissions@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_emissions,"fmissing_value")) then
+             delete(bb_emissions@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
          fout->bb               = bb_emissions
     end do
   end if ;NetCDF

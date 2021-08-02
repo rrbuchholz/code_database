@@ -13,16 +13,17 @@ begin
 ; user input
 ;--------------------------------------------
    if (.not. isvar("year")) then      ; is year=<value> from command line?
-       year_range = "2018_2020"
+       year_range = "2020_2022"
     end if
    if (.not. isvar("YYYYMMDD")) then      ; is year=<value> from command line?
-       YYYYMMDD = 20180101
+       YYYYMMDD = 20210329
     end if
 
   ratio_species = "co2"
   outres = "0.9x1.25"
-  outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+  outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt_new/"
   emis_files = systemfunc ("ls "+outpath+"*"+year_range+".nc")
+  ;print(emis_files)
 
 ;--------------------------------------------
 ; end user input
@@ -57,6 +58,7 @@ begin
     end if
   end do
 
+   ;print(check_array)
    val_check = sum(check_array)
 
     if (val_check.eq.dimsizes(emis_files)) then                      ; determine if values present

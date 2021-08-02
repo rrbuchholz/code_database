@@ -22,14 +22,14 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  tracer = "Co"
+  tracer = "O3"
   region = "Globe"
   timeslice = "August"
 
   ; Plot definitions
     units = "ppb"
-    maxlev = 45
-    lev_spacing = 1
+    maxlev = 70
+    lev_spacing = 2.0
 
    STATIONS = False
 
@@ -47,9 +47,9 @@ begin
   ; camfile_1 = systemfunc ("ls "+dir_in + "*h0*2018-08*.nc")
   ; camfile_2 = systemfunc ("ls "+dir2_in + "*h0*2018-08*.nc")
 
-  dir_in = "/glade/scratch/buchholz/archive/fmerra.2.1003.FCSD.f09.qfedcmip.56L.001/atm/hist/"
-  dir2_in = "/glade/scratch/buchholz/archive/fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/atm/hist/"
-   outpath = "/glade/work/buchholz/CAM_chem_output/maskfire_2018/"
+  dir_in = "/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip/atm/hist/"
+  dir2_in = "/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/atm/hist/"
+   ;outpath = "/glade/work/buchholz/CAM_chem_output/maskfire_2018/"
    camfile_1 = systemfunc ("ls "+dir_in + "*h0*2014-08*.nc")
    camfile_2 = systemfunc ("ls "+dir2_in + "*h0*2014-08*.nc")
 
@@ -156,12 +156,13 @@ printVarSummary(tracer_fields_1)
     mapres@mpGridLineColor = "gray25"
 
     mapres@cnFillOn                  = True
-    ;cmap = read_colormap_file("GMT_haxby")
+    cmap = read_colormap_file("GMT_haxby")
     ;cmap = read_colormap_file("MPL_viridis")
     ;cmap = read_colormap_file("cmp_haxby")
-    cmap = read_colormap_file("BlWhRe")
+    ;cmap = read_colormap_file("BlWhRe")
 
     mapres@cnFillColors      = cmap(4:,:)
+    ;mapres@cnFillColors      = cmap
     ;mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
     mapres@cnLineLabelsOn            = False               ; turn off countour labels
     mapres@cnLinesOn                 = False
@@ -178,7 +179,7 @@ printVarSummary(tracer_fields_1)
 
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
-      mapres@cnMinLevelValF          = -45.                  ; set the minimum contour level
+      mapres@cnMinLevelValF          = 20                ; set the minimum contour level
       mapres@cnMaxLevelValF          = maxlev              ; set the maximum contour level
       mapres@cnLevelSpacingF         = lev_spacing         ; set the interval between contours
 
@@ -190,7 +191,7 @@ printVarSummary(tracer_fields_1)
       panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
       mapres@gsnRightString        = ""
-      mapres@tiMainString     = "CAM-chem surface "+ tracer + ", " +timeslice +" 2018"
+      mapres@tiMainString     = "CAM-chem surface "+ tracer + ", " +timeslice +" 2014"
       mapres@gsnLeftString     = ""
       ;mapres@gsnLeftString     = "CAM-chem surface ISOPNITA+B with Anthropogenic emissions " +timeslice
 
@@ -202,8 +203,8 @@ printVarSummary(tracer_fields_1)
      .or.tracer.eq."CLDTOT") then
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,:,:),mapres)
     else
-      ;map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,55,:,:),mapres)
-      map1 = gsn_csm_contour_map_ce(wks,diff(0,55,:,:),mapres)
+      map1 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,31,:,:),mapres)
+      ;map1 = gsn_csm_contour_map_ce(wks,diff(0,31,:,:),mapres)
     end if
 
 
