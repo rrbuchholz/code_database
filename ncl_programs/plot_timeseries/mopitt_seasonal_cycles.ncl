@@ -23,12 +23,13 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-location = "Northeast"
-plot_title = "Northeast"
+location = "Colorado"
+plot_title = "Colorado"
 
   ; -------------------------------
   ; MOPITT
   ; -------------------------------
+  ;timeseries_files = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/V9/"+location+"_V9T*monthavg_VMR.nc")
   timeseries_files = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/"+location+"_*monthavg_VMR.nc")
   ;timeseries_files = systemfunc ("ls /IASI/home/buchholz/MOPITT_subset/regions_v8/seasonal_change_ext_1/"+location+"_*monthavg_VMR.nc")
 print(timeseries_files)
@@ -37,12 +38,12 @@ print(timeseries_files)
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "pdf"
+    plttype      = "x11"
     ;plttype@wkPaperSize = "A4"
     ;plttype@wkWidth = 0.5
     ;plttype@wkHeight = 0.5
-    miny=80
-    maxy=130
+    miny=90
+    maxy=170
 
   PLOTFTS        = True
   
@@ -89,19 +90,20 @@ print(timeseries_files)
   fin = addfiles(timeseries_files, "r")            ; read in
     ListSetType (fin, "cat")                 ; concatenate
     ; Column vmr
-    timeseries_dummy  = fin[:]->RetrievedX_CORegionStats
-    scale = 1e-09
-    global_trend = -0.5*1e-09
+    ;timeseries_dummy  = fin[:]->RetrievedX_CORegionStats
+    ;scale = 1e-09
+    ;global_trend = -0.5*1e-09
     ; Surface vmr
     ;timeseries_dummy  = fin[:]->AvgRetrievedCOMixingRatioProfile
-    ;timeseries_dummy  = fin[:]->AvgSurfaceVMR
+    timeseries_dummy  = fin[:]->AvgSurfaceVMR
     ;global_trend = -0.5
-    ;scale = 1
+    global_trend = 0.
+    scale = 1
 
     dfs_dummy = fin[:]->AvgDegreesofFreedomforSignal
 
 
-printVarSummary(timeseries_dummy)
+;printVarSummary(timeseries_dummy)
 ;exit
 
     time_dummy        = fin[:]->time
@@ -143,7 +145,7 @@ printVarSummary(timeseries_dummy)
   ; -------------------------------
   ; Avg seasonal cycle
   ; -------------------------------
-  mopitt_seas_avg_a = calc_seasonal_cycle(timeseries,time,2002,2008, 12)
+  mopitt_seas_avg_a = calc_seasonal_cycle(timeseries,time,2002,2011, 12)
 ;print(mopitt_seas_avg_a)
   mopitt_seas_avg_b = calc_seasonal_cycle(timeseries,time,2012,2018, 12)
 ;print(mopitt_seas_avg_b)
@@ -195,14 +197,44 @@ printVarSummary(timeseries_dummy)
 ;   print(name_array+" Peak-to-trough: "+sprintf("%6.4g",peak_to_trough*100) \
 ;         + "%; Peak date (MMDD): "+peak_date)
 
-var_a = mopitt_seas_avg_a(:,1)*mopitt_seas_avg_a(:,1)
-var_b = mopitt_seas_avg_b(:,1)*mopitt_seas_avg_b(:,1)
+var_a = mopitt_seas_avg_a(:,1)/scale*mopitt_seas_avg_a(:,1)/scale
+var_b = mopitt_seas_avg_b(:,1)/scale*mopitt_seas_avg_b(:,1)/scale
 num_a = mopitt_seas_avg_a(:,0)*0
-num_a = 7
+num_a = 10
+; Note different num_a for August
+num_a(7)=9
 num_b = mopitt_seas_avg_b(:,0)*0
 num_b = 7
-t_test_result = ttest(mopitt_seas_avg_a(:,0),var_a,num_a,mopitt_seas_avg_b(:,0),var_b,num_b,False,True)
+df = num_a+num_b-2
+pooled_sd = sqrt((var_a+var_b)/2)
+pooled_sd_2 = sqrt(((num_a-1)*var_a+(num_b-1)*var_b)/(num_a+num_b-2))
+mean1 = mopitt_seas_avg_a(:,0)/scale
+mean2 = mopitt_seas_avg_b(:,0)/scale
+cohen_d = abs(mean1-mean2)/pooled_sd
+t_test_result = ttest(mean1,var_a,num_a,mean2,var_b,num_b,False,True)
 print(t_test_result)
+
+;---- 95 % t= 2.447, 90% t = 1.934
+CI_lb = (mean1-mean2)-1.934*sqrt(var_a/num_a+var_b/num_b)
+CI_ub = (mean1-mean2)+1.934*sqrt(var_a/num_a+var_b/num_b)
+mean_diff = (mopitt_seas_avg_a(:,0)-mopitt_seas_avg_b(:,0))/scale
+
+;print(mopitt_seas_avg_a(:,0)/scale)
+;print(mopitt_seas_avg_b(:,0)/scale)
+
+print(pooled_sd(7))
+print(pooled_sd_2(7)-pooled_sd(7))
+print("*****************************")
+print("August t-test results:")
+print("p-value =   " + sprintf("%9.3f",t_test_result(0,7)) )
+print("t-value =   " + sprintf("%9.3f", t_test_result(1,7)) )
+print("df =        " + df(7))
+print("Cohen's d = " + sprintf("%9.3f", cohen_d(7)) )
+print("95%CI =     " + sprintf("%9.3f", CI_lb(7))+ ";" +sprintf("%9.3f", CI_ub(7)) )
+print("Mean diff = " + sprintf("%9.3f", mean_diff(7)) )
+print("*****************************")
+print("All t-test results:")
+print("95%CI =     " + sprintf("%9.3f", CI_lb(:))+ ";" +sprintf("%9.3f", CI_ub(:)) )
 
 sig_a = where(t_test_result(0,:).lt.(0.05), mopitt_seas_avg_a(:,0), mopitt_seas_avg_a@_FillValue)
 sig_b = where(t_test_result(0,:).lt.(0.05), mopitt_seas_avg_b(:,0), mopitt_seas_avg_b@_FillValue)
@@ -263,8 +295,8 @@ if (PLOT) then
     res@tiMainString        = ""
     res@tiXAxisString       = "Month"
     ;res@tiYAxisString       = "X~B2~CO~N~    (ppb)"
-    res@tiYAxisString       = "Column CO (ppb)"
-    ;res@tiYAxisString       = "Surface CO (ppb)"
+    ;res@tiYAxisString       = "Column CO (ppb)"
+    res@tiYAxisString       = "Surface CO (ppb)"
     ;res@tiYAxisString       = "DFS"
     ;res@gsnLeftString       = location + " surface"
     res@gsnLeftString       = plot_title                 ; change left 
@@ -282,7 +314,7 @@ if (PLOT) then
   ; -------------------------------
   ; timeseries - weekly averages and climatology
   ; -------------------------------
-    res@xyExplicitLegendLabels   = "2002-2008"
+    res@xyExplicitLegendLabels   = "2002-2011"
     res@pmLegendOrthogonalPosF   = -1.42
     res@xyLineColor         = "black"
     res@xyLineThicknessF    = 10.5
@@ -290,7 +322,7 @@ if (PLOT) then
   plot1 = gsn_csm_xy(wks,mopitt_seas_avg_a&month,mopitt_seas_avg_a(:,0)/scale,res)
 
 
-    res@xyExplicitLegendLabels   = "2012-2018"
+    res@xyExplicitLegendLabels   = "2012-2020"
     res@pmLegendOrthogonalPosF   = -1.53
     res@lgLabelFontColor       = "blue3"
     res@gsnLeftString       = ""
@@ -344,7 +376,7 @@ if (PLOT) then
     res@xyMarkLineModes = "Markers"
     res@xyMarkerColors = "black"
     res@xyMarkers = 16
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot1s = gsn_csm_xy(wks,mopitt_seas_avg_a&month,sig_a/scale,res)
     res@xyMarkerSizeF    = 25.5
   ;plot1s01 = gsn_csm_xy(wks,mopitt_seas_avg_a&month,sig_a01/scale,res)
@@ -352,7 +384,7 @@ if (PLOT) then
   ;overlay(plot1, plot1s01)
 
     res@xyMarkerColors = "blue3"
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot2s = gsn_csm_xy(wks,mopitt_seas_avg_b&month,sig_b/scale,res)
     res@xyMarkerSizeF    = 25.5
   ;plot2s01 = gsn_csm_xy(wks,mopitt_seas_avg_a&month,sig_b01/scale,res)
@@ -369,8 +401,8 @@ if (PLOT) then
     pmres@gsMarkerIndex = 16
     pmres@gsMarkerSizeF = 0.012
     pmres@gsMarkerColor := "black"
-  ;  gsn_polymarker_ndc (wks,0.72,0.60,pmres)
-  ;  gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
+    gsn_polymarker_ndc (wks,0.72,0.60,pmres)
+    gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
   ;  pm01res = True
   ;  pm01res@gsMarkerIndex = 16
   ;  pm01res@gsMarkerSizeF = 0.020
