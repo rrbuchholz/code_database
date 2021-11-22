@@ -44,7 +44,6 @@ begin
        smoothIN = 230
   end if
 
-
   ;--------------------------------------------
   ; DATE MANIPULATIONS
   ;--------------------------------------------
@@ -81,15 +80,21 @@ begin
     val_array!1 = "lat"
     val_array!2 = "lon"
 
+
    val_ClmMon = clmMonTLL(val_array)         ; daily climatology at each grid point
 
   ; -------------------------------
   ; CLIMATOLOGOCAL MONTHLY STDDEV
   ; -------------------------------
+    newval = val_array(:,0,0)
+    newyyyymm = newval&time
+    newdate = str_split_by_length(newyyyymm,4)
+    newmonths = toint(newdate(:,1))
+
     val_ClmDaysd = new(dimsizes(val_ClmMon), double)
     do kk=0,11
-      month_ind := ind(months.eq.(kk+1))
-      val_to_avg := detrend_val(month_ind)
+      month_ind := ind(newmonths.eq.(kk+1))
+      val_to_avg := newval(month_ind)
       val_ClmDaysd(kk,0,0) = dim_stddev_n(tofloat(val_to_avg),0)
     end do
     val_ClmDaysd!0 = "month"

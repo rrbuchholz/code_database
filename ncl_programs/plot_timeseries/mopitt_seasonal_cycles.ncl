@@ -23,8 +23,8 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-location = "Colorado"
-plot_title = "Colorado"
+location = "Northeast"
+plot_title = "Northeast"
 
   ; -------------------------------
   ; MOPITT
@@ -42,8 +42,8 @@ print(timeseries_files)
     ;plttype@wkPaperSize = "A4"
     ;plttype@wkWidth = 0.5
     ;plttype@wkHeight = 0.5
-    miny=90
-    maxy=170
+    miny=150
+    maxy=230
 
   PLOTFTS        = True
   
@@ -96,8 +96,8 @@ print(timeseries_files)
     ; Surface vmr
     ;timeseries_dummy  = fin[:]->AvgRetrievedCOMixingRatioProfile
     timeseries_dummy  = fin[:]->AvgSurfaceVMR
-    ;global_trend = -0.5
-    global_trend = 0.
+    global_trend = -0.5
+    ;global_trend = 0.
     scale = 1
 
     dfs_dummy = fin[:]->AvgDegreesofFreedomforSignal
@@ -150,13 +150,14 @@ print(timeseries_files)
   mopitt_seas_avg_b = calc_seasonal_cycle(timeseries,time,2012,2018, 12)
 ;print(mopitt_seas_avg_b)
 
+
 ;--------------------------------------------
 ; Deaseasonalize
 ;--------------------------------------------
   mopitt_seas_avg_c = new((/12, 2/), float)
   mopitt_seas_avg_d = new((/12, 2/), float)
-  ind_1sthalf = ind(years.lt.2011.and.years.ge.2002)
-  ind_2ndhalf = ind(years.ge.2012.and.years.lt.2018)
+  ind_1sthalf = ind(years.le.2011.and.years.ge.2002)
+  ind_2ndhalf = ind(years.ge.2012.and.years.le.2018)
   timeseries_c = timeseries(ind_1sthalf)
   months_c = months(ind_1sthalf)
   timeseries_d = timeseries(ind_2ndhalf)
@@ -167,11 +168,29 @@ print(timeseries_files)
      month_ind_c := ind(months_c.eq.(i+1))
      co_to_avg_c := timeseries_c(month_ind_c)
      mopitt_seas_avg_c(i,0) = dim_avg_n(co_to_avg_c,0)
+     mopitt_seas_avg_c(i,1) = dim_stddev_n(co_to_avg_c,0)
 
      month_ind_d := ind(months_d.eq.(i+1))
      co_to_avg_d := timeseries_d(month_ind_d)
      mopitt_seas_avg_d(i,0) = dim_avg_n(co_to_avg_d,0)
+     mopitt_seas_avg_d(i,1) = dim_stddev_n(co_to_avg_d,0)
   end do
+
+print("AVG")
+print(mopitt_seas_avg_c(:,0) + " --- " + mopitt_seas_avg_a(:,0))
+print("STD DEV")
+print(mopitt_seas_avg_c(:,1) + " --- " + mopitt_seas_avg_a(:,1))
+
+print("AVG")
+print(mopitt_seas_avg_d(:,0) + " --- " + mopitt_seas_avg_b(:,0))
+print("STD DEV")
+print(mopitt_seas_avg_d(:,1) + " --- " + mopitt_seas_avg_b(:,1))
+
+print("2002-2011 AVG --- STD DEV")
+print(mopitt_seas_avg_a(:,0)/scale + " --- " + mopitt_seas_avg_a(:,1)/scale)
+print("2012-2018 AVG --- STD DEV")
+print(mopitt_seas_avg_b(:,0)/scale + " --- " + mopitt_seas_avg_b(:,1)/scale)
+exit
 
 
    
@@ -219,8 +238,10 @@ CI_lb = (mean1-mean2)-1.934*sqrt(var_a/num_a+var_b/num_b)
 CI_ub = (mean1-mean2)+1.934*sqrt(var_a/num_a+var_b/num_b)
 mean_diff = (mopitt_seas_avg_a(:,0)-mopitt_seas_avg_b(:,0))/scale
 
-;print(mopitt_seas_avg_a(:,0)/scale)
-;print(mopitt_seas_avg_b(:,0)/scale)
+print(mopitt_seas_avg_a(:,1)/scale)
+print(mopitt_seas_avg_b(:,1)/scale)
+
+;exit
 
 print(pooled_sd(7))
 print(pooled_sd_2(7)-pooled_sd(7))
@@ -233,8 +254,10 @@ print("Cohen's d = " + sprintf("%9.3f", cohen_d(7)) )
 print("95%CI =     " + sprintf("%9.3f", CI_lb(7))+ ";" +sprintf("%9.3f", CI_ub(7)) )
 print("Mean diff = " + sprintf("%9.3f", mean_diff(7)) )
 print("*****************************")
-print("All t-test results:")
-print("95%CI =     " + sprintf("%9.3f", CI_lb(:))+ ";" +sprintf("%9.3f", CI_ub(:)) )
+;print("All t-test results:")
+;print("95%CI =     " + sprintf("%9.3f",t_test_result(0,:)) )
+
+;exit
 
 sig_a = where(t_test_result(0,:).lt.(0.05), mopitt_seas_avg_a(:,0), mopitt_seas_avg_a@_FillValue)
 sig_b = where(t_test_result(0,:).lt.(0.05), mopitt_seas_avg_b(:,0), mopitt_seas_avg_b@_FillValue)
@@ -260,9 +283,9 @@ if (PLOT) then
       res@tmYLMode        = "Manual"	
       res@tmYLTickStartF  = miny
       res@tmYLTickEndF    = maxy
-      res@tmYLTickSpacingF= 20
-      ;res@tmYLTickStartF  = 180
-      ;res@tmYLTickEndF    = 180
+      res@tmYLTickSpacingF= 30
+      res@tmYLTickStartF  = 160
+      res@tmYLTickEndF    = 220
 
     res@trXMinF             = -0.5
     res@trXMaxF             = 11.5

@@ -34,7 +34,7 @@ print(timeseries_files)
   ; toggles
   ;------------
   PLOT           = True
-    plttype      = "x11"
+    plttype      = "pdf"
     ;plttype@wkPaperSize = "A4"
     ;plttype@wkWidth = 0.5
     ;plttype@wkHeight = 0.5
@@ -137,12 +137,17 @@ print(timeseries_files)
   ; -------------------------------
   ; seasonal_cycles
   ; -------------------------------
+   timeseries!0 = "time"
+   timeseries&time = date
+
   modis_seas_avg_a = calc_seasonal_cycle(timeseries,date,2002,2011, 12)
   modis_seas_avg_b = calc_seasonal_cycle(timeseries,date,2012,2018, 12)
 
-print(modis_seas_avg_a(:,0))
-print(modis_seas_avg_b(:,0))
-;exit
+print("2002-2011 AVG --- STD DEV")
+print(modis_seas_avg_a(:,0) + " --- " + modis_seas_avg_a(:,1))
+print("2012-2018 AVG --- STD DEV")
+print(modis_seas_avg_b(:,0) + " --- " + modis_seas_avg_b(:,1))
+
 
   ; -------------------------------
   ; CALCULATE SIGNIFICANCE
@@ -312,7 +317,7 @@ if (PLOT) then
     res@xyMarkLineModes = "Markers"
     res@xyMarkerColors = "black"
     res@xyMarkers = 16
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot1s = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_a,res)
     res@xyMarkerSizeF    = 25.5
   ;plot1s01 = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_a01,res)
@@ -320,7 +325,7 @@ if (PLOT) then
   ;overlay(plot1, plot1s01)
 
     res@xyMarkerColors = "red3"
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot2s = gsn_csm_xy(wks,modis_seas_avg_b&month,sig_b,res)
     res@xyMarkerSizeF    = 25.5
   ;plot2s01 = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_b01,res)
@@ -337,8 +342,8 @@ if (PLOT) then
     pmres@gsMarkerIndex = 16
     pmres@gsMarkerSizeF = 0.012
     pmres@gsMarkerColor := "black"
-  ;  gsn_polymarker_ndc (wks,0.72,0.60,pmres)
-  ;  gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
+    gsn_polymarker_ndc (wks,0.72,0.60,pmres)
+    gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
     ;pm01res = True
     ;pm01res@gsMarkerIndex = 16
     ;pm01res@gsMarkerSizeF = 0.020
