@@ -99,7 +99,7 @@ print(timeseries_files)
      ; landsea mask
      a    = addfile("$NCARG_ROOT/lib/ncarg/data/cdf/landsea.nc","r")
       lsdata = a->LSMASK
-      lsm  = landsea_mask(lsdata,timeseries_read&lat,timeseries_read&lon)
+      ;lsm  = landsea_mask(lsdata,timeseries_read&lat,timeseries_read&lon)
       ;timeseries_read = mask(timeseries_read,lsm.eq.0,False)
 
      timeseries_region = timeseries_read(:,{region_select(ind_region,0):region_select(ind_region,1)},\
@@ -137,12 +137,17 @@ print(timeseries_files)
   ; -------------------------------
   ; seasonal_cycles
   ; -------------------------------
-  modis_seas_avg_a = calc_seasonal_cycle(timeseries,date,2002,2011, 12)
-  modis_seas_avg_b = calc_seasonal_cycle(timeseries,date,2012,2017, 12)
+   timeseries!0 = "time"
+   timeseries&time = date
 
-print(modis_seas_avg_a(:,0))
-print(modis_seas_avg_b(:,0))
-;exit
+  modis_seas_avg_a = calc_seasonal_cycle(timeseries,date,2002,2011, 12)
+  modis_seas_avg_b = calc_seasonal_cycle(timeseries,date,2012,2018, 12)
+
+print("2002-2011 AVG --- STD DEV")
+print(modis_seas_avg_a(:,0) + " --- " + modis_seas_avg_a(:,1))
+print("2012-2018 AVG --- STD DEV")
+print(modis_seas_avg_b(:,0) + " --- " + modis_seas_avg_b(:,1))
+
 
   ; -------------------------------
   ; CALCULATE SIGNIFICANCE
@@ -158,8 +163,29 @@ num_b = 7
 ;num_b(0:5) = fields(ind_start_2012_num,:)
 ;num_b(10:11) = fields(ind_start_2012b_num,0:1)
 
+df = num_a+num_b-2
+pooled_sd = sqrt((var_a+var_b)/2)
+mean1 = modis_seas_avg_a(:,0)
+mean2 = modis_seas_avg_b(:,0)
+cohen_d = abs(mean1-mean2)/pooled_sd
+
 t_test_result = ttest(modis_seas_avg_a(:,0),var_a,num_a,modis_seas_avg_b(:,0),var_b,num_b,False,True)
 print(t_test_result)
+
+;---- 95 % t= 2.447, 90% t = 1.934
+CI_lb = ((modis_seas_avg_a(:,0)-modis_seas_avg_b(:,0))-2.447*sqrt(var_a/num_a+var_b/num_b))
+CI_ub = ((modis_seas_avg_a(:,0)-modis_seas_avg_b(:,0))+2.447*sqrt(var_a/num_a+var_b/num_b))
+mean_diff = (modis_seas_avg_a(:,0)-modis_seas_avg_b(:,0))
+
+print("*****************************")
+print("August t-test results:")
+print("p-value =   " + sprintf("%9.3f",t_test_result(0,7)) )
+print("t-value =   " + sprintf("%9.3f", t_test_result(1,7)) )
+print("df =        " + df(7))
+print("Cohen's d = " + sprintf("%9.3f", cohen_d(7)) )
+print("95%CI =     " + sprintf("%9.3f", CI_lb(7))+ ";" +sprintf("%9.3f", CI_ub(7)) )
+print("Mean diff = " + sprintf("%9.3f", mean_diff(7)) )
+print("*****************************")
 
 sig_a = where(t_test_result(0,:).lt.(0.05), modis_seas_avg_a(:,0), modis_seas_avg_a@_FillValue)
 sig_b = where(t_test_result(0,:).lt.(0.05), modis_seas_avg_b(:,0), modis_seas_avg_b@_FillValue)
@@ -291,7 +317,7 @@ if (PLOT) then
     res@xyMarkLineModes = "Markers"
     res@xyMarkerColors = "black"
     res@xyMarkers = 16
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot1s = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_a,res)
     res@xyMarkerSizeF    = 25.5
   ;plot1s01 = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_a01,res)
@@ -299,7 +325,7 @@ if (PLOT) then
   ;overlay(plot1, plot1s01)
 
     res@xyMarkerColors = "red3"
-    res@xyMarkerSizeF    = 15.5
+    res@xyMarkerSizeF    = 25.5
   plot2s = gsn_csm_xy(wks,modis_seas_avg_b&month,sig_b,res)
     res@xyMarkerSizeF    = 25.5
   ;plot2s01 = gsn_csm_xy(wks,modis_seas_avg_a&month,sig_b01,res)
@@ -316,8 +342,8 @@ if (PLOT) then
     pmres@gsMarkerIndex = 16
     pmres@gsMarkerSizeF = 0.012
     pmres@gsMarkerColor := "black"
-  ;  gsn_polymarker_ndc (wks,0.72,0.60,pmres)
-  ;  gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
+    gsn_polymarker_ndc (wks,0.72,0.60,pmres)
+    gsn_text_ndc(wks,"p < 0.05",0.816,0.60,txres)
     ;pm01res = True
     ;pm01res@gsMarkerIndex = 16
     ;pm01res@gsMarkerSizeF = 0.020

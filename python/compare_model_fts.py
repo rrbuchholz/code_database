@@ -67,7 +67,7 @@ except ModuleNotFoundError:
 try:
     import netCDF4
     print("Imported netCDF4")
-except ModuleNotFoundError:
+except:
     print("8. Could not import netCDF4")
 #from pyhdf.SD import SD, SDC
 try:
@@ -81,6 +81,10 @@ try:
     print("Imported h5py")
 except ModuleNotFoundError:
     print("10. Could not import h5py")
+<<<<<<< HEAD
+
+=======
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 
 
 

@@ -22,12 +22,20 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
+<<<<<<< HEAD
+  tracer = "O3"
+=======
   tracer = "CO"
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
   region = "Globe"
   timeslice = "August 2012-2018, QFED"
 
   ; Plot definitions
     units = "ppb"
+<<<<<<< HEAD
+    maxlev = 70
+    lev_spacing = 2.0
+=======
     ;maxlev = 280.0
     ;minlev = 40.0
     ;lev_spacing = 10.0
@@ -43,6 +51,7 @@ begin
     maxlev = 50.
     minlev = -50.
     lev_spacing = 2.5
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 
    STATIONS = False
 
@@ -54,6 +63,20 @@ begin
   ;camfile_1 = systemfunc ("ls "+in_folder+"fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L.cam.h1.2014-08-15-00000.nc")
   ;camfile_1 = systemfunc ("ls "+in_folder+"fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L.cam.h0.2014-08.nc")
 
+<<<<<<< HEAD
+  ; dir_in = "/glade/scratch/tasullivan/archive/controlcomp/atm/hist/"
+  ; dir2_in = "/glade/scratch/tasullivan/archive/nofire/atm/hist/"
+  ; outpath = "/glade/work/buchholz/CAM_chem_output/maskfire_2018/"
+  ; camfile_1 = systemfunc ("ls "+dir_in + "*h0*2018-08*.nc")
+  ; camfile_2 = systemfunc ("ls "+dir2_in + "*h0*2018-08*.nc")
+
+  dir_in = "/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey180615.cmip/atm/hist/"
+  dir2_in = "/data16a/buchholz/CAM_chem_output/fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/atm/hist/"
+   ;outpath = "/glade/work/buchholz/CAM_chem_output/maskfire_2018/"
+   camfile_1 = systemfunc ("ls "+dir_in + "*h0*2014-08*.nc")
+   camfile_2 = systemfunc ("ls "+dir2_in + "*h0*2014-08*.nc")
+
+=======
    ;dir_in = "/glade/scratch/tasullivan/archive/controlcomp/atm/hist/"
    ;dir2_in = "/glade/scratch/tasullivan/archive/nofire/atm/hist/"
    ;outpath = "/glade/work/buchholz/CAM_chem_output/maskfire_2018/"
@@ -76,6 +99,7 @@ begin
    outpath = "/glade/work/buchholz/CAM_chem_output/"
    camfile_1 = systemfunc ("ls "+dir_in + "CAMchem_Aug_qfed_avg_2002_2011.nc")
    camfile_2 = systemfunc ("ls "+dir_in + "CAMchem_Aug_qfed_avg_2012_2018.nc")
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
   
 
 
@@ -180,9 +204,14 @@ printVarSummary(tracer_fields_1)
     mapres@mpGridLineColor = "gray25"
 
     mapres@cnFillOn                  = True
-    ;cmap = read_colormap_file("GMT_haxby")
+    cmap = read_colormap_file("GMT_haxby")
     ;cmap = read_colormap_file("MPL_viridis")
     ;cmap = read_colormap_file("cmp_haxby")
+<<<<<<< HEAD
+    ;cmap = read_colormap_file("BlWhRe")
+
+    mapres@cnFillColors      = cmap(4:,:)
+=======
     cmap = read_colormap_file("BlWhRe")
     ;cmap = read_colormap_file("BlueWhiteOrangeRed")
     ncolors = toint(dimsizes(cmap)-1)
@@ -190,6 +219,7 @@ printVarSummary(tracer_fields_1)
 
     mapres@cnFillColors      = cmap(9:ncolors(0):2,:)
     ;mapres@cnFillColors      = cmap(4:,:)
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
     ;mapres@cnFillColors      = cmap
     ;mapres@cnFillMode                = "CellFill"          ; fill as grid boxes not contours
     mapres@cnLineLabelsOn            = False               ; turn off countour labels
@@ -207,7 +237,11 @@ printVarSummary(tracer_fields_1)
 
 
     mapres@cnLevelSelectionMode      = "ManualLevels"      ; manually set the contour levels
+<<<<<<< HEAD
+      mapres@cnMinLevelValF          = 20                ; set the minimum contour level
+=======
       mapres@cnMinLevelValF          = minlev                  ; set the minimum contour level
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
       mapres@cnMaxLevelValF          = maxlev              ; set the maximum contour level
       mapres@cnLevelSpacingF         = lev_spacing         ; set the interval between contours
 
@@ -219,7 +253,11 @@ printVarSummary(tracer_fields_1)
       panel_res@txString            = ""
       panel_res@gsnPanelLabelBar    = False                ; add common colorbar
       mapres@gsnRightString        = ""
+<<<<<<< HEAD
+      mapres@tiMainString     = "CAM-chem surface "+ tracer + ", " +timeslice +" 2014"
+=======
       mapres@tiMainString     = "CAM-chem surface "+ tracer + ", " +timeslice
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
       mapres@gsnLeftString     = ""
       ;mapres@gsnLeftString     = "CAM-chem surface ISOPNITA+B with Anthropogenic emissions " +timeslice
 
@@ -231,8 +269,13 @@ printVarSummary(tracer_fields_1)
      .or.tracer.eq."CLDTOT") then
       map1 = gsn_csm_contour_map_ce(wks,tracer_fields_1(0,:,:),mapres)
     else
+<<<<<<< HEAD
+      map1 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,31,:,:),mapres)
+      ;map1 = gsn_csm_contour_map_ce(wks,diff(0,31,:,:),mapres)
+=======
       ;map1 = gsn_csm_contour_map_ce(wks,tracer_fields_2(0,55,:,:),mapres)
       map1 = gsn_csm_contour_map_ce(wks,diff(0,50,:,:),mapres)
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
     end if
 
 

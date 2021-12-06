@@ -61,15 +61,15 @@ begin
     ;  lonmax                         = 360.
     ;  centerlon                      = 180
 
-    ;  latmin                         = 20.               ; USA
-    ;  latmax                         = 70.
-    ;  lonmin                         = -140.
-    ;  lonmax                         = -60.
+      latmin                         = 20.               ; USA
+      latmax                         = 70.
+      lonmin                         = -140.
+      lonmax                         = -60.
 
-      latmin                         = -35.               ; Gulf Of Guinea
-      latmax                         = 30.
-      lonmin                         = -30.
-      lonmax                         = 60.
+    ;  latmin                         = -35.               ; Gulf Of Guinea
+    ;  latmax                         = 30.
+    ;  lonmin                         = -30.
+    ;  lonmax                         = 60.
 
 
 

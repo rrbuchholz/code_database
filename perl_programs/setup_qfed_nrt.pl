@@ -31,7 +31,7 @@ chomp($year = `date --date='$today -1 day' +%Y`) ;
 chomp($month = `date --date='$today -1 day' +%m`) ;
 
 # Use next line if you need to overwrite
-#$current_date = 20190921;
+#$current_date = 20210228;
 
 open(OUT,">$topdir/temp.out");
 print OUT "Assessing emission file for $current_date\n";  #DEBUG
@@ -78,8 +78,8 @@ else{
   print OUT "Downloading . . . \n";
   #print OUT  "wget --user=gmao_ops --password= -N -q -P $dir $ftp_address$fname\n";
   #   `wget --user=gmao_ops --password= -N -q -P $dir "$ftp_address$fname" `;
-  print OUT  "wget -nd -r --no-parent -N -q -P $dir -A $fname $http_address\n";
-             `wget -nd -r --no-parent -N -q -P $dir -A $fname $http_address`;
+  print OUT  "wget -nd -r --no-parent -N -q -P $dir $http_address$fname \n";
+             `wget -nd -r --no-parent -N -q -P $dir $http_address$fname`;
 }
 
 
@@ -101,12 +101,12 @@ if ($check_again ne '' && $processed == 0){
 
   print OUT "Splitting OC and BC . . .\n";
      # --- shell script ---#
-     `/usr/local/ncarg/bin/ncl 'tracer="BC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl 'tracer="OC"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl 'tracer="VBS"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl 'tracer="SOAG"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-     `/usr/local/ncarg/bin/ncl 'tracer="SO4"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
-  print OUT "/usr/local/ncarg/bin/ncl 'tracer=\"BC\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
+     `/usr/local/ncarg/bin/ncl 'tracer="BC"' 'year="2020_2022"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="OC"' 'year="2020_2022"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="VBS"' 'year="2020_2022"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="SOAG"' 'year="2020_2022"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+     `/usr/local/ncarg/bin/ncl 'tracer="SO4"' 'year="2020_2022"' NRT=True 'outres="0.9x1.25"' 'emiss_type="from_co2"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n`;
+  print OUT "/usr/local/ncarg/bin/ncl 'tracer=\"BC\"' 'year=\"2020_2022\"' NRT=True 'outres=\"0.9x1.25\"' 'emiss_type=\"from_co2\"' $codehome/redistribute_emiss.ncl >> $topdir/out.dat\n";      #DEBUG
 }
 else{
   print OUT "File still not available . . .\n";
@@ -118,6 +118,7 @@ else{
 #Check Processed and send e-mail
 chomp($current_date_check = `date --date='$today +9 day' +%Y%m%d`);
 #$current_date_check = $current_date+10;
+print OUT "Checking: $current_date_check\n";    #DEBUG
 chomp(@check_file = `/usr/local/ncarg/bin/ncl YYYYMMDD=$current_date_check $codehome/check_emiss.ncl`);
 #print"/usr/local/ncarg/bin/ncl year=$year YYYYMMDD=$current_date $codehome/check_emiss.ncl\n";
 
@@ -148,7 +149,7 @@ if ($processed == 0 && $proc_file == 1){
    #------------------------------
    #send to glade after 1am
    if ($time >= 1 && $min >= 01){
-   `scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+   `scp /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_new/*2020_2022.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
        print OUT "Sent to cheyenne. \n";
    }
 }
@@ -157,7 +158,7 @@ elsif ($processed == 1 && $proc_file == 1){
    #------------------------------
    #send to glade after 1am
    if ($time >= 1 && $min >= 01 && $time<=8){
-   `rsync -t /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt/*.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
+   `rsync -t /data14b/buchholz/qfed/cam_0.9x1.25/from_co2/nrt_new/*2020_2022.nc buchholz\@data-access.ucar.edu:/glade/work/buchholz/emis/qfed_finn_nrt_1x1/`;
        print OUT "Sent to cheyenne at $time. \n";
    }
 }

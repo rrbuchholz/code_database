@@ -47,34 +47,40 @@ begin
        NRT = False
   end if
 
+
+
   if (NRT) then
     if (.not. isvar("YYYYMMDD")) then      ; is YYYYMMDD=<value> from command line?
-       YYYYMMDD = 20190401
+       YYYYMMDD = 20201217
     end if
     splitdate = str_split_by_length(tostring(YYYYMMDD), 4)
     year = toint(splitdate(0))
-    year_range = "2018_2020"
+    year_range = "2020_2022"
     outres = "0.9x1.25"
     ratio_species = "co2"
     species = "CO2"
-    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+    ;outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt/"
+    outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/nrt_new/"
     MIN_EF         = False
     MAX_EF         = False
   else
     if (.not. isvar("year")) then      ; is year=<value> from command line?
-       year = 2016
+       year = 2021
     end if
     qfed_version = "v2.5"
-    outres = "0.9x1.25"
+    outres = "0.9x1.25"                 ; "0.9x1.25" , "hires" 
     ratio_species = "co2"
     species = "CO2"
     outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/from_"+ratio_species+"/"+qfed_version+"/"+year+"/"
+    ; NRT hires
+    ;outpath = "/net/modeling1/data14b/buchholz/qfed/cam_"+outres+"/nrt/from_"+ratio_species+"/"+qfed_version+"/"+year+"/"
     ;------------
     ; toggles
     ;------------
     MIN_EF         = False
-    MAX_EF         = True
+    MAX_EF         = False
   end if
+
 
   ; -------------------------------
   ; QFED files
@@ -84,9 +90,20 @@ begin
     qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_nrt/"
     qfed_files = systemfunc ("ls "+qfed_dir+"*"+YYYYMMDD+"*.nc4")
   else
+    ; for hires
+    if (outres.eq."hires") then
+      qfed_dir = "/net/modeling1/data16b/buchholz/emissions/qfed/orig_0.1/"+year+"/"
+      qfed_files = systemfunc ("ls "+qfed_dir+"*_co2.*"+year+"*.nc4")
+    else
     qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.25/"+ratio_species+"_"+year+"/"
+    ; NRT hires
+    ;qfed_dir = "/net/modeling1/data14b/buchholz/qfed/orig_0.1/nrt/"+ratio_species+"_"+year+"/"
     qfed_files = systemfunc ("ls "+qfed_dir+"*"+year+"*.nc4")
+    end if
   end if
+
+;print(qfed_files)
+;exit
 
   ;------------
   ; toggles
@@ -194,6 +211,9 @@ begin
   ; -------------------------------
   ; CAM-chem res for sums/avgs
   ; -------------------------------
+  if (outres.eq."hires") then
+     ; don't neeed a regridded weight
+  else
      clat = cos(newlat * rad)        ; cosine of latitude
      dlon = (newlon(2) - newlon(1))  ; assume dlon is constant
      dlat = (newlat(2) - newlat(1))  ; assume dlat is constant
@@ -203,6 +223,7 @@ begin
    
      wgt_CAM  = new((/dimsizes(newlat), dimsizes(newlon)/), float)
      wgt_CAM  = conform(wgt_CAM, dydx, 0)
+  end if
 
 
 ;********************************************
@@ -229,7 +250,10 @@ begin
   ;--- replace names to be consistent with MOZART
   var_names = where(var_names.eq."NOXASNO","ignore",var_names)   ; ignore NOx - use NO and NO2
   var_names = where(var_names.eq."SO2","SO2_orig",var_names)   ; split up SO2
-
+  ;var_names(0:2) = "ignore"
+  ;var_names(5:34) = "ignore"
+;print(var_names)
+;exit
   ;---reshape data to 2D array, and convert to float
   strs = str_split_csv (data, delim, 0)  
   ltype = strs(:,0)                 ;--- land type names
@@ -313,6 +337,7 @@ begin
   ; Extratropical Forest     co2_trop
 
   do tracer = 0,dimsizes(var_names)-1
+  ;do tracer = dimsizes(var_names)-1,dimsizes(var_names)-1
   ;do tracer = 2,4
     if (var_names(tracer).eq."NMOC".or.\
         var_names(tracer).eq."NMHC".or.\
@@ -353,10 +378,15 @@ begin
     ; 1.9 x 2.5 or 0.94 x 1.25
     ; -------------------------------
      opt    = False
-     emiss_regrid  := area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \
+
+     if (outres.eq."hires") then
+       emiss_regrid := tracer_emiss
+       wgt_CAM := wgt_QFED
+     else
+       emiss_regrid  := area_conserve_remap_Wrap(tracer_emiss&lon,tracer_emiss&lat, \
                                          tracer_emiss , \
                                          newlon, newlat, opt)  ; (ntim,96,144)
-     ;printVarSummary(emiss_regrid)
+     end if
 
      ;--- sanity check
      SumOrigGrid = wgt_areasum2 (tracer_emiss , wgt_QFED, 0)
@@ -399,13 +429,23 @@ begin
            bb_template = template->bb
 ;printVarSummary(bb_template)
            bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
-           bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
-           delete(bb_template@_FillValue)
-           delete(bb_template@missing_value)
-           delete(bb_template@fmissing_value)
-           bb_template@_FillValue := 0.0
-           bb_template@missing_value := 0.0
-           bb_template@fmissing_value := 0.0
+          ; bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
+           if (isatt(bb_template,"_FillValue")) then
+             delete(bb_template@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_template,"missing_value")) then
+             delete(bb_template@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_template,"fmissing_value")) then
+             delete(bb_template@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+
 
 ;printVarSummary(bb_template)
 ;exit
@@ -426,12 +466,23 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
-           delete(emiss_regrid@missing_value)
-           delete(emiss_regrid@fmissing_value)
            emiss_regrid = where(ismissing(emiss_regrid),0,emiss_regrid) ; replace missing with zeros for calculations
-           emiss_regrid@_FillValue := 0.0
-           emiss_regrid@missing_value := 0.0
-           emiss_regrid@fmissing_value := 0.0
+           if (isatt(emiss_regrid,"_FillValue")) then
+             delete(emiss_regrid@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(emiss_regrid,"missing_value")) then
+             delete(emiss_regrid@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(emiss_regrid,"fmissing_value")) then
+             delete(emiss_regrid@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+
            emiss_regrid@vmax   := tofloat(max(emiss_regrid))
            emiss_regrid@vmin   := tofloat(min(emiss_regrid))
 
@@ -482,7 +533,6 @@ begin
       ; Variables
       ;------------
       emiss_regrid@long_name = dummy_var2(tracer)+" QFED/FINN fire emissions"
-      ;emiss_regrid@_FillValue := 0.0
       emiss_regrid@vmax      = max(emiss_regrid)
       emiss_regrid@vmin      = min(emiss_regrid)
       ;delete(emiss_regrid@missing_value)
@@ -491,6 +541,21 @@ begin
        ;--- date
          fout->date             = date
        ;--- emissions
+       if (isatt(emiss_regrid,"_FillValue")) then
+          delete(emiss_regrid@_FillValue)
+       else
+          print("No _FillValue attribute to remove")
+       end if
+       if (isatt(emiss_regrid,"missing_value")) then
+          delete(emiss_regrid@missing_value)
+       else
+          print("No missing_value attribute to remove")
+       end if
+       if (isatt(emiss_regrid,"fmissing_value")) then
+          delete(emiss_regrid@fmissing_value)
+       else
+          print("No fmissing_value attribute to remove")
+       end if
          fout->bb               = emiss_regrid
       end if
 
@@ -581,20 +646,36 @@ begin
      voc_tracer_emiss = voc_tracer_emiss*NAv         ; moles -> molec
        voc_tracer_emiss@units = "molecules/cm2/s"
 
+   ; -------------------------------
+   ; Need mw for file
+   ; -------------------------------
+     if (voc_spec(voctype).eq."TERPENES")
+       mw_voc = tofloat(mol_wts(ind(mol_wts(:,0).eq."C10H16"),1))
+     else
+       mw_voc = tofloat(mol_wts(ind(mol_wts(:,0).eq.voc_spec(voctype)),1))
+     end if
+     print(voc_spec(voctype)+" MW: "+mw_voc)
+
     ; -------------------------------
     ; regrid to CAM-chem structure
     ; 1.9 x 2.5 or 0.94 x 1.25
     ; -------------------------------
      opt    = False
+     if (outres.eq."hires") then
+       voc_emiss_regrid := voc_tracer_emiss
+       wgt_CAM := wgt_QFED
+     else
      voc_emiss_regrid  := area_conserve_remap_Wrap(voc_tracer_emiss&lon,voc_tracer_emiss&lat, \
                                          voc_tracer_emiss , \
                                          newlon, newlat, opt)  ; (ntim,96,144)
+     end if
     ; printVarSummary(voc_emiss_regrid)
 
      ;--- sanity check
      SumOrigGrid_voc = wgt_areasum2 (voc_tracer_emiss , wgt_QFED, 0) 
      Sum_Regrid_voc = wgt_areasum2 (voc_emiss_regrid, wgt_CAM, 0) 
      SumDiff_voc = SumOrigGrid_voc-Sum_Regrid_voc
+
 
    if (any(SumOrigGrid_voc.eq.0)) then
      print("No emissions for "+voc_spec(voctype)+" in some entries of " + year)
@@ -613,7 +694,7 @@ begin
      ;      "    diff: "+sprintf("%2.2e",SumDiff(max_ind))+\
      ;      "   percent diff: "+sprintf("%2.2f",PercDiff(max_ind))+"%")
      print("Maximum percent diff in "+voc_spec(voctype)+\
-        " from regridding: "+sprintf("%2.2f",PercDiff(max_ind_voc))+"%"+\
+        " from regridding: "+sprintf("%2.2f",PercDiff_voc(max_ind_voc))+"%"+\
          " on date: " + cd_calendar(co2_all&time(max_ind_voc),2))
      print("-------------------------------------------------")
 
@@ -633,12 +714,22 @@ begin
            bb_template = template->bb
            bb_template = where(ismissing(bb_template),0,bb_template) ; replace missing with zeros for calculations
            ;bb_template = where(bb_template.eq.1e+20,0,bb_template) ; replace missing with zeros for calculations
-           delete(bb_template@_FillValue)
-           delete(bb_template@missing_value)
-           delete(bb_template@fmissing_value)
-           bb_template@_FillValue := 0.0
-           bb_template@missing_value := 0.0
-           bb_template@fmissing_value := 0.0
+           if (isatt(bb_template,"_FillValue")) then
+             delete(bb_template@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(bb_template,"missing_value")) then
+             delete(bb_template@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(bb_template,"fmissing_value")) then
+             delete(bb_template@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+
         fout = addfile(outpath+outfilename, "w")                ; ready for some overwriting
       else if (MIN_EF)
         outfilename = "qfed.emis.min_"+voc_spec(voctype)+"_"+outres+"_mol_"+year+".nc"
@@ -656,12 +747,24 @@ begin
 
       if (NRT) then
          ind_overwrite = ind(date_template.eq.date)
-           delete(voc_emiss_regrid@missing_value)
-           delete(voc_emiss_regrid@fmissing_value)
            voc_emiss_regrid = where(ismissing(voc_emiss_regrid),0,voc_emiss_regrid) ; replace missing with zeros for calculations
-           voc_emiss_regrid@_FillValue := 0.0
-           voc_emiss_regrid@missing_value := 0.0
-           voc_emiss_regrid@fmissing_value := 0.0
+
+           if (isatt(voc_emiss_regrid,"_FillValue")) then
+             delete(voc_emiss_regrid@_FillValue)
+           else
+             print("No _FillValue attribute to remove")
+           end if
+           if (isatt(voc_emiss_regrid,"missing_value")) then
+             delete(voc_emiss_regrid@missing_value)
+           else
+             print("No missing_value attribute to remove")
+           end if
+           if (isatt(voc_emiss_regrid,"fmissing_value")) then
+             delete(voc_emiss_regrid@fmissing_value)
+           else
+             print("No fmissing_value attribute to remove")
+           end if
+
            voc_emiss_regrid@vmax   := tofloat(max(voc_emiss_regrid))
            voc_emiss_regrid@vmin   := tofloat(min(voc_emiss_regrid))
 
@@ -685,7 +788,7 @@ begin
       ;------------
       setfileoption(fout, "DefineMode",True)
       fAtt                      = True
-        fAtt@molecular_weight   = mw
+        fAtt@molecular_weight   = mw_voc
         fAtt@conventions        = "CF"
         fAtt@history            = species+" is from QFED, Level3b v2.5 "+\
                                   "(qfed-2.5_r1) Gridded Emission Estimates, with "+\
@@ -707,7 +810,7 @@ begin
       ; Coordinate Variables
       ;------------
         dimNames = (/"time", "lat", "lon"/)  
-	dim_Sizes = (/ -1   ,  dimsizes(emiss_regrid&lat),  dimsizes(emiss_regrid&lon)/) 
+	dim_Sizes = (/ -1   ,  dimsizes(voc_emiss_regrid&lat),  dimsizes(voc_emiss_regrid&lon)/) 
 	dimUnlim = (/ True , False, False/)   
 	filedimdef(fout,dimNames,dim_Sizes,dimUnlim)
 
@@ -715,7 +818,6 @@ begin
       ; Variables
       ;------------
       voc_emiss_regrid@long_name = voc_spec(voctype)+" QFED/FINN fire emissions"
-      emiss_regrid@_FillValue   := 0.0
       voc_emiss_regrid@vmax      = max(voc_emiss_regrid)
       voc_emiss_regrid@vmin      = min(voc_emiss_regrid)
       delete(voc_emiss_regrid@missing_value)
@@ -724,6 +826,21 @@ begin
        ;--- date
          fout->date             = date
        ;--- emissions
+       if (isatt(voc_emiss_regrid,"_FillValue")) then
+          delete(voc_emiss_regrid@_FillValue)
+       else
+          print("No _FillValue attribute to remove")
+       end if
+       if (isatt(voc_emiss_regrid,"missing_value")) then
+          delete(voc_emiss_regrid@missing_value)
+       else
+          print("No missing_value attribute to remove")
+       end if
+       if (isatt(voc_emiss_regrid,"fmissing_value")) then
+          delete(voc_emiss_regrid@fmissing_value)
+       else
+          print("No fmissing_value attribute to remove")
+       end if
          fout->bb               = voc_emiss_regrid
       end if ;NRT or Reanalysis
 
@@ -774,10 +891,12 @@ begin
     ;map1 = gsn_csm_contour_map_ce(wks,co2_all(0,:,:),mapres)
 
     mapres@gsnLeftString            = "spatial sum = "+ SumOrigGrid(0) ; change left title
-      map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
+      ;map1 = gsn_csm_contour_map_ce(wks,tracer_emiss(0,:,:),mapres)
+      map1 = gsn_csm_contour_map_ce(wks,voc_tracer_emiss(0,:,:),mapres)
 
     mapres@gsnLeftString            = "spatial sum = "+ Sum_Regrid(0) ; change left title
-      map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
+      ;map2 = gsn_csm_contour_map_ce(wks,emiss_regrid(0,:,:),mapres)
+      map2 = gsn_csm_contour_map_ce(wks,voc_emiss_regrid(0,:,:),mapres)
 
     panel_res                       = True
       panel_res@txString            = "QFED "+ tracername +" emissions"

@@ -54,13 +54,19 @@ begin
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmax/
 ;fmerra.2.0.FCSD.1deg.chey180615.cmip.qfedBBCOmin/
 ;fmerra.2.0.FCSD.1deg.chey180617.cmip.gfasBBCO/
+<<<<<<< HEAD
+=======
 
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 ;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBB_32L/
 ;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBmaxCO_32L/
 ;fmerra.2.0.FCSD.1deg.chey200406.cmip.qfedBBminCO_32L/
 ;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmax_32L/
 ;fmerra.2.0.FCSD.1deg.chey200408.cmip.qfedBBmin_32L/
+<<<<<<< HEAD
+=======
 
+>>>>>>> 501d5daafbb9770fac51810cf544f70c3cbfc5c4
 
 
   ; -------------------------------

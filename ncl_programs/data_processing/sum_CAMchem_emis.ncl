@@ -24,12 +24,12 @@ begin
 ;--------------------------------------------
 ; user input
 ;--------------------------------------------
-  ystart = 2014
-  yend = 2017
+  ystart = 2012
+  yend = 2013
   reso = "0.9x1.25"
 
   machine = "modeling1"        ; modeling1, modeling2, cheyenne
-  repository = "GFAS"    ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
+  repository = "GFAS_native"   ;FINN, FINN1.5, FINN1.6, FINN_NRT, QFED, QFED_native, QFED/FINN, QFED_NRT, GFAS, GFAS/FINN, CMIP6
 
   ANTHRO = False
 
@@ -53,10 +53,12 @@ begin
 ;              "HCOOH","HYAC","ISOP","IVOC","MACR","MEK","MVK","NH3","NO","NO2","num_bc_a4","num_pom_a4",\
 ;              "num_so4_a1","OC","pom_a4","SO2","so4_a1","SOAG","SVOC","TERPENES","TOLUENE","XYLENES"/)
  ; tracers = (/"SVOC","MTERP","TOLUENE","XYLENES"/)
+; CH3COCH3 = C3H6O
+ ; tracers = (/"CO", "CO2", "CH4", "OC", "BC", "SO2", "C3H8", "CH2O", "CH3COCH3", "NH3, "C2H6", "TPM" /)
+ ; sm_tracers = (/"co", "co2", "ch4", "oc", "bc", "so2", "c3h8", "ch2o", "c3h6o", "nh3", "c2h6", "tpm" /)
+
   tracers = (/"CO"/)
-
-
-  sm_tracers = tracers
+  sm_tracers = (/"co"/)
 
 
 
@@ -121,6 +123,7 @@ do t = 0, dimsizes(tracers)-1
     end if
     end if
 
+
     if (repository.eq."GFAS") then
      emis_dir = top_dir+ "gfas/cam_"+reso+"/regridded"
      e_file_in = "gfas.emis_fromgrib_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
@@ -131,6 +134,12 @@ do t = 0, dimsizes(tracers)-1
      e_file_in = "gfas.emis_"+tracer+"_"+reso+"_mol_"+ystart+"_"+yend+".nc"
      indir = emis_dir+"/allyears/"
      outpath = emis_dir+"/region_sums/"
+    else if (repository.eq."GFAS_native") then
+     emis_dir = "/data16b/buchholz/emissions/gfas/orig_0.1/"
+     e_file_in = systemfunc ("ls "+emis_dir+"2012/*"+sm_tracer+"_*.nc")
+     outpath = emis_dir+"/region_sums/"
+print(e_file_in)
+    end if
     end if
     end if
 
@@ -270,6 +279,13 @@ do t = 0, dimsizes(tracers)-1
       time := emiss_in&time
       lat = tofloat(emiss_in&lat)
       lon = tofloat(emiss_in&lon)
+  else if (repository.eq."GFAS_native") then
+    fin = addfiles(e_file_in, "r")
+      emisname = sm_tracer+"fire"
+      emiss_in          = fin[:]->$emisname$(0:10,:,:)
+      time := emiss_in&time
+      lat = tofloat(emiss_in&latitude)
+      lon = tofloat(emiss_in&longitude)
   else
     fin = addfile(indir+e_file_in, "r")
       emiss_in         := fin->$emiss$
@@ -280,6 +296,10 @@ do t = 0, dimsizes(tracers)-1
   end if
   end if
   end if
+  end if
+
+printVarSummary(emiss_in)
+;exit
 
       yyyymmdd := cd_calendar(time,-2)
        yyyymmdd!0 = "time"
@@ -291,18 +311,18 @@ do t = 0, dimsizes(tracers)-1
       nlat = dimsizes(lat)
       mlon = dimsizes(lon)
 
-      date := fin->date
+      ;date := fin->date
 printVarSummary(emiss_in)
 printVarSummary(time)
 printVarSummary(date)
 time_dummy = time +12
 copy_VarMeta(time, time_dummy)
 
-time2 = cd_convert(time, "days since 1850-01-01 00:00:00" )
+;time2 = cd_convert(time, "days since 1850-01-01 00:00:00" )
 
-print(date + ": " + time +" = " +time2)
+;print(date + ": " + time +" = " +time2)
 
-exit
+;exit
 
 
   ;********************************************
@@ -326,7 +346,8 @@ exit
        mw = 106.167
      else if (tracer.eq."IVOC".or.\
               tracer.eq."SVOC".or.\
-              tracer.eq."SOAG") then
+              tracer.eq."SOAG".or.\
+              tracer.eq."TPM") then
        mw = 12.011
      else
        mw = tofloat(mol_wts(ind(mol_wts(:,0).eq.tracer),1))
@@ -342,16 +363,32 @@ exit
          emiss_in@units = "molecules/cm2/s"
      end if
 
-     ; g cm-2 s-1
-     tracer_emiss = (emiss_in/NAv)*mw          ; molec -> mol -> g
-     ; g cm-2 d-1
-     tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
+     if (repository.eq."GFAS_native") then
+       ;tracer_emiss = short2flt(emiss_in)   ; subtract offset (short2flt only, adds the offeset)
+print(emiss_in@scale_factor)
+
+       test = tofloat(emiss_in@scale_factor*(emiss_in-emiss_in@add_offset))   ; scale*(x_short - offset)
+       test = where(test.lt.0,0.,test)
+       tracer_emiss = test
+       copy_VarMeta(emiss_in, tracer_emiss) 
+
+       ; kg m-2 s-1
+       tracer_emiss = tracer_emiss*86400          ; s-1 -> d-1
+       tracer_emiss = tracer_emiss*1000          ; kg -> g
+       tracer_emiss = tracer_emiss/10000         ; m-2 -> cm-2
+     else
+       ; g cm-2 s-1
+       tracer_emiss = (emiss_in/NAv)*mw          ; molec -> mol -> g
+       ; g cm-2 d-1
+       tracer_emiss = (tracer_emiss*86400)       ; s-1 -> d-1
+     end if 
 
      if (repository.eq."CMIP6") then           ; d-1 -> m-1
        month_days = days_in_month(yyyy,mm)
        month_days_array = conform(tracer_emiss, month_days, 0)
        tracer_emiss = tracer_emiss*month_days_array
      end if
+
      ; g m-2 d-1
      tracer_emiss = (tracer_emiss*100*100)     ; cm-2 -> m-2
       tracer_emiss!0 = "time"
@@ -360,6 +397,7 @@ exit
       tracer_emiss&lat = lat
       tracer_emiss!2 = "lon"
       tracer_emiss&lon = lon
+     
 
 
      ; weight by gridbox area
@@ -367,12 +405,12 @@ exit
        ; (redundant because no emissions over artic and anatarctica)
 
        newlat = lat
-       newlat(0)= 89.99999
-       newlat(dimsizes(newlat)-1)= -89.99999   
+       ;newlat(0)= 89.99999
+       ;newlat(dimsizes(newlat)-1)= -89.99999   
 
      clat = cos(lat * rad)           ; cosine of latitude
-     dlon = (lon(2) - lon(1))        ; assume dlon is constant
-     dlat = (lat(2) - lat(1))        ; assume dlat is constant
+     dlon = abs((lon(2) - lon(1)))   ; assume dlon is constant
+     dlat = abs((lat(2) - lat(1)))   ; assume dlat is constant
      dx   = con * dlon * clat        ; dx (in metres) at each latitude
      dy   = con * dlat               ; dy (in metres) is constant
      dydx = dy * dx                  ; dydx(nlat)
@@ -407,7 +445,7 @@ exit
     ;------------------
     year_array = ispan(ystart,yend,1)
     year_sum_array = new((/dimsizes(year_array)/), float)
-    do i = 0, dimsizes(year_array)-1
+    do i = 0, dimsizes(year_array)-2
       year_ind := ind(globsum&time.gt.year_array(i)*10000.and.\
                  globsum&time.lt.(year_array(i)+1)*10000)
       year_sum_array(i) = sum(globsum(year_ind))
